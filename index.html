@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.5.8</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.5.9</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -979,15 +979,15 @@ const SHEET_DEFS = {
     }
   },
   sunquan:{
-    src:'Sprites/clean/SunQuan_idle_charge_atk.png',
-    displayH:140, yOff:-25,
+    src:'Sprites/clean/SunQuan_idle_back_atk_charge_Special.png',
+    displayH:140, yOff:-25, useDarkBg:true,
     anims:{
-      idle:  {x:2,   y:82,  w:487, h:488, frames:1, dur:15},
-      move:  {x:467, y:4,   w:504, h:549, frames:1, dur:6},
-      back:  {x:467, y:4,   w:504, h:549, frames:1, dur:6},
-      charge:{x:467, y:4,   w:504, h:549, frames:1, dur:6,  dw:132, dh:144},
-      atk:   {x:920, y:126, w:704, h:431, frames:1, dur:1,  dw:145, dh:137},
-      special:{altSrc:'Sprites/clean/SunQuan_charge_special.png', darkBg:true, x:591, y:0, w:592, h:656, frames:1, dur:8},
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:160, dh:200},
+      move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
     }
   },
   liubei:{
