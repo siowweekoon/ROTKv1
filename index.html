@@ -58,7 +58,7 @@ body{background:var(--bg);color:var(--text);font-family:'Georgia',serif;min-heig
 .gmodal-name{font-size:1.6em;color:var(--gold);font-weight:bold;letter-spacing:2px;margin-bottom:4px}
 .gmodal-title{font-size:.85em;color:var(--dim);margin-bottom:16px;letter-spacing:1px}
 .gmodal-stats{font-size:.8em;margin-bottom:14px}
-.gmodal-skill{font-size:.8em;color:#cc9930;border-top:1px solid var(--gold2);padding-top:10px;margin-bottom:20px;line-height:1.5}
+.gmodal-skill{font-size:.8em;color:#cc9930;border-top:1px solid var(--gold2);padding-top:10px;margin-bottom:10px;line-height:1.5}
 .gmodal-btns{display:flex;gap:8px;flex-wrap:wrap}
 .imgmodal-box{max-width:680px}.imgmodal-img{width:42%;min-width:160px}
 /* IOS LANDSCAPE HINT */
@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.4</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.5</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -262,7 +262,7 @@ const SPRITES = {
       <div id="gmodal-title" class="gmodal-title"></div>
       <div id="gmodal-stats" class="gmodal-stats"></div>
       <div id="gmodal-skill" class="gmodal-skill"></div>
-      <div id="gmodal-equip" style="font-size:.75em;color:var(--dim);margin:6px 0;min-height:18px"></div>
+      <div id="gmodal-equip" style="margin:8px 0 2px"></div>
       <div class="gmodal-btns">
         <button class="btn" onclick="closeGModal()" style="margin-right:6px">← Back</button>
         <button class="btn" onclick="openGenEquip()" style="margin-right:6px;background:#333;border-color:var(--gold2)">🎒 Equip</button>
@@ -1747,18 +1747,26 @@ function pickG(id){
     `<div class="srow" style="margin-top:2px"><span class="sl">HP</span><span style="color:var(--gold);font-size:.88em">${g.maxHp}</span></div>`;
   document.getElementById('gmodal-skill').innerHTML=`✨ <b>${g.special?.name||'—'}</b>: ${g.special?.desc||''}`;
   const ge=PR.genEquipped[g.id]||{};
-  const itemCard=(item,label)=>item?`
-    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;max-width:70px">
-      ${item.img?`<img src="${item.img}" onclick="event.stopPropagation();showLightbox('${item.img}')" style="width:52px;height:66px;object-fit:cover;object-position:top;border:1px solid var(--gold2);border-radius:3px;cursor:zoom-in">`:`<div style="width:52px;height:66px;display:flex;align-items:center;justify-content:center;border:1px solid var(--gold2);border-radius:3px;font-size:1.8em">${item.icon||'⚔️'}</div>`}
-      <div style="font-size:.58em;color:var(--gold);text-align:center;line-height:1.2">${item.name}</div>
-      <div style="font-size:.52em;color:var(--dim);text-align:center;line-height:1.2">${item.desc}</div>
-    </div>`:`<div style="display:flex;flex-direction:column;align-items:center;gap:3px;max-width:70px;opacity:.3">
-      <div style="width:52px;height:66px;border:1px dashed #555;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:1.4em">${label==='weapon'?'⚔️':'🛡'}</div>
-      <div style="font-size:.58em;color:var(--dim)">No ${label}</div>
+  const showroomCard=(item,type)=>{
+    const isWep=type==='weapon';
+    const accent=isWep?'#c88820':'#4488bb';
+    const bg=isWep?'linear-gradient(160deg,#1a0d00,#2a1600,#1a0d00)':'linear-gradient(160deg,#000d1a,#001828,#000d1a)';
+    const glow=isWep?'rgba(200,130,0,0.28)':'rgba(50,130,200,0.22)';
+    const lbl=isWep?'⚔ WEAPON':'🛡 ARMOR';
+    if(!item)return`<div style="flex:1;background:#0e0e0e;border:1px dashed #2a2a2a;border-radius:10px;padding:14px 8px;text-align:center;opacity:.35;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px">
+      <div style="font-size:2em;margin-bottom:6px;opacity:.5">${isWep?'⚔️':'🛡'}</div>
+      <div style="font-size:.6em;color:#555;letter-spacing:1px">No ${type}</div></div>`;
+    return`<div style="flex:1;background:${bg};border:1px solid ${accent};border-radius:10px;padding:12px 8px 10px;text-align:center;box-shadow:0 0 20px ${glow},inset 0 0 30px rgba(0,0,0,0.4)">
+      <div style="font-size:.58em;color:${accent};letter-spacing:2px;margin-bottom:8px;font-weight:bold">${lbl}</div>
+      ${item.img?`<img src="${item.img}" style="width:92px;height:122px;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,0.95));margin-bottom:8px;display:block;margin-left:auto;margin-right:auto">`:`<div style="font-size:3em;margin-bottom:8px">${item.icon||'⚔️'}</div>`}
+      <div style="color:var(--gold);font-size:.75em;font-weight:bold;margin-bottom:3px;line-height:1.3">${item.name}</div>
+      <div style="color:#888;font-size:.63em;line-height:1.4;margin-bottom:5px">${item.desc}</div>
+      <div style="font-size:.55em;color:${accent};letter-spacing:1.5px;opacity:.8">✦ UNIQUE</div>
     </div>`;
+  };
   document.getElementById('gmodal-equip').innerHTML=`
-    <div style="color:var(--gold2);font-size:.68em;letter-spacing:2px;margin-bottom:6px">✦ PERSONAL EQUIPMENT</div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap">${itemCard(ge.weapon,'weapon')}${itemCard(ge.armor,'armor')}</div>`;
+    <div style="color:var(--gold2);font-size:.62em;letter-spacing:2px;margin-bottom:8px;opacity:.8">✦ PERSONAL ARMOURY</div>
+    <div style="display:flex;gap:10px">${showroomCard(ge.weapon,'weapon')}${showroomCard(ge.armor,'armor')}</div>`;
   modal.classList.add('open');
 }
 function closeGModal(){document.getElementById('gmodal').classList.remove('open');}
