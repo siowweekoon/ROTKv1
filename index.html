@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.7</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.8</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -262,10 +262,9 @@ const SPRITES = {
       <div id="gmodal-title" class="gmodal-title"></div>
       <div id="gmodal-stats" class="gmodal-stats"></div>
       <div id="gmodal-skill" class="gmodal-skill"></div>
-      <div id="gmodal-equip" style="margin:8px 0 2px"></div>
-      <div class="gmodal-btns">
-        <button class="btn" onclick="closeGModal()" style="margin-right:6px">← Back</button>
-        <button class="btn" onclick="openGenEquip()" style="margin-right:6px;background:#333;border-color:var(--gold2)">🎒 Equip</button>
+      <div class="gmodal-btns" style="margin-top:10px">
+        <button class="btn" onclick="closeGModal()">← Back</button>
+        <button class="btn" onclick="showArmoury()" style="background:#1a1200;border-color:var(--gold2)">🏛 Armoury</button>
         <button class="btn" onclick="closeGModal();startBattle()" style="background:var(--gold2);color:#000">⚔ Battle →</button>
       </div>
     </div>
@@ -410,6 +409,26 @@ const SPRITES = {
   <div style="color:var(--dim);font-size:.8em;margin-bottom:22px">Rise again, warrior.</div>
   <button class="btn" onclick="showTitle()">Return to Title</button>
   <button class="btn" onclick="showSelect()" style="margin-top:9px;background:var(--red);border-color:#aa2222">Rematch →</button>
+</div>
+
+<!-- ARMOURY PAGE -->
+<div id="s-armoury" class="screen" style="position:relative;overflow:hidden;background:#000;padding:0;justify-content:flex-start">
+  <img id="armoury-bg" src="Armoury_hall.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;pointer-events:none">
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;width:100%;min-height:100vh;box-sizing:border-box;padding:18px 16px 20px">
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:16px">
+      <div id="armoury-gen-name" style="font-size:1.7em;color:var(--gold);font-weight:bold;letter-spacing:3px;text-shadow:0 0 18px rgba(200,160,50,.6)"></div>
+      <div id="armoury-gen-title" style="font-size:.82em;color:var(--dim);letter-spacing:2px;margin-top:3px"></div>
+      <div style="color:var(--gold2);font-size:.65em;letter-spacing:4px;margin-top:8px;opacity:.8">✦ &nbsp;PERSONAL ARMOURY&nbsp; ✦</div>
+    </div>
+    <!-- Showcase cards -->
+    <div id="armoury-cards" style="flex:1;display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:center;padding:0 4px"></div>
+    <!-- Buttons -->
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap">
+      <button class="btn" onclick="closeArmoury()">← Back</button>
+      <button class="btn" onclick="closeArmoury();startBattle()" style="background:var(--gold2);color:#000">⚔ Enter Battle →</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1638,7 +1657,7 @@ function goFullscreenLandscape(){
 }
 function leaveFullscreen(){
   try{screen.orientation?.unlock();}catch(e){}
-  try{(document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen)?.call(document);}catch(e){}
+  // Stay fullscreen — let device use natural orientation freely
 }
 
 function showTitle(){
@@ -1742,27 +1761,6 @@ function pickG(id){
     sb('WAR',g.war,'#cc5555')+sb('STR',g.str,'#cc7733')+sb('DEX',g.dex,'#55cc88')+sb('SPD',g.spd,'#44aaff')+
     `<div class="srow" style="margin-top:2px"><span class="sl">HP</span><span style="color:var(--gold);font-size:.88em">${g.maxHp}</span></div>`;
   document.getElementById('gmodal-skill').innerHTML=`✨ <b>${g.special?.name||'—'}</b>: ${g.special?.desc||''}`;
-  const ge=PR.genEquipped[g.id]||{};
-  const showroomCard=(item,type)=>{
-    const isWep=type==='weapon';
-    const accent=isWep?'#c88820':'#4488bb';
-    const bg=isWep?'linear-gradient(160deg,#1a0d00,#2a1600,#1a0d00)':'linear-gradient(160deg,#000d1a,#001828,#000d1a)';
-    const glow=isWep?'rgba(200,130,0,0.28)':'rgba(50,130,200,0.22)';
-    const lbl=isWep?'⚔ WEAPON':'🛡 ARMOR';
-    if(!item)return`<div style="flex:1;background:#0e0e0e;border:1px dashed #2a2a2a;border-radius:10px;padding:14px 8px;text-align:center;opacity:.35;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px">
-      <div style="font-size:2em;margin-bottom:6px;opacity:.5">${isWep?'⚔️':'🛡'}</div>
-      <div style="font-size:.6em;color:#555;letter-spacing:1px">No ${type}</div></div>`;
-    return`<div style="flex:1;background:${bg};border:1px solid ${accent};border-radius:10px;padding:12px 8px 10px;text-align:center;box-shadow:0 0 20px ${glow},inset 0 0 30px rgba(0,0,0,0.4)">
-      <div style="font-size:.58em;color:${accent};letter-spacing:2px;margin-bottom:8px;font-weight:bold">${lbl}</div>
-      ${item.img?`<img src="${item.img}" style="width:92px;height:122px;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,0.95));margin-bottom:8px;display:block;margin-left:auto;margin-right:auto">`:`<div style="font-size:3em;margin-bottom:8px">${item.icon||'⚔️'}</div>`}
-      <div style="color:var(--gold);font-size:.75em;font-weight:bold;margin-bottom:3px;line-height:1.3">${item.name}</div>
-      <div style="color:#888;font-size:.63em;line-height:1.4;margin-bottom:5px">${item.desc}</div>
-      <div style="font-size:.55em;color:${accent};letter-spacing:1.5px;opacity:.8">✦ UNIQUE</div>
-    </div>`;
-  };
-  document.getElementById('gmodal-equip').innerHTML=`
-    <div style="color:var(--gold2);font-size:.62em;letter-spacing:2px;margin-bottom:8px;opacity:.8">✦ PERSONAL ARMOURY</div>
-    <div style="display:flex;gap:10px">${showroomCard(ge.weapon,'weapon')}${showroomCard(ge.armor,'armor')}</div>`;
   modal.classList.add('open');
 }
 function closeGModal(){document.getElementById('gmodal').classList.remove('open');}
@@ -1770,6 +1768,37 @@ function openGenEquip(){
   if(!selGen)return;
   closeGModal();
   showEquipModal(selGen.id);
+}
+function showArmoury(){
+  if(!selGen)return;
+  const g=selGen,ge=PR.genEquipped[g.id]||{};
+  document.getElementById('armoury-gen-name').textContent=g.name;
+  document.getElementById('armoury-gen-title').textContent=g.title;
+  const card=(item,type)=>{
+    const isWep=type==='weapon';
+    const accent=isWep?'#c88820':'#4488bb';
+    const bg=isWep?'linear-gradient(160deg,#1a0d00,#2a1600,#1a0d00)':'linear-gradient(160deg,#000d1a,#001828,#000d1a)';
+    const glow=isWep?'rgba(200,130,0,0.3)':'rgba(50,130,200,0.25)';
+    const lbl=isWep?'⚔ WEAPON':'🛡 ARMOR';
+    if(!item)return`<div style="flex:1;min-width:140px;max-width:280px;background:#0c0c0c;border:1px dashed #2a2a2a;border-radius:14px;padding:20px 12px;text-align:center;opacity:.35;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px">
+      <div style="font-size:3em;margin-bottom:10px;opacity:.4">${isWep?'⚔️':'🛡'}</div>
+      <div style="font-size:.7em;color:#555;letter-spacing:1px">No ${type} yet</div>
+      <div style="font-size:.6em;color:#444;margin-top:6px">Win battles to earn</div></div>`;
+    return`<div style="flex:1;min-width:140px;max-width:280px;background:${bg};border:1px solid ${accent};border-radius:14px;padding:18px 12px 14px;text-align:center;box-shadow:0 0 30px ${glow},inset 0 0 40px rgba(0,0,0,0.5)">
+      <div style="font-size:.62em;color:${accent};letter-spacing:3px;margin-bottom:12px;font-weight:bold">${lbl}</div>
+      ${item.img?`<img src="${item.img}" style="width:130px;height:170px;object-fit:contain;filter:drop-shadow(0 8px 20px rgba(0,0,0,1));margin-bottom:12px;display:block;margin-left:auto;margin-right:auto">`:`<div style="font-size:4em;margin-bottom:12px">${item.icon||'⚔️'}</div>`}
+      <div style="color:var(--gold);font-size:.9em;font-weight:bold;margin-bottom:5px;line-height:1.3;letter-spacing:.5px">${item.name}</div>
+      <div style="color:#999;font-size:.72em;line-height:1.5;margin-bottom:8px">${item.desc}</div>
+      <div style="font-size:.58em;color:${accent};letter-spacing:2px;opacity:.85">✦ UNIQUE ✦</div>
+    </div>`;
+  };
+  document.getElementById('armoury-cards').innerHTML=`${card(ge.weapon,'weapon')}${card(ge.armor,'armor')}`;
+  closeGModal();
+  showScreen('s-armoury');
+}
+function closeArmoury(){
+  showScreen('s-select');
+  if(selGen)pickG(selGen.id);
 }
 
 function showLightbox(src){const lb=document.getElementById('lightbox');document.getElementById('lightbox-img').src=src;lb.classList.add('open');}
