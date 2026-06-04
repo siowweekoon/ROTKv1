@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.6</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.7</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -626,11 +626,7 @@ const GOLD={
 };
 function initGenEquip(id){
   if(PR.genEquipped[id])return;
-  const gen=GENS.find(g=>g.id===id);
-  const sig=gen?.sig||{};
   PR.genEquipped[id]={weapon:null,armor:null};
-  if(sig.weapon){const item=RWDS.weapons.find(w=>w.id===sig.weapon);if(item)PR.genEquipped[id].weapon={...item,sig:true};}
-  if(sig.armor) {const item=RWDS.armors.find(a=>a.id===sig.armor); if(item)PR.genEquipped[id].armor= {...item,sig:true};}
 }
 function initDeck(){
   const pool=[...GENS];
@@ -2202,9 +2198,13 @@ function startNextEnemy(){
 //  REWARD
 // ═══════════════════════════════════════════════════
 function openReward(){
+  const ge=PR.genEquipped[usedCardId]||{};
+  const sig=GENS.find(g=>g.id===usedCardId)?.sig||{};
+  const sigWeapon=(!ge.weapon&&sig.weapon)?RWDS.weapons.find(w=>w.id===sig.weapon):null;
+  const sigArmor= (!ge.armor &&sig.armor) ?RWDS.armors.find(a=>a.id===sig.armor) :null;
   const availWives=RWDS.wives.filter(w=>!PR.wives.some(pw=>pw.id===w.id));
-  const s1=(availWives.length&&Math.random()<.5)?pick(availWives):pick(RWDS.scriptures);
-  const s2=pick(RWDS.scriptures);
+  const s1=sigWeapon||((availWives.length&&Math.random()<.5)?pick(availWives):pick(RWDS.scriptures));
+  const s2=sigArmor||pick(RWDS.scriptures);
   const s3=pick(RWDS.horses);
   rwdPool=[s1,s2,s3];
   rwdIdx=null;
@@ -2223,6 +2223,8 @@ function claimSpecific(i){
 function pickRw(i){rwdIdx=i;}
 function claimRew(){
   const r=rwdPool[rwdIdx];
+  if(!PR.genEquipped[usedCardId])initGenEquip(usedCardId);
+  const ge=PR.genEquipped[usedCardId];
   if(r.type==='wife'){
     PR.wives.push(r);
     if(!PR.equipped.wife)PR.equipped.wife=r;
@@ -2232,6 +2234,10 @@ function claimRew(){
   } else if(r.type==='horse'){
     PR.horses.push(r);
     if(!PR.equipped.horse)PR.equipped.horse=r;
+  } else if(r.type==='weapon'){
+    ge.weapon=r;
+  } else if(r.type==='armor'){
+    ge.armor=r;
   }
   PR.wins++;savePR();showTitle();
 }
