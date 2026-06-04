@@ -219,7 +219,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.9.9</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.0</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1825,8 +1825,7 @@ function showArmoury(){
     else if(hasAr)  heroSrc=ref.armor_only;
   }
   if(heroSrc){
-    const isLand=window.innerWidth>window.innerHeight;
-    const heroStyle=isLand?'max-height:85vh;max-width:70%':'max-height:60vh;max-width:88%';
+    const heroStyle='max-height:60vh;max-width:88%';
     document.getElementById('armoury-cards').innerHTML=`
       <div class="armoury-hero-layout">
         <div style="text-align:center;flex-shrink:0">
