@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.9.2</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.9.3</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -422,7 +422,7 @@ const SPRITES = {
       <div style="color:var(--gold2);font-size:.65em;letter-spacing:4px;margin-top:8px;opacity:.8">✦ &nbsp;PERSONAL ARMOURY&nbsp; ✦</div>
     </div>
     <!-- Showcase cards -->
-    <div id="armoury-cards" style="flex:1;display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:center;padding:0 4px"></div>
+    <div id="armoury-cards" style="flex:1;overflow-y:auto;padding:0 4px 8px"></div>
     <!-- Buttons -->
     <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap">
       <button class="btn" onclick="closeArmoury()">← Back</button>
@@ -1780,6 +1780,14 @@ function openGenEquip(){
   closeGModal();
   showEquipModal(selGen.id);
 }
+// Combined reference images per general: weapon_only / armor_only / both
+const ARMOURY_REF={
+  guanyu:{
+    weapon_only:'GuanYu Set/GuanYu_DragonCrescentBlade_only.png',
+    armor_only: 'GuanYu Set/GuanYu_Armor_only.png',
+    both:       'GuanYu Set/GuanYu_DragonScaleArmor_DragonCrescentBlade_reference.png',
+  }
+};
 function showArmoury(){
   if(!selGen)return;
   const g=selGen,ge=PR.genEquipped[g.id]||{};
@@ -1791,19 +1799,39 @@ function showArmoury(){
     const bg=isWep?'linear-gradient(160deg,#1a0d00,#2a1600,#1a0d00)':'linear-gradient(160deg,#000d1a,#001828,#000d1a)';
     const glow=isWep?'rgba(200,130,0,0.3)':'rgba(50,130,200,0.25)';
     const lbl=isWep?'⚔ WEAPON':'🛡 ARMOR';
-    if(!item)return`<div style="flex:1;min-width:140px;max-width:280px;background:#0c0c0c;border:1px dashed #2a2a2a;border-radius:14px;padding:20px 12px;text-align:center;opacity:.35;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px">
-      <div style="font-size:3em;margin-bottom:10px;opacity:.4">${isWep?'⚔️':'🛡'}</div>
-      <div style="font-size:.7em;color:#555;letter-spacing:1px">No ${type} yet</div>
-      <div style="font-size:.6em;color:#444;margin-top:6px">Win battles to earn</div></div>`;
-    return`<div style="flex:1;min-width:140px;max-width:280px;background:${bg};border:1px solid ${accent};border-radius:14px;padding:18px 12px 14px;text-align:center;box-shadow:0 0 30px ${glow},inset 0 0 40px rgba(0,0,0,0.5)">
-      <div style="font-size:.62em;color:${accent};letter-spacing:3px;margin-bottom:12px;font-weight:bold">${lbl}</div>
-      ${item.img?`<img src="${item.img}" style="width:130px;height:170px;object-fit:contain;filter:drop-shadow(0 8px 20px rgba(0,0,0,1));margin-bottom:12px;display:block;margin-left:auto;margin-right:auto">`:`<div style="font-size:4em;margin-bottom:12px">${item.icon||'⚔️'}</div>`}
-      <div style="color:var(--gold);font-size:.9em;font-weight:bold;margin-bottom:5px;line-height:1.3;letter-spacing:.5px">${item.name}</div>
-      <div style="color:#999;font-size:.72em;line-height:1.5;margin-bottom:8px">${item.desc}</div>
-      <div style="font-size:.58em;color:${accent};letter-spacing:2px;opacity:.85">✦ UNIQUE ✦</div>
+    if(!item)return`<div style="flex:1;min-width:130px;max-width:260px;background:#0c0c0c;border:1px dashed #2a2a2a;border-radius:14px;padding:20px 10px;text-align:center;opacity:.35;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px">
+      <div style="font-size:2.5em;margin-bottom:8px;opacity:.4">${isWep?'⚔️':'🛡'}</div>
+      <div style="font-size:.68em;color:#555;letter-spacing:1px">No ${type} yet</div>
+      <div style="font-size:.58em;color:#444;margin-top:4px">Win battles to earn</div></div>`;
+    return`<div style="flex:1;min-width:130px;max-width:260px;background:${bg};border:1px solid ${accent};border-radius:14px;padding:14px 10px 12px;text-align:center;box-shadow:0 0 24px ${glow},inset 0 0 30px rgba(0,0,0,0.5)">
+      <div style="font-size:.58em;color:${accent};letter-spacing:3px;margin-bottom:10px;font-weight:bold">${lbl}</div>
+      ${item.img?`<img src="${item.img}" style="width:110px;height:145px;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,1));margin-bottom:10px;display:block;margin-left:auto;margin-right:auto">`:`<div style="font-size:3.5em;margin-bottom:10px">${item.icon||'⚔️'}</div>`}
+      <div style="color:var(--gold);font-size:.85em;font-weight:bold;margin-bottom:4px;line-height:1.3">${item.name}</div>
+      <div style="color:#999;font-size:.68em;line-height:1.5;margin-bottom:6px">${item.desc}</div>
+      <div style="font-size:.55em;color:${accent};letter-spacing:2px;opacity:.8">✦ UNIQUE ✦</div>
     </div>`;
   };
-  document.getElementById('armoury-cards').innerHTML=`${card(ge.weapon,'weapon')}${card(ge.armor,'armor')}`;
+  const ref=ARMOURY_REF[g.id];
+  const hasWp=!!ge.weapon,hasAr=!!ge.armor;
+  let heroSrc=null;
+  if(ref){
+    if(hasWp&&hasAr)heroSrc=ref.both;
+    else if(hasWp)  heroSrc=ref.weapon_only;
+    else if(hasAr)  heroSrc=ref.armor_only;
+  }
+  if(heroSrc){
+    // Hero showroom: big reference image on top, detail cards scroll below
+    document.getElementById('armoury-cards').innerHTML=`
+      <div style="text-align:center;margin-bottom:16px">
+        <img src="${heroSrc}" style="max-height:55vh;max-width:90%;object-fit:contain;filter:drop-shadow(0 10px 30px rgba(0,0,0,0.95));display:block;margin:0 auto">
+      </div>
+      <div style="text-align:center;color:var(--gold2);font-size:.6em;letter-spacing:3px;margin-bottom:14px;opacity:.55">↓ &nbsp;ITEM DETAILS&nbsp; ↓</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
+        ${hasWp?card(ge.weapon,'weapon'):''}${hasAr?card(ge.armor,'armor'):''}
+      </div>`;
+  } else {
+    document.getElementById('armoury-cards').innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%">${card(ge.weapon,'weapon')}${card(ge.armor,'armor')}</div>`;
+  }
   closeGModal();
   showScreen('s-armoury');
 }
