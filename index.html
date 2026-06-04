@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.9.1</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.9.2</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -486,7 +486,7 @@ const GENS=[
      fn:(p,e,PB,EB)=>{const d=Math.floor(p.war*2.4+rand(15,35));EB.hp=Math.max(0,EB.hp-d);spawnArrow(PB.x,EB.x,GNDX-55,d);}},
    q:{win:["The old eagle soars highest!"],los:["These old bones... give way."]}},
 
-  {id:'machao',    name:'Ma Chao',      title:'Splendid Martial God', f:'SHU',char:'馬',wep:'spear',sig:{weapon:'silver_tiger'},
+  {id:'machao',    name:'Ma Chao',      title:'Splendid Martial God', f:'SHU',char:'馬',wep:'spear',sig:{weapon:'silver_tiger',armor:'machao_armor'},
    war:90,str:80,dex:80,spd:80,maxHp:550,
    special:{name:'Ferocious Charge',desc:'Dash forward + big hit',
      fn:(p,e,PB,EB)=>{PB.x=Math.max(50,EB.x-42);const d=Math.floor(p.war*2.2+rand(10,30));EB.hp=Math.max(0,EB.hp-d);EB.hurtTimer=25;spawnHit(EB.x,GNDX-60,d,true,'#ffaa44');}},
@@ -546,7 +546,7 @@ const GENS=[
      fn:(p,e,PB,EB)=>{const d=Math.floor(p.war*2.5+rand(15,40));EB.hp=Math.max(0,EB.hp-d);EB.hurtTimer=30;spawnHit(EB.x,GNDX-60,d,true,'#ffcc66');}},
    q:{win:["Champions crumble before the Flying General!"],los:["My halberd... fails me today."]}},
 
-  {id:'asiainvincible',name:'Asia the Invincible',title:'Master of Sunflower Art',f:'IND',char:'東',wep:'sword',cc:'#dd44cc',sig:{armor:'asia_armor'},
+  {id:'asiainvincible',name:'Asia the Invincible',title:'Master of Sunflower Art',f:'IND',char:'東',wep:'sword',cc:'#dd44cc',sig:{weapon:'tiger_heart',armor:'asia_armor'},
    war:83,str:80,dex:85,spd:95,maxHp:530,
    special:{name:'KuiHuaBaoDian',desc:'Sunflower needles — DEX-heavy pierce, stuns',
      fn:(p,e,PB,EB)=>{const d=Math.floor(p.dex*3.5+rand(30,60));EB.hp=Math.max(0,EB.hp-d);EB.stunTimer=40;spawnHit(EB.x,GNDX-60,d,true,'#ff88ff');}},
@@ -616,6 +616,7 @@ const RWDS={
     {id:'scholar_sword',  name:'Scholar Sword',              icon:'🗡️',img:'ZhouYu Set/ZhouYu_Scholar_Sword_Unique.png',         type:'weapon',desc:'WAR +15, DEX +5, STR +8',   sig:true},
     {id:'sky_piercer',    name:'Sky Piercer Halberd',        icon:'🔱',img:'LuBu Set/LuBu_Sky_Piercer_Halberd_Unique.png',       type:'weapon',desc:'WAR +25, STR +10, SPD +5',  sig:true},
     {id:'lion_mace',      name:'Lion Wrath Tyrant Mace',     icon:'🔨',img:'DongZhou Set/DongZhuo_LionWarth_Tyrannt_Mace.png',   type:'weapon',desc:'WAR +22, STR +8, HP +30',   sig:true},
+    {id:'tiger_heart',    name:'Tiger Heart Spear',          icon:'🐯',img:'AsiaInvincible Set/AsiaInvincible_Tiger_Heart_Spear.png',type:'weapon',desc:'WAR +18, DEX +12, SPD +8',  sig:true},
   ],
   armors:[
     {id:'guanyu_armor',    name:'Dragon Scale Armor',       icon:'🛡',img:'GuanYu Set/GuanYu_Dragon_Scale_Armor_Unique.png',                       type:'armor',desc:'HP +50, DEX +10, WAR +8',        sig:true},
@@ -632,6 +633,7 @@ const RWDS={
     {id:'lubu_armor',      name:'Sky Piercing Armor',       icon:'🛡',img:'LuBu Set/LuBu_Sky_Piercing_armor_unique.png',                         type:'armor',desc:'STR +20, HP +60, DEX +10',       sig:true},
     {id:'asia_armor',      name:'Sun & Moon Gown Armor',    icon:'🛡',img:'AsiaInvincible Set/AsiaInvincible_Sun&Moon_GownArmor_Unique.png',       type:'armor',desc:'DEX +20, SPD +10, WAR +8',      sig:true},
     {id:'dongzhuo_armor',  name:'Tyrannical Warlord Armor', icon:'🛡',img:'DongZhou Set/DongZhuo_Tyrannical_Warlord_Armor_Unique.png',            type:'armor',desc:'STR +20, HP +70, WAR +10',       sig:true},
+    {id:'machao_armor',    name:'Golden Lion Armor',         icon:'🛡',img:'MaChao Set/Machao_Golden_Lion_Armor.png',                               type:'armor',desc:'SPD +12, STR +12, HP +40',       sig:true},
   ],
 };
 
@@ -2111,6 +2113,7 @@ function startBattle(){
     if(wp.id==='scholar_sword')    {PG.war=Math.min(150,PG.war+15);PG.dex=Math.min(150,PG.dex+5);PG.str=Math.min(150,PG.str+8);}
     if(wp.id==='sky_piercer')      {PG.war=Math.min(150,PG.war+25);PG.str=Math.min(150,PG.str+10);PG.spd=Math.min(200,PG.spd+5);}
     if(wp.id==='lion_mace')        {PG.war=Math.min(150,PG.war+22);PG.str=Math.min(150,PG.str+8);PG.maxHp+=30;}
+    if(wp.id==='tiger_heart')      {PG.war=Math.min(150,PG.war+18);PG.dex=Math.min(150,PG.dex+12);PG.spd=Math.min(200,PG.spd+8);}
   }
   if(ar){
     if(ar.id==='guanyu_armor')     {PG.maxHp+=50;PG.dex=Math.min(150,PG.dex+10);PG.war=Math.min(150,PG.war+8);}
@@ -2127,6 +2130,7 @@ function startBattle(){
     if(ar.id==='lubu_armor')       {PG.str=Math.min(150,PG.str+20);PG.maxHp+=60;PG.dex=Math.min(150,PG.dex+10);}
     if(ar.id==='asia_armor')       {PG.dex=Math.min(150,PG.dex+20);PG.spd=Math.min(200,PG.spd+10);PG.war=Math.min(150,PG.war+8);}
     if(ar.id==='dongzhuo_armor')   {PG.str=Math.min(150,PG.str+20);PG.maxHp+=70;PG.war=Math.min(150,PG.war+10);}
+    if(ar.id==='machao_armor')     {PG.spd=Math.min(200,PG.spd+12);PG.str=Math.min(150,PG.str+12);PG.maxHp+=40;}
   }
   EG=JSON.parse(JSON.stringify(pickTierEnemy(TIER1,PG.id,PG.f)));
   // JSON.parse strips functions — re-attach special.fn from the source GENS entries
