@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.2</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.3</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -567,6 +567,14 @@ const RWDS={
     {id:'ironPalm',     name:'Shaolin Iron Palm', icon:'🤚',img:'ShaoLin_Iron_Palm.png',type:'scripture',desc:'Each hit -5 enemy SPD, cap -25'},
     {id:'ironShirt',    name:'Iron Shirt Scripture',icon:'🛡',img:'Iron_shirt_scripture.png',type:'scripture',desc:'Take 20% less damage'},
     {id:'nineyin',      name:'Nine Yin Manual',   icon:'☯️',img:'Nine_yin_manual.png',  type:'scripture',desc:'Ghost drain HP 10%, cooldown -15%',elite:true},
+    {id:'jadeSutra',    name:'Jade Maiden Heart Sutra',          icon:'💎',img:'Manuals/Jade_Maiden_Heart_Sutra_Unique.png',                    type:'scripture',desc:'DEX +15, SPD +10, HP +30',                rewardOnly:true},
+    {id:'jadeSword',    name:'Jade Maiden Sword Manual',         icon:'💎',img:'Manuals/Jade_Maiden_Sword_Manual_Unique.png',                   type:'scripture',desc:'WAR +15, DEX +10, SPD +5',                 rewardOnly:true},
+    {id:'nineYang',     name:'Nine Yang Manual',                 icon:'☀️',img:'Manuals/Nine_Yang_Manual_Unique.png',                           type:'scripture',desc:'STR +20, HP +40, WAR +10',                 rewardOnly:true},
+    {id:'nineYinClaw',  name:'Nine Yin White Bone Claw',         icon:'💀',img:'Manuals/Nine_Yin_White_Bone_Claw_Manual_Unique.png',            type:'scripture',desc:'WAR +20, STR +10, DEX +5',                 rewardOnly:true},
+    {id:'greatShift',   name:'Great Shift of Heaven and Earth',  icon:'🌪️',img:'Manuals/The_Great_Shift_of_Heaven_and_Earth_Unique.png',        type:'scripture',desc:'SPD +20, DEX +15, WAR +10',                rewardOnly:true},
+    {id:'beiming',      name:'Bei Ming Divine Skill',            icon:'🌊',img:'Manuals/Bei_Ming_Divine_Skill_Unique.png',                      type:'scripture',desc:'SP gain +40%, STR +10, HP +30',            rewardOnly:true},
+    {id:'buddhaPalm',   name:'Buddha Palm Manual',               icon:'🙏',img:'Manuals/Buddha_Palm_Manual_Unique.png',                         type:'scripture',desc:'WAR +15, STR +15, HP +20',                 rewardOnly:true},
+    {id:'eighteenPalms',name:'Eighteen Dragon Subduing Palms',   icon:'🐉',img:'Manuals/Eighteen_Subduing_Dragon_Palm_Manual_Unique.png',       type:'scripture',desc:'WAR +20, STR +15, DEX +5',                 rewardOnly:true},
   ],
   horses:[
     {id:'redhare',      name:'Red Hare',      icon:'🐎',img:'RedHare.png',       type:'horse',desc:'SPD +30, WAR +15'},
@@ -1426,8 +1434,9 @@ function checkHits(){
 
 function gainSP(b,amt){
   const windrider=b===PB&&PR.equipped.scripture?.id==='windrider';
+  const beiming=b===PB&&PR.equipped.scripture?.id==='beiming';
   const yueying=b===PB&&PR.equipped.wife?.id==='huangyueying';
-  const m=windrider?1.6:yueying?1.2:1;
+  const m=windrider?1.6:beiming?1.4:yueying?1.2:1;
   const prev=b.sp;
   b.sp=Math.min(100,b.sp+amt*m);
   if(b===PB&&prev<100&&b.sp>=100)sfxSpFull();
@@ -1891,7 +1900,7 @@ function buyNormal(type){
   const price=GOLD.buy[type];
   if(PR.gold<price)return;
   PR.gold-=price;
-  const pool=(type==='scripture'?RWDS.scriptures:RWDS.horses).filter(r=>!r.elite);
+  const pool=(type==='scripture'?RWDS.scriptures:RWDS.horses).filter(r=>!r.elite&&!r.rewardOnly);
   const r=pick(pool);
   if(!r)return;
   if(type==='scripture')PR.scriptures.push(r);
@@ -2019,10 +2028,18 @@ function startBattle(){
     if(w.id==='ladybian')  {PG.maxHp+=60;PG.dex=Math.min(150,PG.dex+10);}
   }
   if(sc){
-    if(sc.id==='ironbody')    {PG.maxHp+=30;PG.str=Math.min(150,PG.str+15);}
-    if(sc.id==='artofwar')    PG.war=Math.min(150,PG.war+10);
+    if(sc.id==='ironbody')     {PG.maxHp+=30;PG.str=Math.min(150,PG.str+15);}
+    if(sc.id==='artofwar')      PG.war=Math.min(150,PG.war+10);
     if(sc.id==='dragontactics') PG.spd=Math.min(200,PG.spd+10);
-    if(sc.id==='fiveRings')   {PG.war=Math.min(150,PG.war+15);PG.str=Math.min(150,PG.str+15);}
+    if(sc.id==='fiveRings')    {PG.war=Math.min(150,PG.war+15);PG.str=Math.min(150,PG.str+15);}
+    if(sc.id==='jadeSutra')    {PG.dex=Math.min(150,PG.dex+15);PG.spd=Math.min(200,PG.spd+10);PG.maxHp+=30;}
+    if(sc.id==='jadeSword')    {PG.war=Math.min(150,PG.war+15);PG.dex=Math.min(150,PG.dex+10);PG.spd=Math.min(200,PG.spd+5);}
+    if(sc.id==='nineYang')     {PG.str=Math.min(150,PG.str+20);PG.maxHp+=40;PG.war=Math.min(150,PG.war+10);}
+    if(sc.id==='nineYinClaw')  {PG.war=Math.min(150,PG.war+20);PG.str=Math.min(150,PG.str+10);PG.dex=Math.min(150,PG.dex+5);}
+    if(sc.id==='greatShift')   {PG.spd=Math.min(200,PG.spd+20);PG.dex=Math.min(150,PG.dex+15);PG.war=Math.min(150,PG.war+10);}
+    if(sc.id==='beiming')      {PG.str=Math.min(150,PG.str+10);PG.maxHp+=30;}
+    if(sc.id==='buddhaPalm')   {PG.war=Math.min(150,PG.war+15);PG.str=Math.min(150,PG.str+15);PG.maxHp+=20;}
+    if(sc.id==='eighteenPalms'){PG.war=Math.min(150,PG.war+20);PG.str=Math.min(150,PG.str+15);PG.dex=Math.min(150,PG.dex+5);}
   }
   if(h){
     if(h.id==='redhare')      {PG.spd+=30;PG.war=Math.min(150,PG.war+15);}
