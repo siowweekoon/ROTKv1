@@ -122,6 +122,17 @@ body{background:var(--bg);color:var(--text);font-family:'Georgia',serif;min-heig
 @media(max-width:900px) and (orientation:landscape){
   .ggrid{grid-template-columns:repeat(3,1fr)}
 }
+/* ARMOURY RESPONSIVE */
+.armoury-hero-img{max-height:calc(100vh - 210px);max-width:88%;object-fit:contain;display:block;margin:0 auto;filter:drop-shadow(0 10px 30px rgba(0,0,0,.95))}
+.armoury-hero-layout{display:flex;flex-direction:column;width:100%}
+.armoury-hero-details{padding-top:10px}
+.armoury-scroll-hint{text-align:center;color:#666;font-size:.6em;letter-spacing:3px;margin-bottom:14px}
+@media(orientation:landscape){
+  .armoury-hero-layout{flex-direction:row;align-items:flex-start;gap:20px}
+  .armoury-hero-img{max-width:42vw;max-height:calc(100vh - 130px);flex-shrink:0}
+  .armoury-hero-details{flex:1;overflow-y:auto;max-height:calc(100vh - 130px)}
+  .armoury-scroll-hint{display:none}
+}
 /* REWARD */
 #s-reward{align-items:center;justify-content:center;padding:20px;text-align:center;background:radial-gradient(ellipse at center,#1a0a00 0%,#060200 100%)}
 .rh{color:var(--gold);font-size:2em;margin-bottom:5px;letter-spacing:3px}.rs{color:var(--dim);font-size:.88em;margin-bottom:26px}
@@ -214,7 +225,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.9.3</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.9.4</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1820,14 +1831,17 @@ function showArmoury(){
     else if(hasAr)  heroSrc=ref.armor_only;
   }
   if(heroSrc){
-    // Hero showroom: big reference image on top, detail cards scroll below
     document.getElementById('armoury-cards').innerHTML=`
-      <div style="text-align:center;margin-bottom:16px">
-        <img src="${heroSrc}" style="max-height:55vh;max-width:90%;object-fit:contain;filter:drop-shadow(0 10px 30px rgba(0,0,0,0.95));display:block;margin:0 auto">
-      </div>
-      <div style="text-align:center;color:var(--gold2);font-size:.6em;letter-spacing:3px;margin-bottom:14px;opacity:.55">↓ &nbsp;ITEM DETAILS&nbsp; ↓</div>
-      <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
-        ${hasWp?card(ge.weapon,'weapon'):''}${hasAr?card(ge.armor,'armor'):''}
+      <div class="armoury-hero-layout">
+        <div style="text-align:center;flex-shrink:0">
+          <img src="${heroSrc}" class="armoury-hero-img">
+        </div>
+        <div class="armoury-hero-details">
+          <div class="armoury-scroll-hint" style="opacity:.55">↓ &nbsp;ITEM DETAILS&nbsp; ↓</div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
+            ${hasWp?card(ge.weapon,'weapon'):''}${hasAr?card(ge.armor,'armor'):''}
+          </div>
+        </div>
       </div>`;
   } else {
     document.getElementById('armoury-cards').innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%">${card(ge.weapon,'weapon')}${card(ge.armor,'armor')}</div>`;
