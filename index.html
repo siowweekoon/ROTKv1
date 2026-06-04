@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.6.6</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.7.0</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -262,9 +262,11 @@ const SPRITES = {
       <div id="gmodal-title" class="gmodal-title"></div>
       <div id="gmodal-stats" class="gmodal-stats"></div>
       <div id="gmodal-skill" class="gmodal-skill"></div>
+      <div id="gmodal-equip" style="font-size:.75em;color:var(--dim);margin:6px 0;min-height:18px"></div>
       <div class="gmodal-btns">
-        <button class="btn" onclick="closeGModal()" style="margin-right:10px">← Back</button>
-        <button class="btn" onclick="closeGModal();startBattle()" style="background:var(--gold2);color:#000">⚔ Enter Battle →</button>
+        <button class="btn" onclick="closeGModal()" style="margin-right:6px">← Back</button>
+        <button class="btn" onclick="openGenEquip()" style="margin-right:6px;background:#333;border-color:var(--gold2)">🎒 Equip</button>
+        <button class="btn" onclick="closeGModal();startBattle()" style="background:var(--gold2);color:#000">⚔ Battle →</button>
       </div>
     </div>
   </div>
@@ -441,13 +443,13 @@ const WEAPON_REACH={halberd:115,glaive:108,spear:102,sword:72,bow:125,fan:58};
 //  GENERALS
 // ═══════════════════════════════════════════════════
 const GENS=[
-  {id:'guanyu',    name:'Guan Yu',      title:'Dragon Slayer',       f:'SHU',char:'關',wep:'glaive',
+  {id:'guanyu',    name:'Guan Yu',      title:'Dragon Slayer',       f:'SHU',char:'關',wep:'glaive',sig:{weapon:'greendragon'},
    war:95,str:90,dex:90,spd:80,maxHp:560,
    special:{name:'Dragon Slayer',desc:'Ignores defense',
      fn:(p,e,PB,EB)=>{const d=Math.floor(p.war*2.1+rand(10,40));EB.hp=Math.max(0,EB.hp-d);spawnHit(EB.x,GNDX-60,d,true,'#66cc66');}},
    q:{win:["Loyalty and righteousness triumph!"],los:["The Green Dragon rests today."]}},
 
-  {id:'zhangfei',  name:'Zhang Fei',    title:'Tiger of Chang Ban',  f:'SHU',char:'張',wep:'spear',
+  {id:'zhangfei',  name:'Zhang Fei',    title:'Tiger of Chang Ban',  f:'SHU',char:'張',wep:'spear',sig:{weapon:'serpentspear'},
    war:92,str:85,dex:85,spd:80,maxHp:580,
    special:{name:'Tiger Roar',desc:'Stuns enemy briefly',
      fn:(p,e,PB,EB)=>{const d=Math.floor(p.war*1.5+rand(5,20));EB.hp=Math.max(0,EB.hp-d);EB.stunTimer=80;spawnHit(EB.x,GNDX-60,d,true,'#66cc66');}},
@@ -519,7 +521,7 @@ const GENS=[
      fn:(p,e,PB,EB)=>{EB.burnTimer=300;EB.burnDmg=3;addFx('🔥 FIRE ATTACK! Enemy burns!','#ff4400');}},
    q:{win:["The Grand Viceroy stands victorious!"],los:["Sky-born talent, cut down."]}},
 
-  {id:'lubu',      name:'Lü Bu',        title:'God of War',          f:'IND',char:'呂',wep:'halberd',
+  {id:'lubu',      name:'Lü Bu',        title:'God of War',          f:'IND',char:'呂',wep:'halberd',sig:{horse:'redhare'},
    war:97,str:80,dex:95,spd:90,maxHp:580,
    special:{name:'Halberd Sky',desc:'Massive reach + crushing damage',
      fn:(p,e,PB,EB)=>{const d=Math.floor(p.war*2.5+rand(15,40));EB.hp=Math.max(0,EB.hp-d);EB.hurtTimer=30;spawnHit(EB.x,GNDX-60,d,true,'#ffcc66');}},
@@ -572,18 +574,27 @@ const RWDS={
   ],
 };
 
-let PR={deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:0,wins:0};
+let PR={deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:0,wins:0,genEquipped:{}};
 let usedCardId=null;
-function freshPR(){return{deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:500,wins:0};}
+function freshPR(){return{deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:500,wins:0,genEquipped:{}};}
 const GOLD={
   earn:{midWin:20,fullWin:50,lose:10},
   buy:{cardT1:50,cardT2:150,wife:80,scripture:100,horse:120,weapon:130},
   sell:{cardT1:25,cardT2:75,wife:40,scripture:40,horse:60,weapon:65}
 };
+function initGenEquip(id){
+  if(PR.genEquipped[id])return;
+  const gen=GENS.find(g=>g.id===id);
+  const sig=gen?.sig;
+  PR.genEquipped[id]={wife:null,scripture:null,horse:null,weapon:null};
+  if(sig?.weapon){const item=RWDS.weapons.find(w=>w.id===sig.weapon);if(item)PR.genEquipped[id].weapon={...item,sig:true};}
+  else if(sig?.horse){const item=RWDS.horses.find(h=>h.id===sig.horse);if(item)PR.genEquipped[id].horse={...item,sig:true};}
+}
 function initDeck(){
   const pool=[...GENS];
   const a=pick(pool),b=pick(pool.filter(g=>g.id!==a.id));
   PR.deck=[{id:a.id},{id:b.id}];
+  PR.deck.forEach(c=>initGenEquip(c.id));
 }
 function refreshRWDSDescs(){
   const allRwds=[...RWDS.wives,...RWDS.scriptures,...RWDS.horses,...RWDS.weapons];
@@ -601,6 +612,8 @@ function loadPR(){
       if(PR.gold===undefined)PR.gold=0;
       if(!PR.weapons)PR.weapons=[];
       if(PR.equipped.weapon===undefined)PR.equipped.weapon=null;
+      if(!PR.genEquipped)PR.genEquipped={};
+      PR.deck.forEach(c=>initGenEquip(c.id));
     }
     else{PR=freshPR();initDeck();}
   }}catch(e){PR=freshPR();initDeck();}
@@ -1668,9 +1681,21 @@ function pickG(id){
     sb('WAR',g.war,'#cc5555')+sb('STR',g.str,'#cc7733')+sb('DEX',g.dex,'#55cc88')+sb('SPD',g.spd,'#44aaff')+
     `<div class="srow" style="margin-top:2px"><span class="sl">HP</span><span style="color:var(--gold);font-size:.88em">${g.maxHp}</span></div>`;
   document.getElementById('gmodal-skill').innerHTML=`✨ <b>${g.special?.name||'—'}</b>: ${g.special?.desc||''}`;
+  const ge=PR.genEquipped[g.id]||{};
+  const eqParts=[];
+  if(ge.weapon)eqParts.push(`⚔️ ${ge.weapon.name||ge.weapon}`);
+  if(ge.horse) eqParts.push(`🐎 ${ge.horse.name||ge.horse}`);
+  if(ge.scripture){const sc=PR.scriptures.find(r=>r.id===(ge.scripture?.id||ge.scripture));if(sc)eqParts.push(`📜 ${sc.name}`);}
+  if(ge.wife){const w=PR.wives.find(r=>r.id===(ge.wife?.id||ge.wife));if(w)eqParts.push(`💍 ${w.name}`);}
+  document.getElementById('gmodal-equip').textContent=eqParts.length?eqParts.join('  ·  '):'No equipment';
   modal.classList.add('open');
 }
 function closeGModal(){document.getElementById('gmodal').classList.remove('open');}
+function openGenEquip(){
+  if(!selGen)return;
+  closeGModal();
+  showEquipModal(selGen.id);
+}
 
 function showLightbox(src){const lb=document.getElementById('lightbox');document.getElementById('lightbox-img').src=src;lb.classList.add('open');}
 function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
@@ -1683,41 +1708,59 @@ function renderRewardItem(r,onclick,badge){
     <div style="color:var(--dim);font-size:.75em">${r.desc}</div></div></div>`;
 }
 
-function showEquipModal(prefix){
+let equipModalGenId=null;
+function showEquipModal(genId,prefix){
+  equipModalGenId=genId||null;
+  const ge=genId?(PR.genEquipped[genId]||{}):{};
+  const genName=genId?GENS.find(g=>g.id===genId)?.name:'';
   const sections=[
     {label:'💍 Companion (Wife)',pool:PR.wives,slot:'wife'},
     {label:'📜 Scripture',pool:PR.scriptures,slot:'scripture'},
-    {label:'🐎 Mount (Horse)',pool:PR.horses,slot:'horse'},
-    {label:'⚔️ Weapon',pool:PR.weapons,slot:'weapon'},
   ];
-  let h='';
+  let h=genId?`<div style="color:var(--gold);font-size:.85em;margin-bottom:8px">Equipping: <b>${genName}</b></div>`:'';
+  // Show weapon/horse as fixed display if they exist on the general
+  if(genId){
+    const wp=ge.weapon;const hs=ge.horse;
+    if(wp)h+=`<div style="color:var(--gold2);font-size:.75em;margin:6px 0 2px">⚔️ Weapon</div><div style="padding:6px 8px;border:1px solid #555;border-radius:4px;color:var(--gold);font-size:.85em">${wp.name||wp} ${wp.sig?'<span style="color:#888;font-size:.75em">(Signature)</span>':''}</div>`;
+    if(hs)h+=`<div style="color:var(--gold2);font-size:.75em;margin:6px 0 2px">🐎 Mount</div><div style="padding:6px 8px;border:1px solid #555;border-radius:4px;color:var(--gold);font-size:.85em">${hs.name||hs} ${hs.sig?'<span style="color:#888;font-size:.75em">(Signature)</span>':''}</div>`;
+  }
   sections.forEach(({label,pool,slot})=>{
     h+=`<div style="color:var(--gold2);font-size:.75em;letter-spacing:2px;margin:10px 0 4px">${label}</div>`;
     if(!pool.length){h+='<div style="color:var(--dim);font-size:.8em;padding:4px 8px">None collected</div>';}
     else{
-      // deduplicate, show count
       const seen={};pool.forEach(r=>{seen[r.id]=(seen[r.id]||{...r,count:0});seen[r.id].count++;});
       Object.values(seen).forEach(r=>{
-        const eq=PR.equipped[slot]?.id===r.id;
+        const equippedId=genId?(ge[slot]?.id||ge[slot]):PR.equipped[slot]?.id;
+        const eq=equippedId===r.id;
         h+=renderRewardItem(r,`equipItem('${slot}','${r.id}')`,
           eq?'<span style="color:#44ff88;font-size:.75em"> ✓ EQUIPPED</span>':
             r.count>1?`<span style="color:#888;font-size:.75em"> ×${r.count}</span>`:'');
       });
     }
-    // Unequip option
-
   });
   document.getElementById('equip-content').innerHTML=(prefix||'')+h;
   document.getElementById('equip-modal').classList.add('open');
 }
 function closeEquip(){document.getElementById('equip-modal').classList.remove('open');}
 function equipItem(slot,id){
-  if(!id||PR.equipped[slot]?.id===id){PR.equipped[slot]=null;}
-  else{
-    const pool=slot==='wife'?PR.wives:slot==='scripture'?PR.scriptures:slot==='weapon'?PR.weapons:PR.horses;
-    PR.equipped[slot]=pool.find(r=>r.id===id)||null;
+  if(equipModalGenId){
+    const ge=PR.genEquipped[equipModalGenId]||(PR.genEquipped[equipModalGenId]={wife:null,scripture:null,horse:null,weapon:null});
+    const curId=ge[slot]?.id||ge[slot];
+    if(!id||curId===id){ge[slot]=null;}
+    else{
+      const pool=slot==='wife'?PR.wives:PR.scriptures;
+      const item=pool.find(r=>r.id===id);
+      ge[slot]=item?item.id:null;
+    }
+    savePR();showEquipModal(equipModalGenId);
+  } else {
+    if(!id||PR.equipped[slot]?.id===id){PR.equipped[slot]=null;}
+    else{
+      const pool=slot==='wife'?PR.wives:slot==='scripture'?PR.scriptures:slot==='weapon'?PR.weapons:PR.horses;
+      PR.equipped[slot]=pool.find(r=>r.id===id)||null;
+    }
+    savePR();showEquipModal(null);
   }
-  savePR();showEquipModal();
 }
 
 function showSacrificeModal(pool){
@@ -1753,7 +1796,7 @@ function renderMarket(){
       {label:'Common General Card',desc:'Random Tier 1 general',price:200,action:"buyCard(1)"},
       {label:'Normal Scripture',   desc:'Random non-elite manual',price:GOLD.buy.scripture,action:"buyNormal('scripture')"},
       {label:'Normal Horse',       desc:'Random non-elite horse', price:GOLD.buy.horse,    action:"buyNormal('horse')"},
-      {label:'Normal Weapon',      desc:'Random non-elite weapon',price:GOLD.buy.weapon,   action:"buyNormal('weapon')"},
+      {label:'Normal Weapon',      desc:'Assign to a general',    price:GOLD.buy.weapon,   action:"showBuyWeaponPicker()"},
     ];
     el.innerHTML=rows.map(r=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;margin:4px 0;border:1px solid var(--gold2);border-radius:4px">
@@ -1763,11 +1806,9 @@ function renderMarket(){
           Buy 🪙${r.price}</button>
       </div>`).join('');
   } else {
-    // Sell: scriptures, horses, weapons only — stacked by id with picture
+    // Sell: scriptures only (weapons/horses go direct to generals)
     const sellable=[
       ...PR.scriptures.map(r=>({...r,_t:'scripture'})),
-      ...PR.horses.map(r=>({...r,_t:'horse'})),
-      ...PR.weapons.map(r=>({...r,_t:'weapon'}))
     ];
     if(!sellable.length){el.innerHTML='<div style="color:var(--dim);text-align:center;padding:16px">Nothing to sell</div>';return;}
     // Group by id
@@ -1805,6 +1846,31 @@ function buyNormal(type){
   else PR.weapons.push(r);
   if(!PR.equipped[type])PR.equipped[type]=r;
   savePR();renderMarket();showTitle();
+}
+function showBuyWeaponPicker(){
+  if(PR.gold<GOLD.buy.weapon){return;}
+  const sigIds=GENS.map(g=>g.sig?.weapon||g.sig?.horse).filter(Boolean);
+  const pool=RWDS.weapons.filter(r=>!r.elite&&!sigIds.includes(r.id));
+  if(!pool.length)return;
+  const gens=PR.deck.map(c=>GENS.find(g=>g.id===c.id)).filter(Boolean);
+  const el=document.getElementById('market-content');
+  const pickerHTML=`<div style="border:1px solid var(--gold2);border-radius:6px;padding:10px;margin-top:8px;background:rgba(0,0,0,.4)">
+    <div style="color:var(--gold);font-size:.85em;margin-bottom:6px">⚔️ Assign weapon to which general?</div>
+    ${gens.map(g=>`<button onclick="buyWeaponForGeneral('${g.id}')" class="btn" style="margin:3px;font-size:.78em;padding:4px 10px">${g.name}</button>`).join('')}
+    <button onclick="renderMarket()" class="btn" style="margin:3px;font-size:.78em;padding:4px 10px;opacity:.6">Cancel</button>
+  </div>`;
+  el.innerHTML+=pickerHTML;
+}
+function buyWeaponForGeneral(genId){
+  if(PR.gold<GOLD.buy.weapon)return;
+  const sigIds=GENS.map(g=>g.sig?.weapon||g.sig?.horse).filter(Boolean);
+  const pool=RWDS.weapons.filter(r=>!r.elite&&!sigIds.includes(r.id));
+  const r=pick(pool);if(!r)return;
+  PR.gold-=GOLD.buy.weapon;
+  if(!PR.genEquipped[genId])initGenEquip(genId);
+  PR.genEquipped[genId].weapon=r;
+  savePR();renderMarket();
+  addFx(`⚔️ ${r.name} → ${GENS.find(g=>g.id===genId)?.name}`,'#e8c44d');
 }
 function buyReward(type){
   const price=GOLD.buy[type];
@@ -1881,9 +1947,13 @@ function startBattle(){
   if(!selGen)return;
   PG=JSON.parse(JSON.stringify(selGen));
   if(selGen.special?.fn)PG.special.fn=selGen.special.fn;
-  // Apply equipped rewards (one per slot)
+  // Apply equipped rewards (per-general slots)
   const wifeSpd={diaochan:5,xiaoqiao:10,daqiao:15,wangzhaojun:10,xishi:10,zhenji:8,huangyueying:0,caiwenji:0,ladysun:0,ladybian:0};
-  const w=PR.equipped.wife,sc=PR.equipped.scripture,h=PR.equipped.horse,wp=PR.equipped.weapon;
+  const ge=PR.genEquipped[PG.id]||{};
+  const w=ge.wife?PR.wives.find(r=>r.id===ge.wife)||ge.wife:null;
+  const sc=ge.scripture?PR.scriptures.find(r=>r.id===ge.scripture)||ge.scripture:null;
+  const h=ge.horse||null;
+  const wp=ge.weapon||null;
   if(w){
     PG.spd=Math.min(200,PG.spd+(wifeSpd[w.id]??0));
     if(w.id==='diaochan')  {PG.str=Math.min(150,PG.str+10);}
@@ -1948,6 +2018,7 @@ function addCardToDecK(tier){
   const pool=(tier===2?TIER2:TIER1).filter(id=>id!==usedCardId);
   const id=pick(pool)||pick(tier===2?TIER2:TIER1);
   PR.deck.push({id});
+  initGenEquip(id);
   const name=GENS.find(g=>g.id===id)?.name||id;
   addFx(`🎴 +${name} (${tier===2?'Elite':'Common'})`,tier===2?'#e8c44d':'#888888');
   savePR();
@@ -1960,7 +2031,6 @@ function applyLossPenalty(isBattle2){
   if(isBattle2){
     const pool=[
       ...PR.scriptures.map((r,i)=>({...r,_type:'scripture',_i:i})),
-      ...PR.weapons.map((r,i)=>({...r,_type:'weapon',_i:i}))
     ];
     if(pool.length) return pool; // caller shows choice modal
   }
@@ -2021,10 +2091,13 @@ function startNextEnemy(){
 //  REWARD
 // ═══════════════════════════════════════════════════
 function openReward(){
+  const sigIds=GENS.map(g=>g.sig?.weapon||g.sig?.horse).filter(Boolean);
   const availWives=RWDS.wives.filter(w=>!PR.wives.some(pw=>pw.id===w.id));
+  const availWeapons=RWDS.weapons.filter(w=>!sigIds.includes(w.id));
+  const availHorses=RWDS.horses.filter(h=>!sigIds.includes(h.id));
   const s1=(availWives.length&&Math.random()<.5)?pick(availWives):pick(RWDS.scriptures);
-  const s2=Math.random()<.5?pick(RWDS.scriptures):pick(RWDS.weapons);
-  const s3=pick(RWDS.horses);
+  const s2=Math.random()<.5?pick(RWDS.scriptures):pick(availWeapons)||pick(RWDS.scriptures);
+  const s3=pick(availHorses)||pick(RWDS.scriptures);
   rwdPool=[s1,s2,s3];
   rwdIdx=null;
   document.getElementById('ropts').innerHTML=rwdPool.map((r,i)=>`
@@ -2042,13 +2115,19 @@ function claimSpecific(i){
 function pickRw(i){rwdIdx=i;}
 function claimRew(){
   const r=rwdPool[rwdIdx];
-  const typeToSlot={wife:'wife',scripture:'scripture',horse:'horse',weapon:'weapon'};
-  const slot=typeToSlot[r.type]||'wife';
-  if(r.type==='wife')PR.wives.push(r);
-  else if(r.type==='scripture')PR.scriptures.push(r);
-  else if(r.type==='horse')PR.horses.push(r);
-  else if(r.type==='weapon')PR.weapons.push(r);
-  if(!PR.equipped[slot])PR.equipped[slot]=r; // auto-equip if slot empty
+  if(!PR.genEquipped[usedCardId])initGenEquip(usedCardId);
+  const ge=PR.genEquipped[usedCardId];
+  if(r.type==='wife'){
+    PR.wives.push(r);
+    if(!ge.wife)ge.wife=r.id; // auto-equip to this general if slot empty
+  } else if(r.type==='scripture'){
+    PR.scriptures.push(r);
+    if(!ge.scripture)ge.scripture=r.id;
+  } else if(r.type==='horse'){
+    ge.horse=r; // direct to general, no global inventory
+  } else if(r.type==='weapon'){
+    ge.weapon=r; // direct to general, no global inventory
+  }
   PR.wins++;savePR();showTitle();
 }
 
@@ -2065,7 +2144,7 @@ function spawnConfetti(){
 }
 
 loadPR();if(PR.deck.length===0)initDeck();
-if(!PR.deck.some(c=>c.id==='asiainvincible')){PR.deck.push({id:'asiainvincible'});savePR();}
+if(!PR.deck.some(c=>c.id==='asiainvincible')){PR.deck.push({id:'asiainvincible'});initGenEquip('asiainvincible');savePR();}
 loadSprites();loadSheets();showTitle();
 if(PR.wins===0&&!localStorage.getItem('tkd_tutorial'))setTimeout(()=>{showTutorial();localStorage.setItem('tkd_tutorial','1');},800);
 document.getElementById('btn-nav-close').style.display='flex';
