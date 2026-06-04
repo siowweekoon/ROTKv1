@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.9</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.9.0</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -816,7 +816,7 @@ function drawCombatant(cb, gd, isPlayer, frame) {
   // For attack frame: body stays anchored at cb.x; weapon extends OUTWARD.
   // Player faces right → extra width goes right  (left edge stays at cb.x - SP_W/2)
   // Enemy faces left (mirrored) → extra width also goes toward player after flip
-  const enemyYOff=isPlayer?0:-10;
+  const enemyYOff=isPlayer?0:-5;
   const sf=getSheetFrame(gd.id,cb.state,cb.atkFrame,frame,cb.usingSpecial);
   if(sf){
     const sfY=GNDX-sf.dh+18+sf.yOff+enemyYOff;
@@ -1548,8 +1548,13 @@ function gameLoop(){
   CX.clearRect(0,0,CW,CH);
   drawBG();
   if(PB&&EB){
-    drawCombatant(PB,PG,true,frameCount);
-    drawCombatant(EB,EG,false,frameCount);
+    if(PB.usingSpecial){
+      drawCombatant(EB,EG,false,frameCount);
+      drawCombatant(PB,PG,true,frameCount);
+    } else {
+      drawCombatant(PB,PG,true,frameCount);
+      drawCombatant(EB,EG,false,frameCount);
+    }
   }
   drawParts();
   if(!battleRunning&&PB&&EB){
