@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.8</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.9</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -255,16 +255,16 @@ const SPRITES = {
 
 <!-- GENERAL PREVIEW MODAL -->
 <div id="gmodal" class="gmodal-bg" onclick="closeGModal()">
-  <div class="gmodal-box" onclick="event.stopPropagation()">
+  <div class="gmodal-box" onclick="event.stopPropagation()" style="position:relative">
+    <button onclick="showArmoury()" style="position:absolute;top:8px;right:8px;z-index:10;background:#1a1200;border:1px solid var(--gold2);color:var(--gold);font-size:.72em;padding:5px 10px;border-radius:4px;cursor:pointer;letter-spacing:.5px">🏛 Armoury</button>
     <img id="gmodal-img" src="" alt="" class="gmodal-img" style="cursor:zoom-in" onclick="showLightbox(this.src)" title="Click to zoom">
     <div class="gmodal-info">
       <div id="gmodal-name" class="gmodal-name"></div>
       <div id="gmodal-title" class="gmodal-title"></div>
       <div id="gmodal-stats" class="gmodal-stats"></div>
       <div id="gmodal-skill" class="gmodal-skill"></div>
-      <div class="gmodal-btns" style="margin-top:10px">
+      <div class="gmodal-btns" style="margin-top:10px;justify-content:space-between;width:100%">
         <button class="btn" onclick="closeGModal()">← Back</button>
-        <button class="btn" onclick="showArmoury()" style="background:#1a1200;border-color:var(--gold2)">🏛 Armoury</button>
         <button class="btn" onclick="closeGModal();startBattle()" style="background:var(--gold2);color:#000">⚔ Battle →</button>
       </div>
     </div>
