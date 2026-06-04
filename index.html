@@ -123,8 +123,7 @@ body{background:var(--bg);color:var(--text);font-family:'Georgia',serif;min-heig
   .ggrid{grid-template-columns:repeat(3,1fr)}
 }
 /* ARMOURY RESPONSIVE */
-.armoury-hero-img{max-height:60vh;max-width:88%;object-fit:contain;display:block;margin:0 auto;filter:drop-shadow(0 10px 30px rgba(0,0,0,.95))}
-@media(orientation:landscape){.armoury-hero-img{max-height:85vh;max-width:70%}}
+.armoury-hero-img{object-fit:contain;display:block;margin:0 auto;filter:drop-shadow(0 10px 30px rgba(0,0,0,.95))}
 .armoury-hero-layout{display:flex;flex-direction:column;align-items:center;width:100%;gap:14px}
 .armoury-hero-details{width:100%}
 .armoury-scroll-hint{text-align:center;color:#666;font-size:.6em;letter-spacing:3px;margin-bottom:10px}
@@ -220,7 +219,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.9.8</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.9.9</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1826,10 +1825,12 @@ function showArmoury(){
     else if(hasAr)  heroSrc=ref.armor_only;
   }
   if(heroSrc){
+    const isLand=window.innerWidth>window.innerHeight;
+    const heroStyle=isLand?'max-height:85vh;max-width:70%':'max-height:60vh;max-width:88%';
     document.getElementById('armoury-cards').innerHTML=`
       <div class="armoury-hero-layout">
         <div style="text-align:center;flex-shrink:0">
-          <img src="${heroSrc}" class="armoury-hero-img">
+          <img src="${heroSrc}" class="armoury-hero-img" style="${heroStyle}">
         </div>
         <div class="armoury-hero-details">
           <div class="armoury-scroll-hint" style="opacity:.55">↓ &nbsp;ITEM DETAILS&nbsp; ↓</div>
