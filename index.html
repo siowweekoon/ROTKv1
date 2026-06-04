@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.3</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v1.8.4</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1675,22 +1675,21 @@ function showTitle(){
 }
 
 function showInventory(){
-  // Show equipped summary at top, then full equip selection below
   const eq=PR.equipped;
-  const thumb=r=>r.img?`<img src="${r.img}" onclick="showLightbox('${r.img}')" style="width:28px;height:36px;object-fit:cover;object-position:top;border:1px solid var(--gold2);cursor:zoom-in;flex-shrink:0">`:`<span style="font-size:1.2em">${r.icon}</span>`;
-  const slots=['wife','scripture','horse','weapon'];
-  const labels={wife:'👰 Wife',scripture:'📖 Scripture',horse:'🐎 Horse',weapon:'⚔️ Weapon'};
-  let equipped='<div style="margin-bottom:12px"><div style="color:var(--gold2);font-size:.72em;letter-spacing:2px;margin-bottom:6px">CURRENTLY EQUIPPED</div><div style="display:flex;gap:8px;flex-wrap:wrap">';
-  slots.forEach(s=>{
+  const thumb=r=>r?( r.img?`<img src="${r.img}" onclick="showLightbox('${r.img}')" style="width:36px;height:46px;object-fit:cover;object-position:top;border:1px solid var(--gold2);cursor:zoom-in;border-radius:3px">`:`<span style="font-size:1.4em">${r.icon}</span>` ):`<div style="width:36px;height:46px;border:1px dashed #555;border-radius:3px"></div>`;
+  const slots=[{s:'wife',label:'💍 Wife'},{s:'scripture',label:'📜 Scripture'},{s:'horse',label:'🐎 Horse'}];
+  let prefix=`<div style="margin-bottom:14px">
+    <div style="color:var(--gold2);font-size:.72em;letter-spacing:2px;margin-bottom:8px">✦ CURRENTLY EQUIPPED</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap">`;
+  slots.forEach(({s,label})=>{
     const r=eq[s];
-    equipped+=`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;opacity:${r?'1':'.3'}">
-      ${r?thumb(r):`<div style="width:28px;height:36px;border:1px dashed var(--gold2);border-radius:2px"></div>`}
-      <div style="font-size:.6em;color:var(--dim)">${labels[s].split(' ')[1]||labels[s]}</div>
+    prefix+=`<div style="display:flex;flex-direction:column;align-items:center;gap:3px;opacity:${r?'1':'.35'}">
+      ${thumb(r)}
+      <div style="font-size:.62em;color:var(--dim);text-align:center;max-width:52px">${r?r.name:label}</div>
     </div>`;
   });
-  equipped+='</div></div>';
-  // Prepend to equip modal content
-  showEquipModal(equipped);
+  prefix+='</div></div><hr style="border-color:#333;margin-bottom:10px">';
+  showEquipModal(null,prefix);
 }
 
 function showSelect(){
@@ -1748,10 +1747,18 @@ function pickG(id){
     `<div class="srow" style="margin-top:2px"><span class="sl">HP</span><span style="color:var(--gold);font-size:.88em">${g.maxHp}</span></div>`;
   document.getElementById('gmodal-skill').innerHTML=`✨ <b>${g.special?.name||'—'}</b>: ${g.special?.desc||''}`;
   const ge=PR.genEquipped[g.id]||{};
-  const eqParts=[];
-  if(ge.weapon)eqParts.push(`⚔️ ${ge.weapon.name}`);
-  if(ge.armor) eqParts.push(`🛡 ${ge.armor.name}`);
-  document.getElementById('gmodal-equip').textContent=eqParts.length?eqParts.join('  ·  '):'No equipment';
+  const itemCard=(item,label)=>item?`
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;max-width:70px">
+      ${item.img?`<img src="${item.img}" onclick="event.stopPropagation();showLightbox('${item.img}')" style="width:52px;height:66px;object-fit:cover;object-position:top;border:1px solid var(--gold2);border-radius:3px;cursor:zoom-in">`:`<div style="width:52px;height:66px;display:flex;align-items:center;justify-content:center;border:1px solid var(--gold2);border-radius:3px;font-size:1.8em">${item.icon||'⚔️'}</div>`}
+      <div style="font-size:.58em;color:var(--gold);text-align:center;line-height:1.2">${item.name}</div>
+      <div style="font-size:.52em;color:var(--dim);text-align:center;line-height:1.2">${item.desc}</div>
+    </div>`:`<div style="display:flex;flex-direction:column;align-items:center;gap:3px;max-width:70px;opacity:.3">
+      <div style="width:52px;height:66px;border:1px dashed #555;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:1.4em">${label==='weapon'?'⚔️':'🛡'}</div>
+      <div style="font-size:.58em;color:var(--dim)">No ${label}</div>
+    </div>`;
+  document.getElementById('gmodal-equip').innerHTML=`
+    <div style="color:var(--gold2);font-size:.68em;letter-spacing:2px;margin-bottom:6px">✦ PERSONAL EQUIPMENT</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">${itemCard(ge.weapon,'weapon')}${itemCard(ge.armor,'armor')}</div>`;
   modal.classList.add('open');
 }
 function closeGModal(){document.getElementById('gmodal').classList.remove('open');}
