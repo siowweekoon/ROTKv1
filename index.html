@@ -1805,7 +1805,7 @@ function showArmoury(){
       <div style="font-size:.58em;color:#444;margin-top:4px">Win battles to earn</div></div>`;
     return`<div style="flex:1;min-width:130px;max-width:260px;background:${bg};border:1px solid ${accent};border-radius:14px;padding:14px 10px 12px;text-align:center;box-shadow:0 0 24px ${glow},inset 0 0 30px rgba(0,0,0,0.5)">
       <div style="font-size:.58em;color:${accent};letter-spacing:3px;margin-bottom:10px;font-weight:bold">${lbl}</div>
-      ${item.img?`<img src="${item.img}" style="width:110px;height:145px;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,1));margin-bottom:10px;display:block;margin-left:auto;margin-right:auto">`:`<div style="font-size:3.5em;margin-bottom:10px">${item.icon||'⚔️'}</div>`}
+      ${item.img?`<img src="${item.img}" onclick="showLightbox('${item.img}')" style="width:110px;height:145px;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,1));margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;cursor:zoom-in">`:`<div style="font-size:3.5em;margin-bottom:10px">${item.icon||'⚔️'}</div>`}
       <div style="color:var(--gold);font-size:.85em;font-weight:bold;margin-bottom:4px;line-height:1.3">${item.name}</div>
       <div style="color:#999;font-size:.68em;line-height:1.5;margin-bottom:6px">${item.desc}</div>
       <div style="font-size:.55em;color:${accent};letter-spacing:2px;opacity:.8">✦ UNIQUE ✦</div>
