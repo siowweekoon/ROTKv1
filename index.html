@@ -219,7 +219,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.2</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.3</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1051,15 +1051,15 @@ const SHEET_DEFS = {
     }
   },
   machao:{
-    src:'Sprites/clean/MaChao_idle_charge_atk.png',
-    displayH:148, yOff:-35,
+    src:'Sprites/clean/Machao_idle_back_atk_charge_Special.png',
+    displayH:140, yOff:-25, useDarkBg:true,
     anims:{
-      idle:   {x:1,   y:133,w:574,h:540,frames:1,dur:15},
-      move:   {x:584, y:0,  w:522,h:676,frames:1,dur:6},
-      back:   {x:584, y:0,  w:522,h:676,frames:1,dur:6},
-      charge: {x:584, y:0,  w:522,h:676,frames:1,dur:6},
-      atk:    {x:1122,y:3,  w:835,h:686,frames:1,dur:4},
-      special:{altSrc:'Sprites/clean/MaChao_charge_special.png', darkBg:true, x:820, y:0, w:820, h:656, frames:1, dur:8},
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
+      move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
     }
   },  asiainvincible:{
     src:'Sprites/clean/AsiaTheInvincinble_idle_move_atk_charging_Special%20Ability.png',
@@ -1098,13 +1098,15 @@ const SHEET_DEFS = {
     }
   },
   zhouyu:{
-    src:'Sprites/clean/Zhouyu_charge_special.png',
-    displayH:148, yOff:-15, useDarkBg:true,
+    src:'Sprites/clean/ZhouYu_idle_back_atk_charge_Special.png',
+    displayH:140, yOff:-25, useDarkBg:true,
     anims:{
-      charge: {x:0,   y:0, w:623, h:650, frames:1, dur:6},
-      move:   {x:0,   y:0, w:623, h:650, frames:1, dur:6},
-      atk:    {x:0,   y:0, w:623, h:650, frames:1, dur:4},
-      special:{x:623, y:0, w:624, h:650, frames:1, dur:8},
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
+      move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
     }
   },
   zhugeliang:{
