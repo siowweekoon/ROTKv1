@@ -219,7 +219,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.0</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.1</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1016,13 +1016,15 @@ const SHEET_B64={};
 const SHEET_DEFS = {
   // src = default image; anims can override with altSrc for frames from a different file
   guanyu:{
-    src:'Sprites/clean/GuanYu_idle_charge_atk.png',
-    displayH:130, yOff:-20, useDarken:true,
+    src:'Sprites/clean/GuanYu_idle_back_atk_charge_Special.png',
+    displayH:140, yOff:-25, useDarkBg:true,
     anims:{
-      charge: {altSrc:'Sprites/clean/GuanYu_charging_Special%20Ability.png',x:9,  y:171,w:534,h:420,frames:1,dur:6, dw:190,dh:149},
-      move:   {altSrc:'Sprites/clean/GuanYu_charging_Special%20Ability.png',x:9,  y:171,w:534,h:420,frames:1,dur:6, dw:190,dh:149},
-      atk:    {x:1207,y:184,w:770,h:568,frames:1,dur:4},
-      special:{altSrc:'Sprites/clean/GuanYu_charging_Special%20Ability.png',x:553,y:11, w:578,h:635,frames:1,dur:8, dw:238,dh:260},
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
+      move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
     }
   },
   zhaoyun:{
@@ -1142,13 +1144,15 @@ const SHEET_DEFS = {
     }
   },
   zhangfei:{
-    src:'Sprites/clean/ZhangFei_charge_special.png',
-    displayH:150, yOff:-15, useDarkBg:true,
+    src:'Sprites/clean/ZhangFei_idle_back_atk_charge_Special.png',
+    displayH:140, yOff:-25, useDarkBg:true,
     anims:{
-      charge: {x:0,   y:0, w:711, h:704, frames:1, dur:6},
-      move:   {x:0,   y:0, w:711, h:704, frames:1, dur:6},
-      atk:    {x:0,   y:0, w:711, h:704, frames:1, dur:4},
-      special:{x:711, y:0, w:711, h:704, frames:1, dur:8},
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
+      move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
     }
   },
   dongzhuo:{
