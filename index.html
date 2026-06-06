@@ -219,7 +219,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.5</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.6</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -664,14 +664,14 @@ function refreshRWDSDescs(){
   const allRwds=[...RWDS.wives,...RWDS.scriptures,...RWDS.horses,...RWDS.weapons,...(RWDS.armors||[])];
   const byId={};allRwds.forEach(r=>{byId[r.id]=r;});
   ['wives','scriptures','horses','weapons'].forEach(key=>{
-    PR[key].forEach(item=>{const src=byId[item.id];if(src){item.desc=src.desc;item.name=src.name;}});
+    PR[key].forEach(item=>{const src=byId[item.id];if(src){item.desc=src.desc;item.name=src.name;item.img=src.img;}});
   });
   ['wife','scripture','horse','weapon'].forEach(slot=>{
-    const eq=PR.equipped[slot];if(eq){const src=byId[eq.id];if(src){eq.desc=src.desc;eq.name=src.name;}}
+    const eq=PR.equipped[slot];if(eq){const src=byId[eq.id];if(src){eq.desc=src.desc;eq.name=src.name;eq.img=src.img;}}
   });
   Object.values(PR.genEquipped||{}).forEach(ge=>{
-    if(ge.weapon){const src=byId[ge.weapon.id];if(src){ge.weapon.desc=src.desc;ge.weapon.name=src.name;}}
-    if(ge.armor) {const src=byId[ge.armor.id]; if(src){ge.armor.desc=src.desc; ge.armor.name=src.name;}}
+    if(ge.weapon){const src=byId[ge.weapon.id];if(src){ge.weapon.desc=src.desc;ge.weapon.name=src.name;ge.weapon.img=src.img;}}
+    if(ge.armor) {const src=byId[ge.armor.id]; if(src){ge.armor.desc=src.desc; ge.armor.name=src.name; ge.armor.img=src.img;}}
   });
 }
 function loadPR(){
