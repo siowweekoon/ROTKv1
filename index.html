@@ -219,7 +219,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.8</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.9</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -987,6 +987,8 @@ let RAF=null;
 let battleStreak=0;
 let streakPool=[];
 let b3Victory=false;
+let b4Battle=false;
+let b4Victory=false;
 const STRONG_ENEMIES=['guanyu','zhangfei','zhaoyun','lubu'];
 const TIER1=['lvmeng','zhugeliang','zhouyu','sunquan','caocao','liubei','huangzhong'];
 const TIER2=['zhangfei','zhaoyun','machao','xiahoudun','zhangliao','lubu','asiainvincible','dongzhuo'];
@@ -2242,6 +2244,23 @@ function applyLossPenalty(isBattle2){
 
 function endBattle(won){
   if(won){sfxVictory();}else{sfxDefeat();}
+  if(won&&b4Battle){
+    b4Battle=false;battleStreak=0;streakPool=[];
+    PR.deck.push({id:usedCardId});addCardToDecK(2);
+    PR.gold+=GOLD.earn.fullWin;PR.wins++;b4Victory=true;savePR();
+    addFx(`👑 LEGENDARY CLEARED — ULTIMATE VICTORY! 👑`,'#ffcc00');
+    setTimeout(openReward,2200);return;
+  }
+  if(!won&&b4Battle){
+    b4Battle=false;
+    const penaltyPool=applyLossPenalty(true);
+    battleStreak=0;streakPool=[];
+    setTimeout(()=>{
+      document.getElementById('go-msg').textContent=`"${pick(PG.q.los)}"`;
+      document.getElementById('go-lost-reward').textContent=`🎴 ${GENS.find(g=>g.id===usedCardId)?.name||''} card lost → Common card`;
+      showScreen('s-gameover');if(penaltyPool)showSacrificeModal(penaltyPool);
+    },800);return;
+  }
   if(won){
     battleStreak++;
     if(battleStreak>=3){
@@ -2252,7 +2271,7 @@ function endBattle(won){
       PR.gold+=GOLD.earn.fullWin;
       PR.wins++;b3Victory=true;savePR();
       addFx(`🏆 INSANE CLEARED — LEGENDARY VICTORY! 🏆`,'#ff4444');
-      setTimeout(openReward,2200);
+      setTimeout(showB4Choice,2200);
     } else if(battleStreak>=2){
       // Win Battle 2: fight on to B3 Insane (card already returned after B1)
       PR.gold+=GOLD.earn.midWin;savePR();
@@ -2266,8 +2285,8 @@ function endBattle(won){
       setTimeout(startNextEnemy,1800);
     }
   } else {
-    const isBattle2=battleStreak>=1;
-    battleStreak=0;streakPool=[];
+    const isBattle2=battleStreak>=1||b4Battle;
+    b4Battle=false;battleStreak=0;streakPool=[];
     const penaltyPool=applyLossPenalty(isBattle2);
     setTimeout(()=>{
       document.getElementById('go-msg').textContent=`"${pick(PG.q.los)}"`;
@@ -2302,14 +2321,14 @@ function startB3(){
   const base=GENS.find(g=>g.id==='guanyu');
   EG=JSON.parse(JSON.stringify(base));
   if(base?.special?.fn)EG.special.fn=base.special.fn;
-  EG.maxHp=Math.round(EG.maxHp*1.5);
-  EG.war=Math.round(EG.war*1.5);
+  EG.maxHp=Math.round(EG.maxHp*1.25);
+  EG.war=Math.round(EG.war*1.25);
   // Full sig weapon (greendragon: WAR+15,DEX+8,STR+5) + armor (guanyu_armor: HP+50,DEX+10,WAR+8)
   EG.war+=15+8;EG.dex=(EG.dex||0)+8+10;EG.str=(EG.str||0)+5;EG.maxHp+=50;
   EG.spd+=50;EG.spdFloor=Math.max(10,EG.spd-25);
   EG.tier3=true;
   EB=mkBattle(EG,false);
-  EB.sp=100;EB.sizeScale=1.5;
+  EB.sp=100;EB.sizeScale=1.25;
   PB.hp=PB.maxHp;PB.sp=100;
   PB.x=ARENA_L+30;
   PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;PB.guarding=false;
@@ -2320,6 +2339,58 @@ function startB3(){
   battleRunning=false;
   goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
   startCountdown(()=>{battleRunning=true;addFx(`🔥 BATTLE 3/3 — INSANE GUAN YU! 🔥`,'#ff2222');});
+}
+
+function showB4Choice(){
+  const ov=document.createElement('div');
+  ov.id='b4choice-ov';
+  ov.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:50;font-family:Georgia;';
+  ov.innerHTML=`
+    <div style="color:#ff4444;font-size:1.35em;font-weight:bold;text-shadow:0 0 14px #ff0000;text-align:center">
+      🏆 INSANE CLEARED!<br><span style="font-size:.7em;color:#ffcc44">You stand victorious over Guan Yu...</span>
+    </div>
+    <div style="color:#ddd;font-size:.9em;text-align:center;max-width:270px;line-height:1.5">
+      A <b style="color:#ffcc44">4th Legendary Battle</b> awaits.<br>
+      <span style="color:#aaa;font-size:.85em">Win: 5 reward cards &amp; glory.<br>Lose: your card is gone.</span>
+    </div>
+    <button onclick="closeB4Choice(false)" style="background:#336633;color:#fff;font-size:1em;padding:13px 30px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
+      ✅ Collect 4 Rewards &amp; Rest
+    </button>
+    <button onclick="closeB4Choice(true)" style="background:#8b1a1a;color:#fff;font-size:1em;padding:13px 30px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
+      ⚔ Battle 4 — LEGENDARY (Risk it!)
+    </button>`;
+  document.getElementById('s-battle').appendChild(ov);
+}
+function closeB4Choice(doB4){
+  const ov=document.getElementById('b4choice-ov');if(ov)ov.remove();
+  if(doB4)startB4();else{b3Victory=true;b4Victory=false;openReward();}
+}
+function startB4(){
+  b3Victory=false;
+  const base=GENS.find(g=>g.id==='lubu');
+  EG=JSON.parse(JSON.stringify(base));
+  if(base?.special?.fn)EG.special.fn=base.special.fn;
+  EG.maxHp=Math.round(EG.maxHp*1.5);
+  EG.war=Math.round(EG.war*1.5);
+  const sigWp=RWDS.weapons.find(w=>w.id==='sky_piercer');
+  const sigAr=RWDS.armors.find(a=>a.id==='lubu_armor');
+  if(sigWp){EG.war+=25;EG.str+=10;EG.spd+=5;}
+  if(sigAr){EG.str+=20;EG.maxHp+=60;EG.dex=(EG.dex||0)+10;}
+  EG.spd+=60;EG.spdFloor=Math.max(10,EG.spd-25);
+  EG.tier3=true;
+  b4Battle=true;
+  EB=mkBattle(EG,false);
+  EB.sp=100;EB.sizeScale=1.35;
+  PB.hp=PB.maxHp;PB.sp=100;
+  PB.x=ARENA_L+30;
+  PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;PB.guarding=false;
+  PARTS=[];DNUM=[];FXTXT=[];ARROWS=[];
+  pHitDealt=false;eHitDealt=false;cancelGuard();
+  aiTimer=0;aiAction='approach';frameCount=0;
+  document.getElementById('e-name').textContent='👑 Lü Bu [LEGENDARY]';
+  battleRunning=false;
+  goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
+  startCountdown(()=>{battleRunning=true;addFx(`👑 BATTLE 4 — LEGENDARY LÜ BU! 👑`,'#ffcc00');});
 }
 
 // ═══════════════════════════════════════════════════
@@ -2334,9 +2405,11 @@ function openReward(){
   const s1=sigWeapon||((availWives.length&&Math.random()<.5)?pick(availWives):pick(RWDS.scriptures));
   const s2=sigArmor||pick(RWDS.scriptures);
   const s3=pick(RWDS.horses);
-  const isB3=b3Victory;b3Victory=false;
-  const s4=isB3?(availWives.length?pick(availWives):pick(RWDS.scriptures.filter(r=>r.rewardOnly)||RWDS.scriptures)):null;
-  rwdPool=isB3?[s1,s2,s3,s4]:[s1,s2,s3];
+  const isB4=b4Victory;b4Victory=false;
+  const isB3=b3Victory||isB4;b3Victory=false;
+  const s4=isB3?(availWives.length?pick(availWives):pick(RWDS.scriptures.filter(r=>r.rewardOnly).length?RWDS.scriptures.filter(r=>r.rewardOnly):RWDS.scriptures)):null;
+  const s5=isB4?(pick(RWDS.scriptures.filter(r=>r.rewardOnly).length?RWDS.scriptures.filter(r=>r.rewardOnly):RWDS.scriptures)):null;
+  rwdPool=isB4?[s1,s2,s3,s4,s5]:isB3?[s1,s2,s3,s4]:[s1,s2,s3];
   rwdIdx=null;
   document.getElementById('ropts').innerHTML=rwdPool.map((r,i)=>`
     <div class="rcard${r.img?' has-img':''}" id="rc${i}">
