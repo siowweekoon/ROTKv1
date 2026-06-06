@@ -249,6 +249,7 @@ const SPRITES = {
     <button class="ftab" data-f="WEI" onclick="swFac('WEI')">魏 WEI</button>
     <button class="ftab" data-f="WU"  onclick="swFac('WU')">吳 WU</button>
     <button class="ftab" data-f="IND" onclick="swFac('IND')">獨 IND</button>
+    <button class="ftab" data-f="SHEN" onclick="swFac('SHEN')" style="color:#cc88ff;border-color:#884499">神 WAR GODS</button>
   </div>
   <div id="ggrid" class="ggrid"></div>
   <div class="sbot">
@@ -641,9 +642,9 @@ const RWDS={
   ],
 };
 
-let PR={deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:0,wins:0,genEquipped:{}};
+let PR={deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:0,wins:0,genEquipped:{},b3Played:false};
 let usedCardId=null;
-function freshPR(){return{deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:500,wins:0,genEquipped:{}};}
+function freshPR(){return{deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:500,wins:0,genEquipped:{},b3Played:false};}
 const GOLD={
   earn:{midWin:20,fullWin:50,lose:10},
   buy:{cardT1:50,cardT2:150,wife:80,scripture:100,horse:120,weapon:130},
@@ -680,6 +681,7 @@ function loadPR(){
       if(!PR.weapons)PR.weapons=[];
       if(PR.equipped.weapon===undefined)PR.equipped.weapon=null;
       if(!PR.genEquipped)PR.genEquipped={};
+      if(!PR.b3Played)PR.b3Played=false;
       // Strip old wife/scripture/horse from genEquipped (now global)
       Object.keys(PR.genEquipped).forEach(k=>{
         const ge=PR.genEquipped[k];
@@ -1757,6 +1759,26 @@ function showSelect(){
 
 function renderSel(){
   document.querySelectorAll('.ftab').forEach(t=>t.classList.toggle('active',t.dataset.f===curFac));
+  if(curFac==='SHEN'){
+    const unlocked=PR.b3Played;
+    document.querySelector('.shdr p').textContent='⚔ Divine bosses — not playable';
+    document.getElementById('ggrid').innerHTML=`
+      <div class="gc" style="${unlocked?'cursor:pointer':'opacity:0.38;filter:grayscale(80%);cursor:not-allowed'}"
+           onclick="${unlocked?`showLightbox('Portraits/Monkey_God.png')`:'void(0)'}">
+        <div class="gport" style="background:#1a0a2a;position:relative">
+          ${unlocked?`<img src="Portraits/Monkey_God.png" alt="Monkey God" style="cursor:zoom-in">`:
+            `<span style="color:#aa66ff;font-size:2em">神</span>`}
+          ${!unlocked?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);font-size:1.8em">🔒</div>`:''}
+        </div>
+        <div class="gcontent">
+          <div class="gname" style="color:#cc88ff">Monkey God</div>
+          <div class="gtit">${unlocked?'Sun Wukong — Great Sage Equal to Heaven':'??? Enter the Insane Challenge to reveal'}</div>
+          ${unlocked?`<div style="color:#aa66ff;font-size:.75em;margin-top:5px">⚔ Boss Encountered</div>`:''}
+        </div>
+      </div>`;
+    document.getElementById('btn-ok').disabled=true;
+    return;
+  }
   const deckIds=PR.deck.map(c=>c.id);
   const deckCount={};deckIds.forEach(id=>deckCount[id]=(deckCount[id]||0)+1);
   const gens=GENS.filter(g=>g.f===curFac);
@@ -2359,6 +2381,7 @@ function startB3(){
   EG.war+=15+8;EG.dex=(EG.dex||0)+8+10;EG.str=(EG.str||0)+5;EG.maxHp+=50;
   EG.spd+=50;EG.spdFloor=Math.max(10,EG.spd-25);
   EG.tier3=true;
+  PR.b3Played=true;savePR();
   EB=mkBattle(EG,false);
   EB.sp=100;EB.sizeScale=1.25;
   PB.hp=PB.maxHp;PB.sp=100;
