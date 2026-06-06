@@ -219,7 +219,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.7</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.8</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -986,6 +986,7 @@ let frameCount=0;
 let RAF=null;
 let battleStreak=0;
 let streakPool=[];
+let b3Victory=false;
 const STRONG_ENEMIES=['guanyu','zhangfei','zhaoyun','lubu'];
 const TIER1=['lvmeng','zhugeliang','zhouyu','sunquan','caocao','liubei','huangzhong'];
 const TIER2=['zhangfei','zhaoyun','machao','xiahoudun','zhangliao','lubu','asiainvincible','dongzhuo'];
@@ -1509,13 +1510,8 @@ function updateEnemy(){
   const hpR=EB.hp/EB.maxHp;
   const spd=(BASE_SPEED+(EG.spd-60)*.04)*(EB.slowTimer>0?.45:1);
 
-  // B3: force special every 3 seconds (180 frames)
-  if(EG.tier3){
-    EB.b3SpCooldown=(EB.b3SpCooldown||180)-1;
-    if(EB.b3SpCooldown<=0&&EB.atkCool<=0){
-      EB.sp=100;EB.b3SpCooldown=180;aiAction='special';aiTimer=1;
-    }
-  }
+  // B3: passive SP regen — charges to full in ~3s on its own
+  if(EG.tier3) EB.sp=Math.min(100,EB.sp+0.55);
   aiTimer--;
   if(aiTimer<=0){
     if(EB.sp>=100&&EB.atkCool<=0) aiAction='special';
@@ -2254,7 +2250,7 @@ function endBattle(won){
       PR.deck.push({id:usedCardId});
       addCardToDecK(2);
       PR.gold+=GOLD.earn.fullWin;
-      PR.wins++;savePR();
+      PR.wins++;b3Victory=true;savePR();
       addFx(`🏆 INSANE CLEARED — LEGENDARY VICTORY! 🏆`,'#ff4444');
       setTimeout(openReward,2200);
     } else if(battleStreak>=2){
@@ -2313,7 +2309,7 @@ function startB3(){
   EG.spd+=50;EG.spdFloor=Math.max(10,EG.spd-25);
   EG.tier3=true;
   EB=mkBattle(EG,false);
-  EB.sp=100;EB.sizeScale=1.5;EB.b3SpCooldown=180;
+  EB.sp=100;EB.sizeScale=1.5;
   PB.hp=PB.maxHp;PB.sp=100;
   PB.x=ARENA_L+30;
   PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;PB.guarding=false;
@@ -2338,7 +2334,9 @@ function openReward(){
   const s1=sigWeapon||((availWives.length&&Math.random()<.5)?pick(availWives):pick(RWDS.scriptures));
   const s2=sigArmor||pick(RWDS.scriptures);
   const s3=pick(RWDS.horses);
-  rwdPool=[s1,s2,s3];
+  const isB3=b3Victory;b3Victory=false;
+  const s4=isB3?(availWives.length?pick(availWives):pick(RWDS.scriptures.filter(r=>r.rewardOnly)||RWDS.scriptures)):null;
+  rwdPool=isB3?[s1,s2,s3,s4]:[s1,s2,s3];
   rwdIdx=null;
   document.getElementById('ropts').innerHTML=rwdPool.map((r,i)=>`
     <div class="rcard${r.img?' has-img':''}" id="rc${i}">
