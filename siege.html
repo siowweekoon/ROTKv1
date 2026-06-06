@@ -55,9 +55,8 @@ function init(){
   hero={x:CASTLE_X-55,y:GROUND,walkX:null,fireTimer:0,range:205,dmg:24,fireRate:36};
   towers=TOWER_DEFS.map(d=>({...d,unlocked:false,fireTimer:0}));
   enemies=[];projs=[];parts=[];
-  wave=0;waveState='idle';spawnCount=0;spawnTimer=90;nextWaveTimer=0;fc=0;
-  gameState='playing';
-  waveAnnounce=120;
+  fc=0;gameState='playing';
+  startWave(0);
 }
 
 function startWave(idx){
