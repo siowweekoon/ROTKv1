@@ -1088,6 +1088,18 @@ const SHEET_DEFS = {
       special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
     }
   },
+  monkeygod:{
+    src:'Sprites/clean/MonkeyGod_idle_back_atk_charge_Special.png',
+    displayH:140, yOff:-25, useDarkBg:true,
+    anims:{
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
+      move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
+    }
+  },
   liubei:{
     src:'Sprites/clean/LiuBei_idle_back_atk_charge_Special.png',
     displayH:140, yOff:-25, useDarkBg:true,
@@ -2251,7 +2263,7 @@ function endBattle(won){
       addCardToDecK(2);
       PR.gold+=GOLD.earn.fullWin;
       PR.wins++;b3Victory=true;savePR();
-      addFx(`🏆 INSANE CLEARED — LEGENDARY VICTORY! 🏆`,'#ff4444');
+      addFx(`🏆 MONKEY GOD DEFEATED — LEGENDARY VICTORY! 🏆`,'#ff4444');
       setTimeout(openReward,2200);
     } else if(battleStreak>=2){
       // Win Battle 2: offer optional B3 Insane
@@ -2340,6 +2352,9 @@ function startB3(){
   const base=GENS.find(g=>g.id==='guanyu');
   EG=JSON.parse(JSON.stringify(base));
   if(base?.special?.fn)EG.special.fn=base.special.fn;
+  // Override identity — sprite, name; all GuanYu stats/special still used
+  EG.id='monkeygod';
+  EG.name='Monkey God';
   EG.maxHp=Math.round(EG.maxHp*1.25);
   EG.war=Math.round(EG.war*1.25);
   // Full sig weapon (greendragon: WAR+15,DEX+8,STR+5) + armor (guanyu_armor: HP+50,DEX+10,WAR+8)
@@ -2354,10 +2369,10 @@ function startB3(){
   PARTS=[];DNUM=[];FXTXT=[];ARROWS=[];
   pHitDealt=false;eHitDealt=false;cancelGuard();
   aiTimer=0;aiAction='approach';frameCount=0;
-  document.getElementById('e-name').textContent='⚔ Guan Yu [INSANE]';
+  document.getElementById('e-name').textContent='🐒 Monkey God [INSANE]';
   battleRunning=false;
   goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
-  startCountdown(()=>{battleRunning=true;addFx(`🔥 BATTLE 3/3 — INSANE GUAN YU! 🔥`,'#ff2222');});
+  startCountdown(()=>{battleRunning=true;addFx(`🔥 BATTLE 3/3 — MONKEY GOD! 🔥`,'#ff2222');});
 }
 
 function showB3Choice(){
@@ -2369,14 +2384,14 @@ function showB3Choice(){
       ⚔ BOTH BATTLES CLEARED!<br><span style="font-size:.7em;color:#ff8800">A supreme challenge awaits...</span>
     </div>
     <div style="color:#ddd;font-size:.9em;text-align:center;max-width:270px;line-height:1.5">
-      Face <b style="color:#ff4444">Guan Yu [INSANE]</b> for a 4th reward card,<br>or collect your 3 rewards now.
+      Face <b style="color:#ff4444">Monkey God [INSANE]</b> for a 4th reward card,<br>or collect your 3 rewards now.
       <br><span style="color:#aaa;font-size:.85em">Lose B3: still collect 3 rewards, no penalty.</span>
     </div>
     <button onclick="closeB3Choice(false)" style="background:#336633;color:#fff;font-size:1em;padding:13px 30px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
       ✅ Collect 3 Rewards &amp; Rest
     </button>
     <button onclick="closeB3Choice(true)" style="background:#8b1a1a;color:#fff;font-size:1em;padding:13px 30px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
-      🔥 Battle 3 — INSANE Guan Yu (Risk it!)
+      🔥 Battle 3 — INSANE Monkey God (Risk it!)
     </button>`;
   document.getElementById('s-battle').appendChild(ov);
 }
