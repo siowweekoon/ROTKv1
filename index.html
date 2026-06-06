@@ -219,7 +219,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:4px 18px;margin-top:8px;border-radius:3px">
       <span style="font-size:1.2em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.6</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:4px">v2.0.7</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -830,11 +830,13 @@ function drawCombatant(cb, gd, isPlayer, frame) {
   const enemyYOff=isPlayer?0:-5;
   const sf=getSheetFrame(gd.id,cb.state,cb.atkFrame,frame,cb.usingSpecial);
   if(sf){
-    const sfY=GNDX-sf.dh+18+sf.yOff+enemyYOff;
+    const ssc=cb.sizeScale||1;
+    const sdw=sf.dw*ssc,sdh=sf.dh*ssc;
+    const sfY=GNDX-sdh+18+sf.yOff+enemyYOff;
     const useDarken=sf.raw&&SHEET_DEFS[gd.id]?.useDarken;
     if(useDarken)CX.globalCompositeOperation='darken';
-    if(!isPlayer){CX.translate(cb.x+sf.dw/2,0);CX.scale(-1,1);CX.drawImage(sf.img,sf.sx,sf.sy,sf.sw,sf.sh,0,sfY,sf.dw,sf.dh);}
-    else{CX.drawImage(sf.img,sf.sx,sf.sy,sf.sw,sf.sh,cb.x-sf.dw/2,sfY,sf.dw,sf.dh);}
+    if(!isPlayer){CX.translate(cb.x+sdw/2,0);CX.scale(-1,1);CX.drawImage(sf.img,sf.sx,sf.sy,sf.sw,sf.sh,0,sfY,sdw,sdh);}
+    else{CX.drawImage(sf.img,sf.sx,sf.sy,sf.sw,sf.sh,cb.x-sdw/2,sfY,sdw,sdh);}
     if(useDarken)CX.globalCompositeOperation='source-over';
 
   } else if (img && img.complete) {
@@ -986,7 +988,7 @@ let battleStreak=0;
 let streakPool=[];
 const STRONG_ENEMIES=['guanyu','zhangfei','zhaoyun','lubu'];
 const TIER1=['lvmeng','zhugeliang','zhouyu','sunquan','caocao','liubei','huangzhong'];
-const TIER2=['guanyu','zhangfei','zhaoyun','machao','xiahoudun','zhangliao','lubu','asiainvincible','dongzhuo'];
+const TIER2=['zhangfei','zhaoyun','machao','xiahoudun','zhangliao','lubu','asiainvincible','dongzhuo'];
 function pickTierEnemy(tier,excludeId,excludeFac){
   let pool=GENS.filter(g=>tier.includes(g.id)&&g.id!==excludeId);
   const pref=pool.filter(g=>g.f!==excludeFac);
@@ -1347,6 +1349,7 @@ function updatePlayer(){
         const bon=Math.floor((hpBefore-EB.hp)*.25);
         if(bon>0)EB.hp=Math.max(0,EB.hp-bon);
       } else PG.special.fn(PG,EG,PB,EB);
+      if(EG.tier3)EB.stunTimer=0; // B3 immune to stun
     }
     // Special damage capped at 50%
     const sklDmg=hpBefore-EB.hp;
@@ -1355,7 +1358,7 @@ function updatePlayer(){
     // Nine Yin: +35% bonus on top
     
     if(PR.equipped.horse?.id==='stormstallion'&&EB.stunTimer>0)EB.stunTimer+=18;
-    if(PR.equipped.wife?.id==='caiwenji'||PR.equipped.scripture?.id==='nineyin'){const drain=Math.floor(EB.hp*.1);EB.hp=Math.max(0,EB.hp-drain);PB.hp=Math.min(PB.maxHp,PB.hp+drain);DNUM.push({x:EB.x,y:GNDX-100,vy:-1.5,life:1.6,text:'👻-'+drain,col:'#aabbff',sz:18});DNUM.push({x:PB.x,y:GNDX-100,vy:-1.5,life:1.6,text:'+'+drain,col:'#44ff88',sz:18});sfxDrain();}
+    if(!EG.tier3&&(PR.equipped.wife?.id==='caiwenji'||PR.equipped.scripture?.id==='nineyin')){const drain=Math.floor(EB.hp*.1);EB.hp=Math.max(0,EB.hp-drain);PB.hp=Math.min(PB.maxHp,PB.hp+drain);DNUM.push({x:EB.x,y:GNDX-100,vy:-1.5,life:1.6,text:'👻-'+drain,col:'#aabbff',sz:18});DNUM.push({x:PB.x,y:GNDX-100,vy:-1.5,life:1.6,text:'+'+drain,col:'#44ff88',sz:18});sfxDrain();}
     addFx(`✨ ${PG.special?.name||'SPECIAL'}!`,'#cc88ff');
     return;
   }
@@ -1419,7 +1422,7 @@ function checkHits(){
           if(EB.guarding){dmg=Math.min(Math.floor(dmg*.5),100);gainSP(EB,30);sfxBlock();}
           else{gainSP(EB,15);}
           EB.hp=Math.max(0,EB.hp-dmg);
-          if(!EB.guarding){const kbMult=PR.equipped.weapon?.id==='serpentspear'?1.5:1;const kb=Math.floor((20+Math.floor(dmg*0.2))*kbMult);EB.hurtTimer=HURTF;EB.state='hurt';EB.x=clamp(EB.x+kb,PB.x+46,ARENA_R);}
+          if(!EB.guarding){if(!EG.tier3){const kbMult=PR.equipped.weapon?.id==='serpentspear'?1.5:1;const kb=Math.floor((20+Math.floor(dmg*0.2))*kbMult);EB.hurtTimer=HURTF;EB.state='hurt';EB.x=clamp(EB.x+kb,PB.x+46,ARENA_R);}}
           spawnHit(EB.x,GNDX-65,dmg,dmg>35,FAC[PG.f].hi);sfxHit(dmg>35);
           gainSP(PB,30);
           // Tiger Crane: 12% double strike
@@ -1450,12 +1453,17 @@ function checkHits(){
           const retreating=PB.guarding;
           dmg=Math.min(Math.floor(dmg*(retreating?.4:.5)),100);
           gainSP(PB,30);
+        } else if(EG.tier3){
+          // tier3 insane: only retreating guards (40% dmg), otherwise full damage
+          const retreating=PB.guarding;
+          if(retreating)dmg=Math.min(Math.floor(dmg*.4),100);
+          gainSP(PB,retreating?30:15);
         } else {
           // tier2: no guard at all, full damage
           gainSP(PB,15);
         }
         PB.hp=Math.max(0,PB.hp-dmg);
-        if(!EG.tier1){PB.hurtTimer=HURTF;PB.state='hurt';}
+        if(!EG.tier1&&!(EG.tier3&&PB.guarding)){PB.hurtTimer=HURTF;PB.state='hurt';}
         spawnHit(PB.x,GNDX-65,dmg,dmg>30,FAC[EG.f].hi);sfxHit(true);
         gainSP(EB,30);
       }
@@ -1501,6 +1509,13 @@ function updateEnemy(){
   const hpR=EB.hp/EB.maxHp;
   const spd=(BASE_SPEED+(EG.spd-60)*.04)*(EB.slowTimer>0?.45:1);
 
+  // B3: force special every 3 seconds (180 frames)
+  if(EG.tier3){
+    EB.b3SpCooldown=(EB.b3SpCooldown||180)-1;
+    if(EB.b3SpCooldown<=0&&EB.atkCool<=0){
+      EB.sp=100;EB.b3SpCooldown=180;aiAction='special';aiTimer=1;
+    }
+  }
   aiTimer--;
   if(aiTimer<=0){
     if(EB.sp>=100&&EB.atkCool<=0) aiAction='special';
@@ -1517,11 +1532,11 @@ function updateEnemy(){
     case'approach': EB.x=clamp(EB.x-spd,PB.x+46,ARENA_R);EB.state='moving';break;
     case'retreat':  EB.x=clamp(EB.x+spd,PB.x+46,ARENA_R);EB.state='moving';break;
     case'attack':
-      if(EB.atkCool<=0){EB.atkFrame=ATOTAL;EB.atkCool=rand(36,55);EB.state='attacking';}
+      if(EB.atkCool<=0){EB.atkFrame=ATOTAL;EB.atkCool=EG.tier3?ACOOLDOWN:rand(36,55);EB.state='attacking';}
       break;
     case'special':
       if(EB.sp>=100&&EB.atkCool<=0){
-        EB.sp=0;EB.atkFrame=ATOTAL;EB.atkCool=ACOOLDOWN+18;EB.state='attacking';EB.usingSpecial=true;sfxSpecial(EG.id);
+        EB.sp=0;EB.atkFrame=ATOTAL;EB.atkCool=EG.tier3?ACOOLDOWN:ACOOLDOWN+18;EB.state='attacking';EB.usingSpecial=true;sfxSpecial(EG.id);
         if(EG.special){EG.special.fn(EG,PG,EB,PB);}
       }
       break;
@@ -2233,18 +2248,25 @@ function endBattle(won){
   if(won){sfxVictory();}else{sfxDefeat();}
   if(won){
     battleStreak++;
-    if(battleStreak>=2){
-      // Win Battle 2: return card + 1 Elite + rewards
+    if(battleStreak>=3){
+      // Win Battle 3 Insane: return card + 1 Elite + rewards
       battleStreak=0;streakPool=[];
       PR.deck.push({id:usedCardId});
       addCardToDecK(2);
       PR.gold+=GOLD.earn.fullWin;
-      PR.wins++;savePR();setTimeout(openReward,1800);
+      PR.wins++;savePR();
+      addFx(`🏆 INSANE CLEARED — LEGENDARY VICTORY! 🏆`,'#ff4444');
+      setTimeout(openReward,2200);
+    } else if(battleStreak>=2){
+      // Win Battle 2: fight on to B3 Insane (card already returned after B1)
+      PR.gold+=GOLD.earn.midWin;savePR();
+      addFx(`⚔ 2/3 — FINAL BATTLE: INSANE GUAN YU AWAITS! ⚔`,'#ff8800');
+      setTimeout(startNextEnemy,1800);
     } else {
       // Win Battle 1: return card only, fight on
       PR.deck.push({id:usedCardId});
       PR.gold+=GOLD.earn.midWin;savePR();
-      addFx(`⚔ 1/2 CARD RETAINED — FIGHT ON! ⚔`,'#e8c44d');
+      addFx(`⚔ 1/3 CARD RETAINED — FIGHT ON! ⚔`,'#e8c44d');
       setTimeout(startNextEnemy,1800);
     }
   } else {
@@ -2262,6 +2284,7 @@ function endBattle(won){
 }
 
 function startNextEnemy(){
+  if(battleStreak>=2){startB3();return;}
   EG=JSON.parse(JSON.stringify(pickTierEnemy(TIER2,PG.id,PG.f)));
   const egSrc=GENS.find(g=>g.id===EG.id);
   if(egSrc?.special?.fn)EG.special.fn=egSrc.special.fn;
@@ -2276,7 +2299,31 @@ function startNextEnemy(){
   document.getElementById('e-name').textContent=EG.name;
   battleRunning=false;
   goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
-  startCountdown(()=>{battleRunning=true;addFx(`⚔ BATTLE 2/2 — ${EG.name}! ⚔`,'#e8c44d');});
+  startCountdown(()=>{battleRunning=true;addFx(`⚔ BATTLE 2/3 — ${EG.name}! ⚔`,'#e8c44d');});
+}
+
+function startB3(){
+  const base=GENS.find(g=>g.id==='guanyu');
+  EG=JSON.parse(JSON.stringify(base));
+  if(base?.special?.fn)EG.special.fn=base.special.fn;
+  EG.maxHp=Math.round(EG.maxHp*1.5);
+  EG.war=Math.round(EG.war*1.5);
+  // Full sig weapon (greendragon: WAR+15,DEX+8,STR+5) + armor (guanyu_armor: HP+50,DEX+10,WAR+8)
+  EG.war+=15+8;EG.dex=(EG.dex||0)+8+10;EG.str=(EG.str||0)+5;EG.maxHp+=50;
+  EG.spd+=50;EG.spdFloor=Math.max(10,EG.spd-25);
+  EG.tier3=true;
+  EB=mkBattle(EG,false);
+  EB.sp=100;EB.sizeScale=1.5;EB.b3SpCooldown=180;
+  PB.hp=PB.maxHp;PB.sp=100;
+  PB.x=ARENA_L+30;
+  PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;PB.guarding=false;
+  PARTS=[];DNUM=[];FXTXT=[];ARROWS=[];
+  pHitDealt=false;eHitDealt=false;cancelGuard();
+  aiTimer=0;aiAction='approach';frameCount=0;
+  document.getElementById('e-name').textContent='⚔ Guan Yu [INSANE]';
+  battleRunning=false;
+  goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
+  startCountdown(()=>{battleRunning=true;addFx(`🔥 BATTLE 3/3 — INSANE GUAN YU! 🔥`,'#ff2222');});
 }
 
 // ═══════════════════════════════════════════════════
