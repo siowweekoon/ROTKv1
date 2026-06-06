@@ -2266,16 +2266,22 @@ function endBattle(won){
       setTimeout(startNextEnemy,1800);
     }
   } else {
+    const isB3Loss=battleStreak>=2;
     const isBattle2=battleStreak>=1;
     battleStreak=0;streakPool=[];
-    const penaltyPool=applyLossPenalty(isBattle2);
-    setTimeout(()=>{
-      document.getElementById('go-msg').textContent=`"${pick(PG.q.los)}"`;
-      document.getElementById('go-lost-reward').textContent=
-        `🎴 ${GENS.find(g=>g.id===usedCardId)?.name||''} card lost → Common card`;
-      showScreen('s-gameover');
-      if(penaltyPool) showSacrificeModal(penaltyPool);
-    },800);
+    if(isB3Loss){
+      // B3 loss: no penalty, no card lost — collect 3 rewards as if B3 declined
+      setTimeout(openReward,800);
+    } else {
+      const penaltyPool=applyLossPenalty(isBattle2);
+      setTimeout(()=>{
+        document.getElementById('go-msg').textContent=`"${pick(PG.q.los)}"`;
+        document.getElementById('go-lost-reward').textContent=
+          `🎴 ${GENS.find(g=>g.id===usedCardId)?.name||''} card lost → Common card`;
+        showScreen('s-gameover');
+        if(penaltyPool) showSacrificeModal(penaltyPool);
+      },800);
+    }
   }
 }
 
@@ -2331,9 +2337,6 @@ function startNextEnemy(){
 }
 
 function startB3(){
-  // Remove usedCard from deck so a B3 loss properly costs the card
-  const ci=PR.deck.findIndex(c=>c.id===usedCardId);
-  if(ci>=0){PR.deck.splice(ci,1);savePR();}
   const base=GENS.find(g=>g.id==='guanyu');
   EG=JSON.parse(JSON.stringify(base));
   if(base?.special?.fn)EG.special.fn=base.special.fn;
@@ -2367,7 +2370,7 @@ function showB3Choice(){
     </div>
     <div style="color:#ddd;font-size:.9em;text-align:center;max-width:270px;line-height:1.5">
       Face <b style="color:#ff4444">Guan Yu [INSANE]</b> for a 4th reward card,<br>or collect your 3 rewards now.
-      <br><span style="color:#aaa;font-size:.85em">Lose B3: your card is gone.</span>
+      <br><span style="color:#aaa;font-size:.85em">Lose B3: still collect 3 rewards, no penalty.</span>
     </div>
     <button onclick="closeB3Choice(false)" style="background:#336633;color:#fff;font-size:1em;padding:13px 30px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
       ✅ Collect 3 Rewards &amp; Rest
