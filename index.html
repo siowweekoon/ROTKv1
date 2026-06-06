@@ -2279,10 +2279,43 @@ function endBattle(won){
   }
 }
 
+const B2_SIG_STATS={
+  serpentspear:   {war:8,  str:12},
+  zhaoyun_spear:  {war:20, spd:5,  dex:8},
+  silver_tiger:   {war:20, spd:5,  str:8},
+  terror_sword:   {war:18, spd:5,  str:8},
+  ironclad_sabre: {war:18, str:5,  maxHp:30},
+  sky_piercer:    {war:25, str:10, spd:5},
+  lion_mace:      {war:22, str:8,  maxHp:30},
+  tiger_heart:    {war:18, dex:12, spd:8},
+  zhangfei_armor: {str:15, maxHp:40, dex:8},
+  zhaoyun_armor:  {dex:15, maxHp:40, spd:8},
+  machao_armor:   {spd:12, str:12,   maxHp:40},
+  zhangliao_armor:{spd:15, dex:10,   war:8},
+  xiahoudun_armor:{str:15, maxHp:50, war:10},
+  lubu_armor:     {str:20, maxHp:60, dex:10},
+  asia_armor:     {dex:20, spd:10,   war:8},
+  dongzhuo_armor: {str:20, maxHp:70, war:10},
+  redhare:        {spd:30, war:15},
+};
+function applyB2Gear(eg){
+  eg.maxHp=Math.round(eg.maxHp*1.1);
+  const sig=GENS.find(g=>g.id===eg.id)?.sig||{};
+  ['weapon','armor','horse'].forEach(slot=>{
+    const bonus=B2_SIG_STATS[sig[slot]||'']||{};
+    if(bonus.war)  eg.war  =(eg.war||0)+bonus.war;
+    if(bonus.str)  eg.str  =(eg.str||0)+bonus.str;
+    if(bonus.dex)  eg.dex  =(eg.dex||0)+bonus.dex;
+    if(bonus.spd)  eg.spd  =(eg.spd||0)+bonus.spd;
+    if(bonus.maxHp)eg.maxHp=(eg.maxHp||0)+bonus.maxHp;
+  });
+}
+
 function startNextEnemy(){
   EG=JSON.parse(JSON.stringify(pickTierEnemy(TIER2,PG.id,PG.f)));
   const egSrc=GENS.find(g=>g.id===EG.id);
   if(egSrc?.special?.fn)EG.special.fn=egSrc.special.fn;
+  applyB2Gear(EG);
   streakPool.push(EG.id);
   EB=mkBattle(EG,false);
   PB.hp=PB.maxHp;
