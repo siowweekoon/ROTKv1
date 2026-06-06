@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Three Kingdoms Siege</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden}
+canvas{display:block;touch-action:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+// ── Canvas ────────────────────────────────────────────────────
+const cv=document.getElementById('c');
+const cx=cv.getContext('2d');
+const CW=800,CH=450;
+cv.width=CW;cv.height=CH;
+function resize(){
+  const s=Math.min(window.innerWidth/CW,window.innerHeight/CH);
+  cv.style.width=Math.floor(CW*s)+'px';
+  cv.style.height=Math.floor(CH*s)+'px';
+}
+window.addEventListener('resize',resize);resize();
+
+// ── Constants ─────────────────────────────────────────────────
+const GROUND=CH-70;
+const CASTLE_X=CW-95;
+const CASTLE_W=85;
+const SPAWN_X=-35;
+
+// ── Wave / Tower definitions ───────────────────────────────────
+const WAVES=[
+  {count:6,  hp:55,  spd:0.55, reward:10},
+  {count:9,  hp:95,  spd:0.75, reward:15},
+  {count:13, hp:140, spd:1.0,  reward:20, boss:{hp:450,spd:0.38,reward:100,size:26}},
+];
+
+const TOWER_DEFS=[
+  {x:195, cost:30,  type:'archer',   label:'Archer Tower',   range:185, dmg:18, fireRate:78,  col:'#88cc44'},
+  {x:400, cost:80,  type:'crossbow', label:'Crossbow Tower', range:235, dmg:32, fireRate:58,  col:'#44aaff'},
+  {x:590, cost:160, type:'ballista', label:'Ballista',       range:295, dmg:65, fireRate:115, col:'#ff8844'},
+];
+
+// ── State ─────────────────────────────────────────────────────
+let gold,castle,hero,towers,enemies,projs,parts;
+let wave,waveState,spawnCount,spawnTimer,nextWaveTimer,fc,gameState;
+let waveAnnounce=0; // frames to show wave announcement
+
+function init(){
+  gold=25;
+  castle={hp:300,maxHp:300};
+  hero={x:CASTLE_X-55,y:GROUND,walkX:null,fireTimer:0,range:205,dmg:24,fireRate:36};
+  towers=TOWER_DEFS.map(d=>({...d,unlocked:false,fireTimer:0}));
+  enemies=[];projs=[];parts=[];
+  wave=0;waveState='idle';spawnCount=0;spawnTimer=90;nextWaveTimer=0;fc=0;
+  gameState='playing';
+  waveAnnounce=120;
+}
+
+function startWave(idx){
+  wave=idx;waveState='spawning';spawnCount=0;spawnTimer=90;
+  waveAnnounce=120;
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function rand(a,b){return a+Math.random()*(b-a);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function nearest(x,y,range){
+  // Target highest-x enemy (closest to castle) within range
+  let best=null,bx=-Infinity;
+  enemies.forEach(e=>{
+    if(e.dead)return;
+    const d=Math.hypot(x-e.x,y-e.y);
+    if(d<range&&e.x>bx){bx=e.x;best=e;}
+  });
+  return best;
+}
+
+function shoot(fx,fy,target,dmg,col,spd){
+  projs.push({x:fx,y:fy,target,dmg,col,spd:spd||9.5,dead:false});
+}
+
+function burst(x,y,col,n){
+  for(let i=0;i<(n||6);i++)
+    parts.push({x,y,vx:rand(-2.5,2.5),vy:rand(-3.5,-0.5),life:1,col,r:rand(2,5)});
+}
+
+// ── Update ────────────────────────────────────────────────────
+function updateHero(){
+  if(hero.walkX!==null){
+    const dx=hero.walkX-hero.x;
+    if(Math.abs(dx)<2.5)hero.walkX=null;
+    else hero.x+=Math.sign(dx)*2.5;
+    hero.x=clamp(hero.x,28,CASTLE_X-38);
+  }
+  hero.fireTimer--;
+  if(hero.fireTimer<=0){
+    const t=nearest(hero.x,hero.y,hero.range);
+    if(t){hero.fireTimer=hero.fireRate;shoot(hero.x,hero.y-20,t,hero.dmg,'#ffdd22',11);}
+  }
+}
+
+function updateTowers(){
+  towers.forEach(tw=>{
+    if(!tw.unlocked)return;
+    tw.fireTimer--;
+    if(tw.fireTimer<=0){
+      const t=nearest(tw.x,GROUND-30,tw.range);
+      if(t){tw.fireTimer=tw.fireRate;shoot(tw.x,GROUND-50,t,tw.dmg,tw.col,12);}
+    }
+  });
+}
+
+function updateProjs(){
+  projs.forEach(p=>{
+    if(p.dead)return;
+    if(!p.target||p.target.dead){p.dead=true;return;}
+    const dx=p.target.x-p.x,dy=(p.target.y-12)-p.y;
+    const d=Math.hypot(dx,dy);
+    if(d<p.spd+5){
+      p.target.hp-=p.dmg;
+      burst(p.target.x,p.target.y-12,'#ff5533');
+      if(p.target.hp<=0&&!p.target.dead){
+        p.target.dead=true;
+        gold+=p.target.reward;
+        burst(p.target.x,p.target.y-12,'#ffcc00',10);
+      }
+      p.dead=true;
+    } else {p.x+=dx/d*p.spd;p.y+=dy/d*p.spd;}
+  });
+  projs=projs.filter(p=>!p.dead);
+}
+
+function updateEnemies(){
+  enemies.forEach(e=>{
+    if(e.dead)return;
+    e.x+=e.spd;
+    if(e.x>=CASTLE_X-10){
+      castle.hp=Math.max(0,castle.hp-(e.isBoss?45:18));
+      burst(CASTLE_X,GROUND-30,'#cc2222',8);
+      e.dead=true;
+    }
+  });
+  enemies=enemies.filter(e=>!e.dead);
+}
+
+function updateParts(){
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.12;p.life-=0.04;});
+  parts=parts.filter(p=>p.life>0);
+}
+
+function updateSpawn(){
+  const wd=WAVES[wave];
+  if(!wd)return;
+  if(waveState==='spawning'){
+    spawnTimer--;
+    if(spawnTimer<=0){
+      const total=wd.count+(wd.boss?1:0);
+      const isBoss=wd.boss&&spawnCount===wd.count;
+      const def=isBoss?wd.boss:wd;
+      enemies.push({
+        x:SPAWN_X,y:GROUND,
+        hp:def.hp,maxHp:def.hp,
+        spd:def.spd,reward:def.reward,
+        size:def.size||15,isBoss,dead:false
+      });
+      spawnCount++;
+      spawnTimer=78;
+      if(spawnCount>=total)waveState='waiting';
+    }
+  } else if(waveState==='waiting'){
+    if(enemies.length===0){
+      if(wave>=WAVES.length-1){gameState='won';}
+      else{waveState='nextwave';nextWaveTimer=200;}
+    }
+  } else if(waveState==='nextwave'){
+    nextWaveTimer--;
+    if(nextWaveTimer<=0)startWave(wave+1);
+  }
+}
+
+function update(){
+  fc++;
+  if(gameState!=='playing')return;
+  if(waveAnnounce>0)waveAnnounce--;
+  updateHero();updateTowers();updateProjs();updateEnemies();updateParts();updateSpawn();
+  if(castle.hp<=0){castle.hp=0;gameState='lost';}
+}
+
+// ── Render ────────────────────────────────────────────────────
+function hpbar(x,y,w,hp,max,col){
+  cx.fillStyle='#222';cx.fillRect(x-w/2,y,w,5);
+  cx.fillStyle=col||'#44cc44';cx.fillRect(x-w/2,y,Math.round(w*(hp/max)),5);
+  cx.strokeStyle='#555';cx.lineWidth=.5;cx.strokeRect(x-w/2,y,w,5);
+}
+
+function draw(){
+  // Sky gradient
+  const bg=cx.createLinearGradient(0,0,0,CH);
+  bg.addColorStop(0,'#0a0300');bg.addColorStop(1,'#1c0900');
+  cx.fillStyle=bg;cx.fillRect(0,0,CW,CH);
+
+  // Ground
+  cx.fillStyle='#2e1600';cx.fillRect(0,GROUND+2,CW,CH);
+  cx.fillStyle='#4a2800';cx.fillRect(0,GROUND,CW,3);
+
+  // Tower range rings (faint, only when unlocked)
+  towers.forEach(tw=>{
+    if(!tw.unlocked)return;
+    cx.strokeStyle=tw.col+'22';cx.lineWidth=1;
+    cx.beginPath();cx.arc(tw.x,GROUND-40,tw.range,0,Math.PI*2);cx.stroke();
+  });
+
+  // Tower slots
+  towers.forEach(tw=>{
+    const py=GROUND-28;
+    // Platform
+    cx.fillStyle=tw.unlocked?'#3e2e20':'#231810';
+    cx.fillRect(tw.x-26,py,52,28);
+    cx.strokeStyle=tw.unlocked?tw.col:'#444';cx.lineWidth=1.5;
+    cx.strokeRect(tw.x-26,py,52,28);
+
+    if(tw.unlocked){
+      // Tower body
+      cx.fillStyle='#3a2a1a';cx.fillRect(tw.x-10,py-55,20,55);
+      cx.fillStyle=tw.col+'cc';cx.fillRect(tw.x-16,py-64,32,12);
+      // Merlons
+      for(let m=-1;m<=1;m++){
+        cx.fillStyle=tw.col+'99';cx.fillRect(tw.x+m*12-4,py-74,8,12);
+      }
+      cx.fillStyle='#ddd';cx.font='bold 9px Georgia';cx.textAlign='center';
+      cx.fillText(tw.label,tw.x,GROUND+4);
+    } else {
+      cx.fillStyle='#888';cx.font='14px serif';cx.textAlign='center';
+      cx.fillText('🔒',tw.x,py+18);
+      cx.fillStyle='#ffcc44';cx.font='bold 11px Georgia';
+      cx.fillText(tw.cost+'g',tw.x,py+30);
+      cx.fillStyle='#666';cx.font='8px Georgia';cx.fillText(tw.label,tw.x,py-3);
+    }
+
+    // Unlock hint when hero is adjacent and has gold
+    if(!tw.unlocked&&Math.abs(hero.x-tw.x)<46&&gold>=tw.cost){
+      cx.fillStyle='rgba(0,0,0,.8)';cx.fillRect(tw.x-54,py-36,108,20);
+      cx.fillStyle='#ffee44';cx.font='bold 10px Georgia';cx.textAlign='center';
+      cx.fillText('TAP HERE TO UNLOCK',tw.x,py-22);
+    }
+  });
+
+  // Castle
+  const cbase=GROUND-105;
+  cx.fillStyle='#4d3d2d';cx.fillRect(CASTLE_X,cbase,CASTLE_W,105);
+  // Shading
+  cx.fillStyle='rgba(255,200,100,.04)';cx.fillRect(CASTLE_X,cbase,CASTLE_W/3,105);
+  cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(CASTLE_X+CASTLE_W*2/3,cbase,CASTLE_W/3,105);
+  // Gate
+  cx.fillStyle='#150900';cx.fillRect(CASTLE_X+24,GROUND-42,36,42);
+  cx.fillStyle='#2a1800';cx.beginPath();cx.arc(CASTLE_X+42,GROUND-42,18,Math.PI,0);cx.fill();
+  // Battlements
+  for(let i=0;i<5;i++){
+    cx.fillStyle=i%2===0?'#5a4030':'#4d3d2d';
+    cx.fillRect(CASTLE_X+i*18,cbase-16,14,16);
+  }
+  // Castle HP bar
+  const chpR=castle.hp/castle.maxHp;
+  cx.fillStyle='#222';cx.fillRect(CASTLE_X,cbase-24,CASTLE_W,8);
+  cx.fillStyle=chpR>.5?'#44cc44':chpR>.25?'#dd8822':'#cc2222';
+  cx.fillRect(CASTLE_X,cbase-24,Math.round(CASTLE_W*chpR),8);
+  cx.strokeStyle='#666';cx.lineWidth=1;cx.strokeRect(CASTLE_X,cbase-24,CASTLE_W,8);
+
+  // Enemies
+  enemies.forEach(e=>{
+    if(e.dead)return;
+    const ey=e.y-e.size;
+    // Shadow
+    cx.fillStyle='rgba(0,0,0,.3)';cx.beginPath();
+    cx.ellipse(e.x,GROUND+1,e.size*.8,4,0,0,Math.PI*2);cx.fill();
+    // Body
+    cx.fillStyle=e.isBoss?'#991111':'#772020';
+    cx.beginPath();cx.ellipse(e.x,ey,e.size*.65,e.size,0,0,Math.PI*2);cx.fill();
+    if(e.isBoss){
+      cx.strokeStyle='#ff3333';cx.lineWidth=2;cx.stroke();
+      cx.fillStyle='#ff6666';cx.font='bold 9px Georgia';cx.textAlign='center';
+      cx.fillText('⚔ BOSS',e.x,ey-e.size-6);
+    }
+    hpbar(e.x,ey-e.size-8,e.size*2.4,e.hp,e.maxHp,e.isBoss?'#ff4444':'#44cc44');
+  });
+
+  // Projectiles
+  projs.forEach(p=>{
+    cx.save();cx.shadowColor=p.col;cx.shadowBlur=6;
+    cx.fillStyle=p.col;cx.beginPath();cx.arc(p.x,p.y,3.5,0,Math.PI*2);cx.fill();
+    cx.restore();
+  });
+
+  // Particles
+  cx.save();
+  parts.forEach(p=>{
+    cx.globalAlpha=p.life*.9;cx.fillStyle=p.col;
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fill();
+  });
+  cx.globalAlpha=1;cx.restore();
+
+  // Hero shadow
+  cx.fillStyle='rgba(0,0,0,.3)';cx.beginPath();
+  cx.ellipse(hero.x,GROUND+1,14,4,0,0,Math.PI*2);cx.fill();
+  // Hero body
+  const hy=hero.y-24;
+  cx.save();
+  cx.shadowColor='#ffcc44';cx.shadowBlur=14;
+  cx.fillStyle='#cc8800';cx.beginPath();cx.arc(hero.x,hy,17,0,Math.PI*2);cx.fill();
+  cx.strokeStyle='#ffee77';cx.lineWidth=2;cx.stroke();
+  cx.restore();
+  cx.fillStyle='#fff';cx.font='18px serif';cx.textAlign='center';
+  cx.fillText('⚔',hero.x,hy+7);
+  // Walk trail
+  if(hero.walkX!==null){
+    cx.strokeStyle='rgba(255,220,80,.25)';cx.lineWidth=1.5;cx.setLineDash([5,5]);
+    cx.beginPath();cx.moveTo(hero.x,GROUND-2);cx.lineTo(hero.walkX,GROUND-2);cx.stroke();
+    cx.setLineDash([]);
+    // Target foot marker
+    cx.fillStyle='rgba(255,220,80,.5)';cx.beginPath();
+    cx.arc(hero.walkX,GROUND-2,4,0,Math.PI*2);cx.fill();
+  }
+
+  // HUD bar
+  cx.fillStyle='rgba(0,0,0,.78)';cx.fillRect(0,0,CW,30);
+  cx.strokeStyle='#4a3000';cx.lineWidth=1;cx.strokeRect(0,0,CW,30);
+  // Gold
+  cx.fillStyle='#ffcc44';cx.font='bold 13px Georgia';cx.textAlign='left';
+  cx.fillText('🪙  '+gold+' Gold',10,20);
+  // Wave
+  cx.textAlign='center';
+  if(waveState==='nextwave'){
+    const blink=Math.floor(fc/15)%2===0;
+    cx.fillStyle=blink?'#ffcc44':'#cc8800';
+    cx.fillText('✦ Wave '+(wave+1)+' cleared — next wave incoming… ✦',CW/2,20);
+  } else {
+    cx.fillStyle='#e8c44d';
+    cx.fillText('⚔  Wave '+(wave+1)+' / '+WAVES.length,CW/2,20);
+  }
+  // Castle HP text
+  cx.textAlign='right';
+  const cpR=castle.hp/castle.maxHp;
+  cx.fillStyle=cpR>.5?'#88ee88':cpR>.25?'#ffaa44':'#ff4444';
+  cx.fillText('🏰  '+castle.hp+' / '+castle.maxHp,CW-10,20);
+
+  // Wave announcement banner
+  if(waveAnnounce>0&&gameState==='playing'){
+    const a=Math.min(1,waveAnnounce/40)*Math.min(1,(waveAnnounce>20?1:(waveAnnounce/20)));
+    cx.save();cx.globalAlpha=a;
+    cx.fillStyle='rgba(0,0,0,.7)';cx.fillRect(0,CH/2-36,CW,52);
+    cx.fillStyle='#ff4444';cx.font='bold 30px Georgia';cx.textAlign='center';
+    cx.shadowColor='#ff0000';cx.shadowBlur=20;
+    cx.fillText('⚔  WAVE '+(wave+1)+(wave===WAVES.length-1?' — FINAL WAVE!':'  INCOMING!')+'  ⚔',CW/2,CH/2+4);
+    cx.restore();
+  }
+
+  // Win / Lose overlay
+  if(gameState==='won'||gameState==='lost'){
+    cx.fillStyle='rgba(0,0,0,.85)';cx.fillRect(0,0,CW,CH);
+    if(gameState==='won'){
+      cx.fillStyle='#ffcc44';cx.font='bold 38px Georgia';cx.textAlign='center';
+      cx.shadowColor='#ffaa00';cx.shadowBlur=28;
+      cx.fillText('⚔  CASTLE DEFENDED!  ⚔',CW/2,CH/2-32);
+      cx.shadowBlur=0;
+      cx.fillStyle='#e8c44d';cx.font='16px Georgia';
+      cx.fillText('All three waves repelled — the kingdom stands!',CW/2,CH/2+6);
+    } else {
+      cx.fillStyle='#cc2222';cx.font='bold 38px Georgia';cx.textAlign='center';
+      cx.shadowColor='#ff0000';cx.shadowBlur=28;
+      cx.fillText('💀  CASTLE FALLEN  💀',CW/2,CH/2-32);
+      cx.shadowBlur=0;
+      cx.fillStyle='#aaa';cx.font='16px Georgia';
+      cx.fillText('The walls have crumbled... rally your forces.',CW/2,CH/2+6);
+    }
+    // Restart button
+    const bx=CW/2-75,by=CH/2+30,bw=150,bh=40;
+    cx.fillStyle='#3a2200';cx.fillRect(bx,by,bw,bh);
+    cx.strokeStyle='#ffcc44';cx.lineWidth=2;cx.strokeRect(bx,by,bw,bh);
+    cx.fillStyle='#ffcc44';cx.font='bold 14px Georgia';cx.textAlign='center';
+    cx.fillText('↺  Play Again',CW/2,by+26);
+  }
+}
+
+// ── Input ─────────────────────────────────────────────────────
+function onInput(clientX,clientY){
+  const r=cv.getBoundingClientRect();
+  const x=(clientX-r.left)*(CW/r.width);
+  const y=(clientY-r.top)*(CH/r.height);
+
+  // Restart
+  if(gameState==='won'||gameState==='lost'){
+    if(x>CW/2-75&&x<CW/2+75&&y>CH/2+30&&y<CH/2+70){init();}
+    return;
+  }
+
+  // Tower unlock (hero must be nearby AND player clicks near the slot)
+  let unlocked=false;
+  towers.forEach(tw=>{
+    if(tw.unlocked)return;
+    if(Math.abs(x-tw.x)<50&&Math.abs(hero.x-tw.x)<48&&gold>=tw.cost){
+      gold-=tw.cost;tw.unlocked=true;tw.fireTimer=0;unlocked=true;
+    }
+  });
+  if(!unlocked)hero.walkX=x;
+}
+
+cv.addEventListener('click',e=>onInput(e.clientX,e.clientY));
+cv.addEventListener('touchstart',e=>{e.preventDefault();onInput(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+
+// ── Loop ──────────────────────────────────────────────────────
+function loop(){requestAnimationFrame(loop);update();draw();}
+init();loop();
+</script>
+</body>
+</html>
