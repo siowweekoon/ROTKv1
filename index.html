@@ -1581,7 +1581,7 @@ function gameLoop(){
     checkHits();
     // Check win/loss
     if(PB.hp<=0&&PB.state!=='dead'){PB.state='dead';battleRunning=false;setTimeout(()=>endBattle(false),800);}
-    if(EB.hp<=0&&EB.state!=='dead'){EB.state='dead';battleRunning=false;setTimeout(()=>endBattle(true),800);}
+    else if(EB.hp<=0&&EB.state!=='dead'){EB.state='dead';battleRunning=false;setTimeout(()=>endBattle(true),800);}
   }
   tickParts();
   // Render
