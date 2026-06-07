@@ -218,7 +218,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(1.1em,5.5vw,2.6em);color:var(--gold);letter-spacing:clamp(1px,1vw,5px);text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.2.6</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.2.7</div>
     <div id="title-medals" style="margin-top:10px;display:flex;justify-content:center;gap:10px"></div>
   </div>
 
@@ -1804,14 +1804,9 @@ function showTitle(){
     const badge=(id)=>{
       const m=MEDALS[id];
       return `<div onclick="showMedalPopup('${id}')" title="${m.name}" style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div style="width:44px;height:44px;border-radius:50%;
-             background:radial-gradient(circle at 38% 35%,${m.coinB},${m.coinA});
-             border:2px solid #ffd700;
-             box-shadow:0 0 12px ${m.glow},0 0 24px ${m.glow}55;
-             display:flex;align-items:center;justify-content:center">
-          <span style="font-size:1.5em;color:#ffd700;text-shadow:0 0 8px #ffd70099">${m.char}</span>
-        </div>
-        <div style="font-size:.45em;color:#ffd700aa;letter-spacing:1px;max-width:52px;text-align:center;line-height:1.2">${m.name.split(' ').slice(0,2).join(' ')}</div>
+        <img src="${m.img}" style="width:48px;height:auto;display:block;
+             filter:drop-shadow(0 0 6px ${m.glow}) drop-shadow(0 0 12px ${m.glow})">
+        <div style="font-size:.42em;color:#ffd700aa;letter-spacing:.5px;max-width:54px;text-align:center;line-height:1.2">${m.name.split(' ').slice(0,2).join(' ')}</div>
       </div>`;
     };
     let html='';
@@ -2407,20 +2402,18 @@ const MEDALS={
     chinese:'天神降臨',
     char:'神',
     desc:'Struck down the Monkey God — a divine warrior of unmatched fury — in single combat within the arena.',
-    coinA:'#2a0055', coinB:'#7722bb',
-    ribbon:'#5500aa', ribbonGold:'#ffd700',
-    glow:'rgba(150,40,220,.65)',
-    stars:'★ ★ ★ ★ ★',
+    img:'Medals/Vanquisher%20of%20Heaven.png',
+    glow:'rgba(150,40,220,.7)',
+    border:'#c084f5',
   },
   story:{
     name:'HERO OF CHANGBAN',
     chinese:'長坂英雄',
     char:'勇',
     desc:'Rode alone through ten thousand Wei soldiers and delivered the Young Prince to safety at the Battle of Changban.',
-    coinA:'#550000', coinB:'#cc2200',
-    ribbon:'#880000', ribbonGold:'#ffd700',
-    glow:'rgba(200,30,0,.65)',
-    stars:'★ ★ ★ ★ ★',
+    img:'Medals/Hero_of_ChangBan.png',
+    glow:'rgba(80,140,220,.7)',
+    border:'#88bbee',
   },
 };
 
@@ -2437,56 +2430,23 @@ function showMedalPopup(id){
   const ov=document.createElement('div');
   ov.id='medal-popup-ov';
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:11000;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;padding:16px;box-sizing:border-box';
-  // Ribbon stripe: ribbon colour flanking a gold centre stripe
-  const rib=`linear-gradient(90deg,${m.ribbon} 0%,${m.ribbon} 28%,${gold} 28%,${gold} 72%,${m.ribbon} 72%,${m.ribbon} 100%)`;
   ov.innerHTML=`
-    <div style="text-align:center;max-width:320px;width:100%">
+    <div style="text-align:center;max-width:340px;width:100%">
       <div style="font-size:.68em;color:#666;letter-spacing:4px;margin-bottom:6px">ACHIEVEMENT UNLOCKED</div>
-      <div style="font-size:1.15em;color:${gold};letter-spacing:3px;margin-bottom:22px;text-shadow:0 0 14px ${gold}88">✦ MEDAL EARNED ✦</div>
+      <div style="font-size:1.15em;color:${gold};letter-spacing:3px;margin-bottom:18px;text-shadow:0 0 14px ${gold}88">✦ MEDAL EARNED ✦</div>
 
-      <!-- Medal body -->
-      <div style="display:inline-block;position:relative">
-        <!-- Top ribbon (trapezoid) -->
-        <div style="width:54px;height:36px;margin:0 auto;background:${rib};clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 100%,0 100%)"></div>
-
-        <!-- Coin -->
-        <div style="width:148px;height:148px;border-radius:50%;
-             background:radial-gradient(circle at 36% 32%,${m.coinB},${m.coinA});
-             border:6px solid ${gold};
-             box-shadow:0 0 40px ${m.glow},0 0 80px ${m.glow}55,inset 0 3px 10px rgba(255,255,255,.13);
-             position:relative;margin:0 auto">
-          <!-- Outer ring -->
-          <div style="position:absolute;inset:10px;border-radius:50%;border:2px solid ${gold}55"></div>
-          <!-- Middle dotted ring -->
-          <div style="position:absolute;inset:18px;border-radius:50%;border:1px dashed ${gold}33"></div>
-          <!-- Inner disc -->
-          <div style="position:absolute;inset:26px;border-radius:50%;
-               background:radial-gradient(circle at 40% 38%,${m.coinB}88,${m.coinA}dd);
-               border:1.5px solid ${gold}66"></div>
-          <!-- Central content -->
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
-            <div style="font-size:3em;color:${gold};text-shadow:0 0 18px ${gold}99,0 0 36px ${gold}44;line-height:1">${m.char}</div>
-            <div style="font-size:.28em;color:${gold}99;letter-spacing:5px;margin-top:8px">${m.stars}</div>
-          </div>
-          <!-- Top accent star -->
-          <div style="position:absolute;top:4px;left:50%;transform:translateX(-50%);font-size:.85em;filter:drop-shadow(0 0 4px ${gold})">✦</div>
-          <!-- Side accent stars -->
-          <div style="position:absolute;left:6px;top:50%;transform:translateY(-50%);font-size:.7em;color:${gold}88">✦</div>
-          <div style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:.7em;color:${gold}88">✦</div>
-        </div>
-
-        <!-- Bottom ribbon body -->
-        <div style="width:54px;height:26px;margin:0 auto;background:${rib}"></div>
-        <!-- Bottom ribbon V-notch -->
-        <div style="width:54px;height:16px;margin:0 auto;background:${rib};clip-path:polygon(0 0,100% 0,60% 100%,40% 100%)"></div>
+      <!-- Medal image -->
+      <div style="position:relative;display:inline-block">
+        <img src="${m.img}" style="width:210px;height:auto;display:block;margin:0 auto;
+             filter:drop-shadow(0 0 22px ${m.glow}) drop-shadow(0 0 44px ${m.glow})">
       </div>
 
       <!-- Medal name block -->
       <div style="margin-top:18px">
-        <div style="font-size:.6em;color:${gold}88;letter-spacing:4px;margin-bottom:3px">${m.chinese}</div>
+        <div style="font-size:.58em;color:${gold}88;letter-spacing:4px;margin-bottom:4px">${m.chinese}</div>
         <div style="font-size:1.05em;font-weight:bold;color:${gold};letter-spacing:2px;text-shadow:0 0 10px ${gold}66">${m.name}</div>
         <div style="width:60px;height:1px;background:${gold}44;margin:10px auto"></div>
-        <div style="font-size:.75em;color:#ccaa88;line-height:1.7;font-style:italic;margin-top:2px">${m.desc}</div>
+        <div style="font-size:.75em;color:#ccaa88;line-height:1.7;font-style:italic">${m.desc}</div>
       </div>
 
       <button onclick="document.getElementById('medal-popup-ov').remove()" style="margin-top:22px;padding:10px 34px;background:#110800;border:2px solid ${gold};color:${gold};font-family:Georgia,serif;font-size:.88em;cursor:pointer;border-radius:4px;letter-spacing:1px;box-shadow:0 0 12px ${gold}44">Honour Received</button>
