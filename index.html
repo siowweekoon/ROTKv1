@@ -221,7 +221,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(1.1em,5.5vw,2.6em);color:var(--gold);letter-spacing:clamp(1px,1vw,5px);text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.1</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.2</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -539,7 +539,7 @@ const GENS=[
      fn:(p,e,PB,EB)=>{PB.invincTimer=180;addFx('⚡ IRON WILL — INVINCIBLE!','#ff8800');}},
    q:{win:["One eye is all I need to see you fall!"],los:["...Pain finally found my limit."]}},
 
-  {id:'xiahouden', name:'Xia Hou En',   title:'Sword-Bearer of Wei', f:'WEI',char:'恩',wep:'sword',sig:{weapon:'ironclad_sabre',armor:'xiahoudun_armor'},
+  {id:'xiahouden', name:'Xia Hou En',   title:'Sword-Bearer of Wei', f:'WEI',char:'恩',wep:'sword',sig:{weapon:'ironclad_sabre',armor:'xiahoudun_armor'},storyOnly:true,
    war:90,str:75,dex:72,spd:74,maxHp:540,
    special:{name:'Iron Will',desc:'Become invincible for 3 seconds',
      fn:(p,e,PB,EB)=>{if(storyMode){const d=Math.floor(p.war*1.6+rand(25,50));EB.hp=Math.max(0,EB.hp-d);EB.hurtTimer=35;EB.x=Math.max(ARENA_L,EB.x-90);spawnHit(EB.x,GNDX-60,d,true,'#ff6600');addFx('💥 IRON FIST — SHOCKWAVE!','#ff8800');}else{PB.invincTimer=180;addFx('⚡ IRON WILL — INVINCIBLE!','#ff8800');}}},
@@ -563,7 +563,7 @@ const GENS=[
      fn:(p,e,PB,EB)=>{const d=Math.floor(p.war*2.5+rand(15,40));EB.hp=Math.max(0,EB.hp-d);EB.hurtTimer=30;spawnHit(EB.x,GNDX-60,d,true,'#ffcc66');}},
    q:{win:["Champions crumble before the Flying General!"],los:["My halberd... fails me today."]}},
 
-  {id:'asiainvincible',name:'Asia the Invincible',title:'Master of Sunflower Art',f:'IND',char:'東',wep:'sword',cc:'#dd44cc',sig:{weapon:'tiger_heart',armor:'asia_armor'},
+  {id:'asiainvincible',name:'Asia the Invincible',title:'Master of Sunflower Art',f:'IND',char:'東',wep:'sword',cc:'#dd44cc',sig:{weapon:'tiger_heart',armor:'asia_armor'},storyOnly:true,
    war:83,str:80,dex:85,spd:95,maxHp:530,
    special:{name:'KuiHuaBaoDian',desc:'Sunflower needles — DEX-heavy pierce, stuns',
      fn:(p,e,PB,EB)=>{const d=Math.floor(p.dex*3.5+rand(30,60));EB.hp=Math.max(0,EB.hp-d);EB.stunTimer=40;spawnHit(EB.x,GNDX-60,d,true,'#ff88ff');}},
@@ -1013,7 +1013,7 @@ let streakPool=[];
 let b3Victory=false;
 const STRONG_ENEMIES=['guanyu','zhangfei','zhaoyun','lubu'];
 const TIER1=['lvmeng','zhugeliang','zhouyu','sunquan','caocao','liubei','huangzhong'];
-const TIER2=['zhangfei','zhaoyun','machao','xiahoudun','xiahouden','zhangliao','lubu','asiainvincible','dongzhuo'];
+const TIER2=['zhangfei','zhaoyun','machao','xiahoudun','zhangliao','lubu','dongzhuo'];
 function pickTierEnemy(tier,excludeId,excludeFac){
   let pool=GENS.filter(g=>tier.includes(g.id)&&g.id!==excludeId);
   const pref=pool.filter(g=>g.f!==excludeFac);
@@ -2948,7 +2948,6 @@ function spawnConfetti(){
 }
 
 loadPR();if(PR.deck.length===0)initDeck();
-if(!PR.deck.some(c=>c.id==='asiainvincible')){PR.deck.push({id:'asiainvincible'});initGenEquip('asiainvincible');savePR();}
 loadSprites();loadSheets();showTitle();
 if(PR.wins===0&&!localStorage.getItem('tkd_tutorial'))setTimeout(()=>{showTutorial();localStorage.setItem('tkd_tutorial','1');},800);
 document.getElementById('btn-nav-close').style.display='flex';
