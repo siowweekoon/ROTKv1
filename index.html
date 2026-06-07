@@ -218,7 +218,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:2.6em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.2.0</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.2.2</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -2360,7 +2360,7 @@ function storyMakeEG(egId){
   const src=GENS.find(g=>g.id===egId);
   const eg=JSON.parse(JSON.stringify(src));
   if(src?.special?.fn)eg.special.fn=src.special.fn;
-  if(egId==='footsword'||egId==='footshield'){eg.tier1=true;eg.spd=Math.min(200,eg.spd+22);}
+  if(egId==='footsword'||egId==='footshield'){eg.tier1=true;}
   eg.spdFloor=Math.max(10,eg.spd-25);
   return eg;
 }
@@ -2400,8 +2400,8 @@ function storyStartWave(){
   for(let i=0;i<wLen;i++){
     storyEnemies.push(mkStoryEnemy(i%2===0?'footsword':'footshield',i));
   }
-  // Full HP restore each wave
-  PB.hp=PG.maxHp;PB.sp=0;
+  // Full HP restore each wave; SP carries forward
+  PB.hp=PG.maxHp;
   PB.x=ARENA_L+30;
   PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;
   PB.invincTimer=0;PB.burnTimer=0;PB.guarding=false;PB.usingSpecial=false;
@@ -2427,7 +2427,7 @@ function updateStoryEnemies(){
     if(eb.atkCool>0)eb.atkCool--;
     const dist=Math.abs(eb.x-PB.x);
     const reach=WEAPON_REACH[eg.wep||'sword'];
-    const spd=Math.max(eg.spdFloor,eg.spd)*0.32;
+    const spd=(BASE_SPEED+(eg.spd-60)*.04)*(eb.slowTimer>0?.45:1);
     e.aiTimer--;
     if(e.aiTimer<=0){
       if(dist<=reach-4&&eb.atkCool<=0)e.aiAction='attack';
@@ -2520,7 +2520,7 @@ function storyBossEntry(bossId){
   const bossName=bossId==='zhangliao'?'Zhang Liao':'Xiahou Dun';
   EG=storyMakeEG(bossId);
   EB=mkBattle(EG,false);
-  PB.hp=PG.maxHp;PB.sp=0; // Full HP restore for boss fight
+  PB.hp=PG.maxHp; // Full HP restore for boss fight; SP carries forward
   PB.x=ARENA_L+30;
   PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;
   PB.invincTimer=0;PB.burnTimer=0;PB.guarding=false;PB.usingSpecial=false;
