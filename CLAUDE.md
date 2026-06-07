@@ -13,17 +13,34 @@ C:\Users\weeko\Desktop\ROTK\
   Sprites/clean/      ← sprite sheet PNGs for battle animations
 ```
 
-## Generals (14 total)
-| Faction | Generals |
-|---|---|
-| SHU | Guan Yu, Zhang Fei, Zhao Yun, Huang Zhong, Ma Chao, Zhuge Liang, Liu Bei |
-| WEI | Cao Cao, Zhang Liao, Xiahou Dun |
-| WU | Sun Quan, Lv Meng, Zhou Yu |
-| IND | Lü Bu |
+## Generals (13 playable + story-only units)
+| Faction | Tier | Generals |
+|---|---|---|
+| SHU | T2 | Guan Yu, Zhang Fei, Zhao Yun, Ma Chao |
+| SHU | T1 | Huang Zhong, Zhuge Liang, Liu Bei |
+| WEI | T2 | Zhang Liao, Xiahou Dun |
+| WEI | T1 | Cao Cao |
+| WU | T1 | Sun Quan, Lv Meng, Zhou Yu |
+| IND | T2 | Lü Bu, Dong Zhuo |
+
+**storyOnly:true units (hidden from generals page, no free card, not acquirable):**
+- `asiainvincible` — Asia the Invincible (removed as general AND as opponent)
+- `xiahouden` — Xia Hou En (locked as general; Story Phase 2 boss only)
+- `footsword` — Wei Swordsman (story wave enemy)
+- `footshield` — Wei Shieldman (story wave enemy)
+
+**Rule:** Any future NPC/story-only unit must get `storyOnly:true` in GENS. `renderSel()` filters with `!g.storyOnly`.
 
 **Tier system (for battle progression):**
 - TIER1 (round 1 opponents): lvmeng, zhugeliang, zhouyu, sunquan, caocao, liubei, huangzhong
-- TIER2 (round 2 opponents): guanyu, zhangfei, zhaoyun, machao, xiahoudun, zhangliao, lubu
+- TIER2 (round 2 opponents): zhangfei, zhaoyun, machao, xiahoudun, zhangliao, lubu, dongzhuo
+
+**Key special skills:**
+- Zhuge Liang: Eight Trigrams = WAR×1.9 bolt + stun (uses WAR not STR)
+- Liu Bei: Benevolent Rule = heal DEX×1.5 (uses DEX not CHR)
+- Zhou Yu: Fire Attack = burn 50dmg/sec 5sec, player attack +30% during burn
+- Asia Invincible: KuiHuaBaoDian = DEX×3.5 + stun 40f (storyOnly — not encountered in normal play)
+- Cai Wenji Ghost + Nine Yin Ghost: drain 10% enemy HP → heal player
 
 ## Stats on general object
 `war`, `str` (was int), `dex` (was chr), `spd`, `maxHp`
@@ -49,9 +66,11 @@ Special damage capped at 50% of skill fn result
 
 ## General card (roguelike deck) system
 - `PR.deck = [{id:'guanyu'}, ...]` — player's hand of general cards
-- Start with 2 random cards; select screen only shows generals in deck (others greyed/locked)
-- Win streak: used card returned + 1 random TIER2 card gained (deck grows)
-- Lose: used card gone + 1 random TIER1 card added (deck same size, quality drops)
+- Start: 2 random cards (no free Asia card — that line was removed)
+- Select screen only shows generals in deck (others greyed/locked with 🔒)
+- Win B2: card returned + 1 Elite card + choose 1 reward (3 slots)
+- Lose B1: card gone, Common card issued
+- Lose B2: card gone, Common card issued, player picks 1 item to lose
 - 0 cards = cannot fight, must New Game
 
 ## Reward system (4 slots)
@@ -71,15 +90,53 @@ Special damage capped at 50% of skill fn result
 10. Update GOLD prices object
 
 ### Current rewards
-**Wives:** Diao Chan (+5SPD+10STR), Xiao Qiao (+10SPD), Da Qiao (+15SPD), Wang Zhaojun (+10SPD), Xi Shi (+10SPD)
-**Scriptures:** Art of War (skill+25%), Iron Body (STR+15 HP+30), Wind Rider (SP×1.6), Dragon Tactics (cooldown-20% SPD+10)
-**Horses:** Red Hare (SPD+12 WAR+10), Shadow Runner (DEX+10 dodge20% SPD+100), White Dragon (HP+80), Storm Stallion (SPD+5% stun+0.3s)
-**Weapons:** Green Dragon Crescent Blade (WAR+15), Serpent Spear (STR+12 SPD+8 knockback×1.5)
+
+**Wives** (max 1 each, no duplicates):
+| Wife | Bonus |
+|---|---|
+| Diao Chan | +5 SPD, +10 STR |
+| Xiao Qiao | +10 SPD, +5 DEX |
+| Da Qiao | +15 SPD, +10 DEX |
+| Wang Zhaojun | +10 SPD, +5 STR |
+| Xi Shi | +10 SPD, +5 WAR |
+| Lady Sun | +10 WAR, +8 DEX |
+| Zhen Ji | +12 STR, +8 SPD |
+| Huang Yueying | SP gain ×1.2, STR +8 |
+| Cai Wenji | All stats +5, Ghost drain HP 10% on special |
+| Lady Bian | Max HP +60, DEX +10 |
+
+**Scriptures:**
+| Scripture | Effect |
+|---|---|
+| Art of War | Special +25%, WAR +10 |
+| Iron Body Scroll | STR +15, Max HP +30 |
+| Wind Rider Manual | SP gain +60% |
+| Dragon Tactics | Cooldown -15%, SPD +10 |
+| Nine Yin Manual | Ghost drain HP 10%, cooldown -15% |
+| Tiger Crane Manual | 12% double strike (normal hits only) |
+| Six Meridian Sword | Special +50% effective (only direct hit) |
+| Five Rings Codex | WAR +15, STR +15 |
+| Shaolin Iron Palm | Each hit -5 enemy SPD (cap -25) |
+| Iron Shirt Scripture | Take 20% less damage |
+
+**Horses:**
+| Horse | Effect |
+|---|---|
+| Red Hare | SPD +30, WAR +15 |
+| Shadow Runner | Dodge 20%, SPD +30 (elite) |
+| White Dragon | Max HP +40, SPD +10 |
+| Storm Stallion | SPD +5%, Stun +0.3s |
+
+**Weapons:**
+| Weapon | Effect |
+|---|---|
+| Green Dragon Crescent Blade | WAR +15 |
+| Serpent Spear | STR +12, knockback ×1.5 (elite) |
 
 ## Gold economy
-`PR.gold` — currency. Earned: +20 mid-win, +50 full-win, +10 loss.
-Market: buy (T1 card 50g, T2 150g, wife 80g, scripture 100g, horse 120g, weapon 130g)
-Sell: (T1 25g, T2 75g, wife/scripture 40g, horse 60g, weapon 65g)
+`PR.gold` — currency. Start: 500g. Earned: +20 mid-win, +50 full-win, +10 loss.
+Market buy: T1 card 200g, normal scripture/horse/weapon (non-elite).
+Market sell: scriptures/horses/weapons only (stacked ×count view), no wives/cards.
 
 ## Sprite system
 Two rendering paths in drawCombatant():
