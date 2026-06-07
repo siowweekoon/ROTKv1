@@ -218,7 +218,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:2.6em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.2.3</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.2.4</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -2555,6 +2555,8 @@ function storyBossEntry(bossId){
   const bossName=bossId==='zhangliao'?'Zhang Liao':'Xia Hou En';
   EG=storyMakeEG(bossId);
   EB=mkBattle(EG,false);
+  EB.sp=100; // boss enters with full SP — can use special immediately
+  EB.maxHp=Math.floor(EB.maxHp*1.1); EB.hp=EB.maxHp; // +10% HP in story mode
   PB.hp=PG.maxHp; // Full HP restore for boss fight; SP carries forward
   PB.x=ARENA_L+30;
   PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;
