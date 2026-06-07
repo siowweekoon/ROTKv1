@@ -233,8 +233,11 @@ const SPRITES = {
     <!-- Market centre -->
     <button onclick="showMarket()" class="title-nav-btn" style="border-color:#66cc88;color:#aaffbb;align-self:flex-end">🏪<br><span>Market</span></button>
 
-    <!-- Battle right -->
-    <button onclick="showSelect()" class="title-nav-btn title-nav-battle" style="align-self:flex-end">⚔<br><span>Battle</span></button>
+    <!-- Story + Battle right -->
+    <div style="display:flex;flex-direction:column;align-items:stretch;gap:6px">
+      <button onclick="startStory()" class="title-nav-btn" style="border-color:#aa8833;color:#ffdd88">📖<br><span>Story</span></button>
+      <button onclick="showSelect()" class="title-nav-btn title-nav-battle">⚔<br><span>Battle</span></button>
+    </div>
   </div>
 
 
@@ -530,7 +533,7 @@ const GENS=[
   {id:'xiahoudun', name:'Xiahou Dun',   title:'One-Eyed Titan',      f:'WEI',char:'惇',wep:'sword',sig:{weapon:'ironclad_sabre',armor:'xiahoudun_armor'},
    war:90,str:75,dex:72,spd:74,maxHp:540,
    special:{name:'Iron Will',desc:'Become invincible for 3 seconds',
-     fn:(p,e,PB,EB)=>{PB.invincTimer=180;addFx('⚡ IRON WILL — INVINCIBLE!','#ff8800');}},
+     fn:(p,e,PB,EB)=>{if(storyMode){const d=Math.floor(p.war*1.6+rand(25,50));EB.hp=Math.max(0,EB.hp-d);EB.hurtTimer=35;EB.x=Math.max(ARENA_L,EB.x-90);spawnHit(EB.x,GNDX-60,d,true,'#ff6600');addFx('💥 IRON FIST — SHOCKWAVE!','#ff8800');}else{PB.invincTimer=180;addFx('⚡ IRON WILL — INVINCIBLE!','#ff8800');}}},
    q:{win:["One eye is all I need to see you fall!"],los:["...Pain finally found my limit."]}},
 
   {id:'sunquan',   name:'Sun Quan',     title:'Tiger of Jiangdong',  f:'WU', char:'孫',wep:'sword',sig:{weapon:'tiger_dao',armor:'sunquan_armor'},
@@ -562,6 +565,16 @@ const GENS=[
    special:{name:'Iron Tyranny',desc:'Brute crushing blow — massive damage + stun',
      fn:(p,e,PB,EB)=>{const d=Math.floor(p.war*2.3+p.str*0.5+rand(20,45));EB.hp=Math.max(0,EB.hp-d);EB.stunTimer=70;spawnHit(EB.x,GNDX-60,d,true,'#cc3300');}},
    q:{win:["All of Han bows before my might!"],los:["Insolent worm... this changes nothing."]}},
+  {id:'footsword', name:'Wei Swordsman', title:'Infantry',f:'WEI',char:'兵',wep:'sword',
+   war:42,str:38,dex:30,spd:68,maxHp:110,
+   special:{name:'Slash',desc:'Quick slash',
+     fn:(p,e,PB,EB)=>{const d=Math.floor(p.war*1.2+rand(5,15));EB.hp=Math.max(0,EB.hp-d);spawnHit(EB.x,GNDX-50,d,false,'#cc6644');}},
+   q:{win:["For Wei!"],los:["I fall..."]}},
+  {id:'footshield', name:'Wei Shieldman', title:'Infantry',f:'WEI',char:'盾',wep:'sword',
+   war:35,str:45,dex:60,spd:50,maxHp:160,
+   special:{name:'Shield Bash',desc:'Shield bash + stun',
+     fn:(p,e,PB,EB)=>{const d=Math.floor(p.str*1.0+rand(5,15));EB.hp=Math.max(0,EB.hp-d);EB.stunTimer=25;spawnHit(EB.x,GNDX-50,d,false,'#4466cc');}},
+   q:{win:["Shield holds!"],los:["The shield breaks..."]}},
 ];
 
 // ═══════════════════════════════════════════════════
@@ -1032,7 +1045,7 @@ const SHEET_DEFS = {
     }
   },
   zhaoyun:{
-    src:'Sprites/clean/ZhaoYun_idle_back_atk_charge_Special.png',
+    src:'Sprites/clean/ZhaoYun_idle_back_atk_charge_Special.png?v=2',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1055,7 +1068,7 @@ const SHEET_DEFS = {
     }
   },
   machao:{
-    src:'Sprites/clean/Machao_idle_back_atk_charge_Special.png',
+    src:'Sprites/clean/Machao_idle_back_atk_charge_Special.png?v=2',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1079,6 +1092,42 @@ const SHEET_DEFS = {
   },
   sunquan:{
     src:'Sprites/clean/SunQuan_idle_back_atk_charge_Special.png',
+    displayH:140, yOff:-25, useDarkBg:true,
+    anims:{
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
+      move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
+    }
+  },
+  xiahoudun:{
+    src:'Sprites/clean/XiaHouDun_back_atk_charge_Special.png',
+    displayH:140, yOff:-25, useDarkBg:true,
+    anims:{
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
+      move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
+    }
+  },
+  footsword:{
+    src:'Sprites/clean/FootSword_idle_back_atk_charge_Special.png',
+    displayH:140, yOff:-25, useDarkBg:true,
+    anims:{
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
+      move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
+    }
+  },
+  footshield:{
+    src:'Sprites/clean/FootShield_idle_back_atk_charge_Special.png',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1114,7 +1163,7 @@ const SHEET_DEFS = {
     }
   },
   zhouyu:{
-    src:'Sprites/clean/ZhouYu_idle_back_atk_charge_Special.png',
+    src:'Sprites/clean/ZhouYu_idle_back_atk_charge_Special.png?v=2',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1174,7 +1223,7 @@ const SHEET_DEFS = {
     }
   },
   dongzhuo:{
-    src:'Sprites/clean/DongZhuo_idle_back_atk_charge_Special.png',
+    src:'Sprites/clean/DongZhuo_idle_back_atk_charge_Special.png?v=2',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1706,6 +1755,7 @@ function leaveFullscreen(){
 }
 
 function showTitle(){
+  storyMode=false;
   stopLoop();
   let h='';
   const allRwds=[...PR.wives,...PR.scriptures,...PR.horses];
@@ -2272,8 +2322,123 @@ function applyLossPenalty(isBattle2){
   return null;
 }
 
+// ─────────────────────────────────────────────────────────
+//  STORY MODE — Saving of the Prince (Battle of Changban)
+// ─────────────────────────────────────────────────────────
+let storyMode = false;
+const SM_P1_WAVES = [2,4,4,4,6,8];
+const SM_P2_WAVES = [4,6,6,8,8];
+let SM = {phase:1,waveIdx:0,soldierIdx:0,savedHp:0,fightingBoss:false,bossId:null};
+
+function startStory(){
+  storyMode=true;
+  SM={phase:1,waveIdx:0,soldierIdx:0,savedHp:0,fightingBoss:false,bossId:null};
+  const src=GENS.find(g=>g.id==='zhaoyun');
+  PG=JSON.parse(JSON.stringify(src));
+  if(src?.special?.fn)PG.special.fn=src.special.fn;
+  PB=mkBattle(PG,true);
+  SM.savedHp=PB.maxHp;
+  battleStreak=0; usedCardId='zhaoyun';
+  showScreen('s-battle');
+  CV=document.getElementById('bc');CX=CV.getContext('2d');
+  CV.width=CW;CV.height=CH;
+  document.getElementById('p-name').textContent=PG.name;
+  storyNextFight();
+}
+
+function storySpawnEnemy(egId){
+  const src=GENS.find(g=>g.id===egId);
+  EG=JSON.parse(JSON.stringify(src));
+  if(src?.special?.fn)EG.special.fn=src.special.fn;
+  if(egId==='footsword'||egId==='footshield'){EG.tier1=true;EG.spd=Math.min(200,EG.spd+20);}
+  EG.spdFloor=Math.max(10,EG.spd-25);
+  EB=mkBattle(EG,false);
+  PB.hp=SM.savedHp;
+  PB.x=ARENA_L+30;
+  PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;
+  PB.invincTimer=0;PB.burnTimer=0;PB.guarding=false;PB.usingSpecial=false;
+  PARTS=[];DNUM=[];FXTXT=[];ARROWS=[];
+  pHitDealt=false;eHitDealt=false;cancelGuard();
+  aiTimer=0;aiAction='approach';frameCount=0;
+  document.getElementById('e-name').textContent=EG.name;
+  battleRunning=false;
+  goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
+}
+
+function storyNextFight(){
+  const waves=SM.phase===1?SM_P1_WAVES:SM_P2_WAVES;
+  const si=SM.soldierIdx;
+  const egId=si%2===0?'footsword':'footshield';
+  const phaseTotal=waves.reduce((a,b)=>a+b,0);
+  const soFar=waves.slice(0,SM.waveIdx).reduce((a,b)=>a+b,0)+si+1;
+  storySpawnEnemy(egId);
+  startCountdown(()=>{battleRunning=true;addFx(`⚔ Wei soldier ${soFar}/${phaseTotal}!`,'#cc8833');});
+}
+
+function storyBossEntry(bossId){
+  SM.fightingBoss=true;SM.bossId=bossId;
+  PB.hp=Math.floor(PG.maxHp*0.5);SM.savedHp=PB.hp;
+  const bossName=bossId==='zhangliao'?'Zhang Liao':'Xiahou Dun';
+  storySpawnEnemy(bossId);
+  startCountdown(()=>{battleRunning=true;addFx(`⚔ BOSS — ${bossName} appears!`,'#e8c44d');});
+}
+
+function storyBattleWon(){
+  SM.savedHp=PB.hp;
+  if(SM.fightingBoss){
+    if(SM.bossId==='zhangliao'){
+      SM.phase=2;SM.waveIdx=0;SM.soldierIdx=0;SM.fightingBoss=false;SM.bossId=null;
+      addFx('🏆 Zhang Liao falls! Press on!','#ffcc44');
+      setTimeout(storyNextFight,2200);
+    }else{storyComplete();}
+  }else{
+    const waves=SM.phase===1?SM_P1_WAVES:SM_P2_WAVES;
+    SM.soldierIdx++;
+    if(SM.soldierIdx>=waves[SM.waveIdx]){
+      SM.waveIdx++;SM.soldierIdx=0;
+      if(SM.waveIdx>=waves.length){
+        const bossId=SM.phase===1?'zhangliao':'xiahoudun';
+        setTimeout(()=>storyBossEntry(bossId),2200);
+      }else{setTimeout(storyNextFight,1200);}
+    }else{setTimeout(storyNextFight,800);}
+  }
+}
+
+function storyComplete(){
+  storyMode=false;
+  addFx('🏆 ZHAO YUN SAVES THE PRINCE! 🏆','#ffcc44');
+  setTimeout(()=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;color:#e8c44d;text-align:center;padding:20px';
+    ov.innerHTML=`<div style="font-size:2.2em;margin-bottom:14px">🏆 VICTORY</div>
+      <div style="font-size:1em;max-width:420px;color:#ffddaa;line-height:1.6;margin-bottom:24px">
+        Zhao Yun carves through an entire army alone,<br>delivering the Young Prince to safety.<br><br>
+        <em style="color:#e8c44d">A hero stands alone against ten thousand.</em>
+      </div>
+      <button onclick="this.parentElement.remove();showTitle()" style="padding:10px 30px;background:#1a1200;border:2px solid #e8c44d;color:#e8c44d;font-family:Georgia,serif;font-size:1em;cursor:pointer;border-radius:4px">Return to Title</button>`;
+    document.body.appendChild(ov);
+  },2800);
+}
+
+function storyFail(){
+  storyMode=false;
+  addFx('💀 Zhao Yun falls...','#cc2222');
+  setTimeout(()=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;color:#cc4444;text-align:center;padding:20px';
+    ov.innerHTML=`<div style="font-size:2.2em;margin-bottom:14px">💀 FALLEN</div>
+      <div style="font-size:1em;max-width:420px;color:#ffaaaa;line-height:1.6;margin-bottom:24px">
+        Zhao Yun is overwhelmed by the Wei forces.<br>The Young Prince's fate is sealed...
+      </div>
+      <button onclick="this.parentElement.remove();startStory()" style="padding:8px 22px;background:#1a0000;border:2px solid #cc4444;color:#cc4444;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:4px;margin:4px">⚔ Retry</button>
+      <button onclick="this.parentElement.remove();showTitle()" style="padding:8px 22px;background:#111;border:1px solid #666;color:#aaa;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:4px;margin:4px">Title</button>`;
+    document.body.appendChild(ov);
+  },1800);
+}
+
 function endBattle(won){
   if(won){sfxVictory();}else{sfxDefeat();}
+  if(storyMode){won?storyBattleWon():storyFail();return;}
   if(won){
     battleStreak++;
     if(battleStreak>=3){
