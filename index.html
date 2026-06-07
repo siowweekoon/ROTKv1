@@ -1622,6 +1622,7 @@ function gameLoop(){
   frameCount++;
   const storyFoot=storyMode&&!SM.fightingBoss&&storyEnemies.length>0;
   if(battleRunning){
+    if(storyFoot)syncStoryEB();
     updatePlayer();
     if(storyFoot){
       updateStoryEnemies();
@@ -2344,7 +2345,16 @@ const SM_P1_WAVES = [2,4,4,4,6,8];
 const SM_P2_WAVES = [4,6,6,8,8];
 let SM = {phase:1,waveIdx:0,fightingBoss:false,bossId:null,waveClearing:false};
 let storyEnemies = []; // [{gen, battle, aiTimer, aiAction}]
-const SE_YOFFS = [0,-5,5,-4,4,-6,6,3,-3];
+const SE_YOFFS = [0,-10,10,0,-10,10,0,-10,10];
+const SE_XOFFS = [0,-8,8,-5,5,0,-8,8,-5];
+
+// Keep EG/EB pointing to closest living story enemy so updatePlayer works unchanged
+function syncStoryEB(){
+  const living=storyEnemies.filter(e=>e.battle.hp>0);
+  if(!living.length){return;}
+  living.sort((a,b)=>Math.abs(a.battle.x-PB.x)-Math.abs(b.battle.x-PB.x));
+  EG=living[0].gen; EB=living[0].battle;
+}
 
 function storyMakeEG(egId){
   const src=GENS.find(g=>g.id===egId);
@@ -2358,7 +2368,7 @@ function storyMakeEG(egId){
 function mkStoryEnemy(id,slot){
   const gen=storyMakeEG(id);
   const battle=mkBattle(gen,false);
-  battle.x=Math.min(ARENA_R,490+slot*32);
+  battle.x=Math.min(ARENA_R, 490+slot*30+SE_XOFFS[slot%SE_XOFFS.length]);
   battle.lastX=battle.x;
   battle.extraYOff=SE_YOFFS[slot%SE_YOFFS.length];
   battle._hd=false;
@@ -2399,6 +2409,8 @@ function storyStartWave(){
   pHitDealt=false;eHitDealt=false;cancelGuard();
   frameCount=0;
   document.getElementById('e-name').textContent=wLen===1?'Wei Soldier':'Wei Soldiers';
+  // Pre-seed EG/EB so updatePlayer references are valid before syncStoryEB runs
+  EG=storyEnemies[0].gen; EB=storyEnemies[0].battle;
   battleRunning=false;
   addFx(`⚔ Wave ${SM.waveIdx+1}/${waves.length} — ${wLen} soldiers!`,'#cc8833');
   setTimeout(()=>{if(storyMode&&!SM.fightingBoss)battleRunning=true;},1000);
