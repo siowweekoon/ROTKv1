@@ -218,7 +218,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:2.6em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.1.6</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.2.0</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1632,6 +1632,7 @@ function gameLoop(){
   // Render
   CX.clearRect(0,0,CW,CH);
   drawBG();
+  drawStoryCrowd();
   if(PB&&EB){
     if(PB.usingSpecial){
       drawCombatant(EB,EG,false,frameCount);
@@ -1642,7 +1643,9 @@ function gameLoop(){
     }
   }
   drawParts();
-  if(!battleRunning&&PB&&EB){
+  // Show overlay only when player dies, or in boss/normal battles
+  const showOverlay=!battleRunning&&PB&&EB&&(!storyMode||PB.hp<=0||SM.fightingBoss);
+  if(showOverlay){
     CX.save();CX.globalAlpha=.7;CX.fillStyle='rgba(0,0,0,.5)';CX.fillRect(0,0,CW,CH);
     CX.fillStyle=PB.hp<=0?'#cc2222':'#e8c44d';CX.font='bold 36px Georgia';CX.textAlign='center';
     CX.shadowColor=CX.fillStyle;CX.shadowBlur=20;
@@ -2324,30 +2327,134 @@ function applyLossPenalty(isBattle2){
 let storyMode = false;
 const SM_P1_WAVES = [2,4,4,4,6,8];
 const SM_P2_WAVES = [4,6,6,8,8];
-let SM = {phase:1,waveIdx:0,soldierIdx:0,savedHp:0,fightingBoss:false,bossId:null};
+let SM = {phase:1,waveIdx:0,savedHp:0,fightingBoss:false,bossId:null};
+
+// Background soldiers visible on screen but not yet active
+let storyBg = []; // [{id, x, yOffExtra, frameOffset}]
+let storySoldierCount=0, storySoldiersDefeated=0;
+const BG_XSLOTS=[530,550,515,560,535]; // x positions cycling for bg soldiers
+const BG_YOFFS=[0,-5,5,-5,0,5];       // yOff extras cycling
+
+function drawStoryCrowd(){
+  if(!storyMode||storyBg.length===0)return;
+  storyBg.forEach((s,i)=>{
+    const sf=getSheetFrame(s.id,'idle',0,frameCount+s.frameOffset,false);
+    if(!sf)return;
+    const sdh=sf.dh, sdw=sf.dw;
+    const sfY=GNDX-sdh+18+sf.yOff+s.yOffExtra-5;
+    CX.save();
+    CX.globalAlpha=0.82;
+    CX.translate(s.x+sdw/2,0);CX.scale(-1,1);
+    CX.drawImage(sf.img,sf.sx,sf.sy,sf.sw,sf.sh,0,sfY,sdw,sdh);
+    CX.restore();
+  });
+}
+
+function storyMakeEG(egId){
+  const src=GENS.find(g=>g.id===egId);
+  const eg=JSON.parse(JSON.stringify(src));
+  if(src?.special?.fn)eg.special.fn=src.special.fn;
+  if(egId==='footsword'||egId==='footshield'){eg.tier1=true;eg.spd=Math.min(200,eg.spd+20);}
+  eg.spdFloor=Math.max(10,eg.spd-25);
+  return eg;
+}
 
 function startStory(){
   storyMode=true;
-  SM={phase:1,waveIdx:0,soldierIdx:0,savedHp:0,fightingBoss:false,bossId:null};
+  SM={phase:1,waveIdx:0,savedHp:0,fightingBoss:false,bossId:null};
+  storyBg=[];storySoldierCount=0;storySoldiersDefeated=0;
   const src=GENS.find(g=>g.id==='zhaoyun');
   PG=JSON.parse(JSON.stringify(src));
   if(src?.special?.fn)PG.special.fn=src.special.fn;
   PB=mkBattle(PG,true);
   SM.savedHp=PB.maxHp;
-  battleStreak=0; usedCardId='zhaoyun';
+  battleStreak=0;usedCardId='zhaoyun';
   showScreen('s-battle');
   CV=document.getElementById('bc');CX=CV.getContext('2d');
   CV.width=CW;CV.height=CH;
   document.getElementById('p-name').textContent=PG.name;
-  storyNextFight();
+  storyStartWave();
+}
+
+function storyStartWave(){
+  const waves=SM.phase===1?SM_P1_WAVES:SM_P2_WAVES;
+  const wLen=waves[SM.waveIdx];
+  storyBg=[];
+  storySoldierCount=wLen;
+  storySoldiersDefeated=0;
+  // Schedule background soldiers to appear with staggered timing
+  for(let i=1;i<wLen;i++){
+    const idx=i;
+    setTimeout(()=>{
+      if(!storyMode||SM.fightingBoss)return;
+      const id=idx%2===0?'footsword':'footshield';
+      storyBg.push({id,x:BG_XSLOTS[idx%BG_XSLOTS.length],yOffExtra:BG_YOFFS[idx%BG_YOFFS.length],frameOffset:rand(0,60)});
+    },idx*1200);
+  }
+  // First soldier is the active enemy
+  const firstId=0%2===0?'footsword':'footshield';
+  EG=storyMakeEG(firstId);
+  EB=mkBattle(EG,false);
+  PB.hp=SM.savedHp;
+  PB.x=ARENA_L+30;
+  PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;
+  PB.invincTimer=0;PB.burnTimer=0;PB.guarding=false;PB.usingSpecial=false;
+  PARTS=[];DNUM=[];FXTXT=[];ARROWS=[];
+  pHitDealt=false;eHitDealt=false;cancelGuard();
+  aiTimer=0;aiAction='approach';frameCount=0;
+  document.getElementById('e-name').textContent=EG.name;
+  battleRunning=false;
+  goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
+  const phaseTotal=waves.reduce((a,b)=>a+b,0);
+  startCountdown(()=>{battleRunning=true;addFx(`⚔ Wave ${SM.waveIdx+1} — ${wLen} soldiers!`,'#cc8833');});
+}
+
+function storyActivateSoldier(s){
+  // Promote a background soldier to active EG/EB without countdown
+  EG=storyMakeEG(s.id);
+  EB=mkBattle(EG,false);
+  pHitDealt=false;eHitDealt=false;
+  aiTimer=0;aiAction='approach';
+  PARTS=[];DNUM=[];ARROWS=[];
+  document.getElementById('e-name').textContent=EG.name;
+  battleRunning=true;
+}
+
+function storyEnemyDefeated(){
+  SM.savedHp=PB.hp;
+  storySoldiersDefeated++;
+  PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;PB.guarding=false;
+  const tryNext=()=>{
+    if(!storyMode)return;
+    if(storyBg.length>0){
+      const next=storyBg.shift();
+      storyActivateSoldier(next);
+    }else if(storySoldiersDefeated>=storySoldierCount){
+      storyWaveClear();
+    }else{
+      // More soldiers scheduled to appear — wait
+      setTimeout(tryNext,300);
+    }
+  };
+  setTimeout(tryNext,500);
+}
+
+function storyWaveClear(){
+  const waves=SM.phase===1?SM_P1_WAVES:SM_P2_WAVES;
+  SM.waveIdx++;
+  if(SM.waveIdx>=waves.length){
+    const bossId=SM.phase===1?'zhangliao':'xiahoudun';
+    addFx('⚔ A general approaches...','#e8c44d');
+    setTimeout(()=>storyBossEntry(bossId),2000);
+  }else{
+    addFx(`⚔ Wave ${SM.waveIdx+1}/${waves.length}!`,'#cc8833');
+    setTimeout(storyStartWave,1800);
+  }
 }
 
 function storySpawnEnemy(egId){
-  const src=GENS.find(g=>g.id===egId);
-  EG=JSON.parse(JSON.stringify(src));
-  if(src?.special?.fn)EG.special.fn=src.special.fn;
-  if(egId==='footsword'||egId==='footshield'){EG.tier1=true;EG.spd=Math.min(200,EG.spd+20);}
-  EG.spdFloor=Math.max(10,EG.spd-25);
+  storyBg=[];
+  EG=storyMakeEG(egId);
   EB=mkBattle(EG,false);
   PB.hp=SM.savedHp;
   PB.x=ARENA_L+30;
@@ -2361,16 +2468,6 @@ function storySpawnEnemy(egId){
   goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
 }
 
-function storyNextFight(){
-  const waves=SM.phase===1?SM_P1_WAVES:SM_P2_WAVES;
-  const si=SM.soldierIdx;
-  const egId=si%2===0?'footsword':'footshield';
-  const phaseTotal=waves.reduce((a,b)=>a+b,0);
-  const soFar=waves.slice(0,SM.waveIdx).reduce((a,b)=>a+b,0)+si+1;
-  storySpawnEnemy(egId);
-  startCountdown(()=>{battleRunning=true;addFx(`⚔ Wei soldier ${soFar}/${phaseTotal}!`,'#cc8833');});
-}
-
 function storyBossEntry(bossId){
   SM.fightingBoss=true;SM.bossId=bossId;
   PB.hp=Math.floor(PG.maxHp*0.5);SM.savedHp=PB.hp;
@@ -2380,23 +2477,15 @@ function storyBossEntry(bossId){
 }
 
 function storyBattleWon(){
-  SM.savedHp=PB.hp;
   if(SM.fightingBoss){
+    SM.savedHp=PB.hp;
     if(SM.bossId==='zhangliao'){
-      SM.phase=2;SM.waveIdx=0;SM.soldierIdx=0;SM.fightingBoss=false;SM.bossId=null;
+      SM.phase=2;SM.waveIdx=0;SM.fightingBoss=false;SM.bossId=null;
       addFx('🏆 Zhang Liao falls! Press on!','#ffcc44');
-      setTimeout(storyNextFight,2200);
+      setTimeout(storyStartWave,2400);
     }else{storyComplete();}
   }else{
-    const waves=SM.phase===1?SM_P1_WAVES:SM_P2_WAVES;
-    SM.soldierIdx++;
-    if(SM.soldierIdx>=waves[SM.waveIdx]){
-      SM.waveIdx++;SM.soldierIdx=0;
-      if(SM.waveIdx>=waves.length){
-        const bossId=SM.phase===1?'zhangliao':'xiahoudun';
-        setTimeout(()=>storyBossEntry(bossId),2200);
-      }else{setTimeout(storyNextFight,1200);}
-    }else{setTimeout(storyNextFight,800);}
+    storyEnemyDefeated();
   }
 }
 
