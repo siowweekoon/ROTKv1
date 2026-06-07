@@ -216,9 +216,9 @@ const SPRITES = {
   <!-- Title centered -->
   <div style="position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:100%">
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
-      <span style="font-size:2.6em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
+      <span style="font-size:clamp(1.1em,5.5vw,2.6em);color:var(--gold);letter-spacing:clamp(1px,1vw,5px);text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.2.4</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.2.5</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -2378,9 +2378,9 @@ function mkStoryEnemy(id,slot){
 function showStoryIntro(){
   const ov=document.createElement('div');
   ov.id='story-intro-ov';
-  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;font-family:Georgia,serif';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9998;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;font-family:Georgia,serif';
   ov.innerHTML=`
-    <div style="max-width:460px;width:100%;background:linear-gradient(180deg,#1c1100 0%,#0d0800 100%);border:2px solid #8b6914;border-radius:8px;padding:26px 24px;text-align:center;color:#e8c44d;box-shadow:0 0 50px rgba(180,120,0,.3)">
+    <div style="max-width:460px;width:100%;margin:0 auto;background:linear-gradient(180deg,#1c1100 0%,#0d0800 100%);border:2px solid #8b6914;border-radius:8px;padding:26px 24px;text-align:center;color:#e8c44d;box-shadow:0 0 50px rgba(180,120,0,.3)">
       <div style="font-size:1.45em;letter-spacing:2px;margin-bottom:4px">⚔ SAVING OF THE PRINCE</div>
       <div style="font-size:.7em;color:#aa8844;letter-spacing:3px;margin-bottom:14px">Battle of Changban — 208 AD</div>
       <div style="width:50px;height:1px;background:#8b6914;margin:0 auto 16px"></div>
