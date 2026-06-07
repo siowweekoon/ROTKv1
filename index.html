@@ -837,7 +837,7 @@ function drawCombatant(cb, gd, isPlayer, frame) {
   // For attack frame: body stays anchored at cb.x; weapon extends OUTWARD.
   // Player faces right → extra width goes right  (left edge stays at cb.x - SP_W/2)
   // Enemy faces left (mirrored) → extra width also goes toward player after flip
-  const enemyYOff=isPlayer?0:-5;
+  const enemyYOff=isPlayer?0:(-5+(cb.extraYOff||0));
   const sf=getSheetFrame(gd.id,cb.state,cb.atkFrame,frame,cb.usingSpecial);
   if(sf){
     const ssc=cb.sizeScale||1;
@@ -1620,36 +1620,51 @@ function updateHUD(){
 // ═══════════════════════════════════════════════════
 function gameLoop(){
   frameCount++;
+  const storyFoot=storyMode&&!SM.fightingBoss&&storyEnemies.length>0;
   if(battleRunning){
     updatePlayer();
-    updateEnemy();
-    checkHits();
-    // Check win/loss
-    if(PB.hp<=0&&PB.state!=='dead'){PB.state='dead';battleRunning=false;setTimeout(()=>endBattle(false),800);}
-    else if(EB.hp<=0&&EB.state!=='dead'){EB.state='dead';battleRunning=false;setTimeout(()=>endBattle(true),800);}
-  }
-  tickParts();
-  // Render
-  CX.clearRect(0,0,CW,CH);
-  drawBG();
-  drawStoryCrowd();
-  if(PB&&EB){
-    if(PB.usingSpecial){
-      drawCombatant(EB,EG,false,frameCount);
-      drawCombatant(PB,PG,true,frameCount);
-    } else {
-      drawCombatant(PB,PG,true,frameCount);
-      drawCombatant(EB,EG,false,frameCount);
+    if(storyFoot){
+      updateStoryEnemies();
+      checkStoryHits();
+      if(PB.hp<=0&&PB.state!=='dead'){
+        PB.state='dead';battleRunning=false;setTimeout(()=>endBattle(false),800);
+      }else if(storyEnemies.every(e=>e.battle.hp<=0)&&!SM.waveClearing){
+        SM.waveClearing=true;battleRunning=false;setTimeout(storyWaveClear,700);
+      }
+    }else{
+      updateEnemy();checkHits();
+      if(PB.hp<=0&&PB.state!=='dead'){PB.state='dead';battleRunning=false;setTimeout(()=>endBattle(false),800);}
+      else if(EB&&EB.hp<=0&&EB.state!=='dead'){EB.state='dead';battleRunning=false;setTimeout(()=>endBattle(true),800);}
     }
   }
+  tickParts();
+  CX.clearRect(0,0,CW,CH);
+  drawBG();
+  if(storyFoot){
+    drawStoryEnemies();
+    drawCombatant(PB,PG,true,frameCount);
+    // Enemy count overlay
+    const liv=storyEnemies.filter(e=>e.battle.hp>0).length;
+    CX.save();CX.fillStyle='rgba(0,0,0,.65)';CX.fillRect(CW/2-72,6,144,22);
+    CX.fillStyle='#ffcc44';CX.font='bold 12px Georgia';CX.textAlign='center';
+    CX.fillText(`⚔ ${liv} of ${storyEnemies.length} enemies remaining`,CW/2,21);CX.restore();
+  }else if(PB&&EB){
+    if(PB.usingSpecial){drawCombatant(EB,EG,false,frameCount);drawCombatant(PB,PG,true,frameCount);}
+    else{drawCombatant(PB,PG,true,frameCount);drawCombatant(EB,EG,false,frameCount);}
+  }
   drawParts();
-  // Show overlay only when player dies, or in boss/normal battles
-  const showOverlay=!battleRunning&&PB&&EB&&(!storyMode||PB.hp<=0||SM.fightingBoss);
-  if(showOverlay){
-    CX.save();CX.globalAlpha=.7;CX.fillStyle='rgba(0,0,0,.5)';CX.fillRect(0,0,CW,CH);
-    CX.fillStyle=PB.hp<=0?'#cc2222':'#e8c44d';CX.font='bold 36px Georgia';CX.textAlign='center';
-    CX.shadowColor=CX.fillStyle;CX.shadowBlur=20;
-    CX.fillText(PB.hp<=0?'DEFEATED':'VICTORY',CW/2,CH/2);CX.restore();
+  // Overlay: show DEFEATED in foot mode; VICTORY/DEFEATED in boss/normal
+  if(!battleRunning&&PB){
+    if(storyFoot&&PB.hp<=0){
+      CX.save();CX.globalAlpha=.7;CX.fillStyle='rgba(0,0,0,.5)';CX.fillRect(0,0,CW,CH);
+      CX.fillStyle='#cc2222';CX.font='bold 36px Georgia';CX.textAlign='center';
+      CX.shadowColor='#cc2222';CX.shadowBlur=20;CX.fillText('DEFEATED',CW/2,CH/2);CX.restore();
+    }else if(!storyFoot&&EB){
+      CX.save();CX.globalAlpha=.7;CX.fillStyle='rgba(0,0,0,.5)';CX.fillRect(0,0,CW,CH);
+      CX.fillStyle=PB.hp<=0?'#cc2222':'#e8c44d';CX.font='bold 36px Georgia';CX.textAlign='center';
+      CX.shadowColor=CX.fillStyle;CX.shadowBlur=20;
+      CX.fillText(PB.hp<=0?'DEFEATED':'VICTORY',CW/2,CH/2);CX.restore();
+    }
   }
   updateHUD();
   RAF=requestAnimationFrame(gameLoop);
@@ -2327,136 +2342,173 @@ function applyLossPenalty(isBattle2){
 let storyMode = false;
 const SM_P1_WAVES = [2,4,4,4,6,8];
 const SM_P2_WAVES = [4,6,6,8,8];
-let SM = {phase:1,waveIdx:0,savedHp:0,fightingBoss:false,bossId:null};
-
-// Background soldiers visible on screen but not yet active
-let storyBg = []; // [{id, x, yOffExtra, frameOffset}]
-let storySoldierCount=0, storySoldiersDefeated=0;
-const BG_XSLOTS=[530,550,515,560,535]; // x positions cycling for bg soldiers
-const BG_YOFFS=[0,-5,5,-5,0,5];       // yOff extras cycling
-
-function drawStoryCrowd(){
-  if(!storyMode||storyBg.length===0)return;
-  storyBg.forEach((s,i)=>{
-    const sf=getSheetFrame(s.id,'idle',0,frameCount+s.frameOffset,false);
-    if(!sf)return;
-    const sdh=sf.dh, sdw=sf.dw;
-    const sfY=GNDX-sdh+18+sf.yOff+s.yOffExtra-5;
-    CX.save();
-    CX.globalAlpha=0.82;
-    CX.translate(s.x+sdw/2,0);CX.scale(-1,1);
-    CX.drawImage(sf.img,sf.sx,sf.sy,sf.sw,sf.sh,0,sfY,sdw,sdh);
-    CX.restore();
-  });
-}
+let SM = {phase:1,waveIdx:0,fightingBoss:false,bossId:null,waveClearing:false};
+let storyEnemies = []; // [{gen, battle, aiTimer, aiAction}]
+const SE_YOFFS = [0,-5,5,-4,4,-6,6,3,-3];
 
 function storyMakeEG(egId){
   const src=GENS.find(g=>g.id===egId);
   const eg=JSON.parse(JSON.stringify(src));
   if(src?.special?.fn)eg.special.fn=src.special.fn;
-  if(egId==='footsword'||egId==='footshield'){eg.tier1=true;eg.spd=Math.min(200,eg.spd+20);}
+  if(egId==='footsword'||egId==='footshield'){eg.tier1=true;eg.spd=Math.min(200,eg.spd+22);}
   eg.spdFloor=Math.max(10,eg.spd-25);
   return eg;
 }
 
+function mkStoryEnemy(id,slot){
+  const gen=storyMakeEG(id);
+  const battle=mkBattle(gen,false);
+  battle.x=Math.min(ARENA_R,490+slot*32);
+  battle.lastX=battle.x;
+  battle.extraYOff=SE_YOFFS[slot%SE_YOFFS.length];
+  battle._hd=false;
+  return {gen,battle,aiTimer:rand(10,24)+slot*7,aiAction:'approach'};
+}
+
 function startStory(){
   storyMode=true;
-  SM={phase:1,waveIdx:0,savedHp:0,fightingBoss:false,bossId:null};
-  storyBg=[];storySoldierCount=0;storySoldiersDefeated=0;
+  SM={phase:1,waveIdx:0,fightingBoss:false,bossId:null,waveClearing:false};
+  storyEnemies=[];
   const src=GENS.find(g=>g.id==='zhaoyun');
   PG=JSON.parse(JSON.stringify(src));
   if(src?.special?.fn)PG.special.fn=src.special.fn;
   PB=mkBattle(PG,true);
-  SM.savedHp=PB.maxHp;
   battleStreak=0;usedCardId='zhaoyun';
   showScreen('s-battle');
   CV=document.getElementById('bc');CX=CV.getContext('2d');
   CV.width=CW;CV.height=CH;
   document.getElementById('p-name').textContent=PG.name;
+  goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
   storyStartWave();
 }
 
 function storyStartWave(){
   const waves=SM.phase===1?SM_P1_WAVES:SM_P2_WAVES;
   const wLen=waves[SM.waveIdx];
-  storyBg=[];
-  storySoldierCount=wLen;
-  storySoldiersDefeated=0;
-  // Schedule background soldiers to appear with staggered timing
-  for(let i=1;i<wLen;i++){
-    const idx=i;
-    setTimeout(()=>{
-      if(!storyMode||SM.fightingBoss)return;
-      const id=idx%2===0?'footsword':'footshield';
-      storyBg.push({id,x:BG_XSLOTS[idx%BG_XSLOTS.length],yOffExtra:BG_YOFFS[idx%BG_YOFFS.length],frameOffset:rand(0,60)});
-    },idx*1200);
+  SM.waveClearing=false;
+  storyEnemies=[];
+  for(let i=0;i<wLen;i++){
+    storyEnemies.push(mkStoryEnemy(i%2===0?'footsword':'footshield',i));
   }
-  // First soldier is the active enemy
-  const firstId=0%2===0?'footsword':'footshield';
-  EG=storyMakeEG(firstId);
-  EB=mkBattle(EG,false);
-  PB.hp=SM.savedHp;
+  // Full HP restore each wave
+  PB.hp=PG.maxHp;PB.sp=0;
   PB.x=ARENA_L+30;
   PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;
   PB.invincTimer=0;PB.burnTimer=0;PB.guarding=false;PB.usingSpecial=false;
   PARTS=[];DNUM=[];FXTXT=[];ARROWS=[];
   pHitDealt=false;eHitDealt=false;cancelGuard();
-  aiTimer=0;aiAction='approach';frameCount=0;
-  document.getElementById('e-name').textContent=EG.name;
+  frameCount=0;
+  document.getElementById('e-name').textContent=wLen===1?'Wei Soldier':'Wei Soldiers';
   battleRunning=false;
-  goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
-  const phaseTotal=waves.reduce((a,b)=>a+b,0);
-  startCountdown(()=>{battleRunning=true;addFx(`⚔ Wave ${SM.waveIdx+1} — ${wLen} soldiers!`,'#cc8833');});
+  addFx(`⚔ Wave ${SM.waveIdx+1}/${waves.length} — ${wLen} soldiers!`,'#cc8833');
+  setTimeout(()=>{if(storyMode&&!SM.fightingBoss)battleRunning=true;},1000);
 }
 
-function storyActivateSoldier(s){
-  // Promote a background soldier to active EG/EB without countdown
-  EG=storyMakeEG(s.id);
-  EB=mkBattle(EG,false);
-  pHitDealt=false;eHitDealt=false;
-  aiTimer=0;aiAction='approach';
-  PARTS=[];DNUM=[];ARROWS=[];
-  document.getElementById('e-name').textContent=EG.name;
-  battleRunning=true;
-}
-
-function storyEnemyDefeated(){
-  SM.savedHp=PB.hp;
-  storySoldiersDefeated++;
-  PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;PB.guarding=false;
-  const tryNext=()=>{
-    if(!storyMode)return;
-    if(storyBg.length>0){
-      const next=storyBg.shift();
-      storyActivateSoldier(next);
-    }else if(storySoldiersDefeated>=storySoldierCount){
-      storyWaveClear();
-    }else{
-      // More soldiers scheduled to appear — wait
-      setTimeout(tryNext,300);
+function updateStoryEnemies(){
+  const PHF=Math.floor(ATOTAL/2);
+  for(const e of storyEnemies){
+    const eb=e.battle,eg=e.gen;
+    if(eb.hp<=0)continue;
+    if(eb.hurtTimer>0){eb.hurtTimer--;continue;}
+    if(eb.stunTimer>0){eb.stunTimer--;continue;}
+    if(eb.atkFrame>0){eb.atkFrame--;if(eb.atkFrame===0){eb.state='idle';eb.usingSpecial=false;}continue;}
+    if(eb.atkCool>0)eb.atkCool--;
+    const dist=Math.abs(eb.x-PB.x);
+    const reach=WEAPON_REACH[eg.wep||'sword'];
+    const spd=Math.max(eg.spdFloor,eg.spd)*0.32;
+    e.aiTimer--;
+    if(e.aiTimer<=0){
+      if(dist<=reach-4&&eb.atkCool<=0)e.aiAction='attack';
+      else e.aiAction='approach';
+      e.aiTimer=rand(8,18);
     }
-  };
-  setTimeout(tryNext,500);
+    switch(e.aiAction){
+      case'approach':eb.x=clamp(eb.x-spd,PB.x+44,ARENA_R);eb.state='moving';break;
+      case'attack':
+        if(eb.atkCool<=0&&dist<=reach){
+          eb.atkFrame=ATOTAL;eb.atkCool=ACOOLDOWN+22;eb.state='attacking';sfxHit(false);
+        }break;
+    }
+  }
+}
+
+function checkStoryHits(){
+  const PHF=Math.floor(ATOTAL/2);
+  // Player hits: primary = closest enemy, strikeback = all others in range
+  if(PB.atkFrame===PHF&&!pHitDealt){
+    pHitDealt=true;
+    const living=storyEnemies.filter(e=>e.battle.hp>0);
+    if(living.length>0){
+      living.sort((a,b)=>Math.abs(a.battle.x-PB.x)-Math.abs(b.battle.x-PB.x));
+      const baseReach=WEAPON_REACH[PG.wep||'sword']+(PG.spd-60)*.5;
+      const pr=living[0];
+      if(Math.abs(pr.battle.x-PB.x)<=baseReach){
+        const pWar=PB.hp<PB.maxHp/3?Math.floor(PG.war*.7):PG.war;
+        let dmg=Math.floor(pWar*2.1+PG.str*.4+rand(6,24));
+        pr.battle.hp=Math.max(0,pr.battle.hp-dmg);
+        pr.battle.hurtTimer=HURTF;pr.battle.state='hurt';
+        pr.battle.x=clamp(pr.battle.x+Math.floor(20+dmg*.2),PB.x+44,ARENA_R);
+        spawnHit(pr.battle.x,GNDX-65,dmg,dmg>35,FAC[PG.f]?.hi||'#ffcc44');
+        sfxHit(dmg>35);gainSP(PB,30);
+        // Strikeback: splash to all others
+        living.slice(1).forEach(e=>{
+          const sdmg=Math.floor(dmg*.45);
+          if(sdmg>0&&Math.abs(e.battle.x-PB.x)<=baseReach+70){
+            e.battle.hp=Math.max(0,e.battle.hp-sdmg);
+            e.battle.hurtTimer=Math.floor(HURTF*.55);
+            e.battle.x=clamp(e.battle.x+Math.floor(8+sdmg*.12),PB.x+44,ARENA_R);
+            spawnHit(e.battle.x,GNDX-55,sdmg,false,'#ffaa44');
+          }
+        });
+      }
+    }
+  }
+  if(PB.atkFrame!==PHF)pHitDealt=false;
+  // Each enemy's attack frame
+  for(const e of storyEnemies){
+    const eb=e.battle,eg=e.gen;
+    if(eb.hp<=0)continue;
+    if(eb.atkFrame===PHF&&!eb._hd){
+      eb._hd=true;
+      if(Math.abs(eb.x-PB.x)<=WEAPON_REACH[eg.wep||'sword']){
+        if(PB.invincTimer>0){DNUM.push({x:PB.x,y:GNDX-70,vy:-1,life:1,text:'BLOCKED',col:'#8888ff',sz:12});}
+        else{
+          let dmg=Math.floor((eb.hp<eb.maxHp/3?Math.floor(eg.war*.7):eg.war)*1.95+eg.str*.3+rand(6,21));
+          dmg=Math.max(1,Math.floor(dmg*(1-PG.dex*.002)));
+          const ret=PB.guarding;
+          dmg=Math.min(Math.floor(dmg*(ret?.4:.5)),100);
+          gainSP(PB,30);PB.hp=Math.max(0,PB.hp-dmg);
+          if(!ret){PB.hurtTimer=HURTF;PB.state='hurt';}
+          spawnHit(PB.x,GNDX-65,dmg,dmg>30,FAC[eg.f]?.hi||'#cc4444');sfxHit(true);
+          gainSP(eb,30);
+        }
+      }
+    }
+    if(eb.atkFrame!==PHF)eb._hd=false;
+  }
+}
+
+function drawStoryEnemies(){
+  [...storyEnemies].sort((a,b)=>b.battle.x-a.battle.x)
+    .forEach(e=>{if(e.battle.hp>0)drawCombatant(e.battle,e.gen,false,frameCount);});
 }
 
 function storyWaveClear(){
+  PB.hp=PG.maxHp; // full HP restore
   const waves=SM.phase===1?SM_P1_WAVES:SM_P2_WAVES;
   SM.waveIdx++;
   if(SM.waveIdx>=waves.length){
-    const bossId=SM.phase===1?'zhangliao':'xiahoudun';
     addFx('⚔ A general approaches...','#e8c44d');
-    setTimeout(()=>storyBossEntry(bossId),2000);
-  }else{
-    addFx(`⚔ Wave ${SM.waveIdx+1}/${waves.length}!`,'#cc8833');
-    setTimeout(storyStartWave,1800);
-  }
+    setTimeout(()=>storyBossEntry(SM.phase===1?'zhangliao':'xiahoudun'),1800);
+  }else{storyStartWave();}
 }
 
-function storySpawnEnemy(egId){
-  storyBg=[];
-  EG=storyMakeEG(egId);
+function storyBossEntry(bossId){
+  SM.fightingBoss=true;SM.bossId=bossId;storyEnemies=[];
+  const bossName=bossId==='zhangliao'?'Zhang Liao':'Xiahou Dun';
+  EG=storyMakeEG(bossId);
   EB=mkBattle(EG,false);
-  PB.hp=SM.savedHp;
+  PB.hp=PG.maxHp;PB.sp=0; // Full HP restore for boss fight
   PB.x=ARENA_L+30;
   PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;
   PB.invincTimer=0;PB.burnTimer=0;PB.guarding=false;PB.usingSpecial=false;
@@ -2466,27 +2518,15 @@ function storySpawnEnemy(egId){
   document.getElementById('e-name').textContent=EG.name;
   battleRunning=false;
   goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
-}
-
-function storyBossEntry(bossId){
-  SM.fightingBoss=true;SM.bossId=bossId;
-  PB.hp=Math.floor(PG.maxHp*0.5);SM.savedHp=PB.hp;
-  const bossName=bossId==='zhangliao'?'Zhang Liao':'Xiahou Dun';
-  storySpawnEnemy(bossId);
   startCountdown(()=>{battleRunning=true;addFx(`⚔ BOSS — ${bossName} appears!`,'#e8c44d');});
 }
 
 function storyBattleWon(){
-  if(SM.fightingBoss){
-    SM.savedHp=PB.hp;
-    if(SM.bossId==='zhangliao'){
-      SM.phase=2;SM.waveIdx=0;SM.fightingBoss=false;SM.bossId=null;
-      addFx('🏆 Zhang Liao falls! Press on!','#ffcc44');
-      setTimeout(storyStartWave,2400);
-    }else{storyComplete();}
-  }else{
-    storyEnemyDefeated();
-  }
+  if(SM.bossId==='zhangliao'){
+    SM.phase=2;SM.waveIdx=0;SM.fightingBoss=false;SM.bossId=null;SM.waveClearing=false;
+    addFx('🏆 Zhang Liao falls! Press on!','#ffcc44');
+    setTimeout(storyStartWave,2000);
+  }else{storyComplete();}
 }
 
 function storyComplete(){
