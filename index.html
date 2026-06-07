@@ -567,13 +567,9 @@ const GENS=[
    q:{win:["All of Han bows before my might!"],los:["Insolent worm... this changes nothing."]}},
   {id:'footsword', name:'Wei Swordsman', title:'Infantry',f:'WEI',char:'兵',wep:'sword',
    war:42,str:38,dex:30,spd:68,maxHp:110,
-   special:{name:'Slash',desc:'Quick slash',
-     fn:(p,e,PB,EB)=>{const d=Math.floor(p.war*1.2+rand(5,15));EB.hp=Math.max(0,EB.hp-d);spawnHit(EB.x,GNDX-50,d,false,'#cc6644');}},
    q:{win:["For Wei!"],los:["I fall..."]}},
   {id:'footshield', name:'Wei Shieldman', title:'Infantry',f:'WEI',char:'盾',wep:'sword',
    war:35,str:45,dex:60,spd:50,maxHp:160,
-   special:{name:'Shield Bash',desc:'Shield bash + stun',
-     fn:(p,e,PB,EB)=>{const d=Math.floor(p.str*1.0+rand(5,15));EB.hp=Math.max(0,EB.hp-d);EB.stunTimer=25;spawnHit(EB.x,GNDX-50,d,false,'#4466cc');}},
    q:{win:["Shield holds!"],los:["The shield breaks..."]}},
 ];
 
@@ -1575,7 +1571,7 @@ function updateEnemy(){
 
   aiTimer--;
   if(aiTimer<=0){
-    if(EB.sp>=100&&EB.atkCool<=0) aiAction='special';
+    if(EG.special&&EB.sp>=100&&EB.atkCool<=0) aiAction='special';
     else if(dist<=reach-6&&EB.atkCool<=0) aiAction='attack';
     else if(hpR<.25&&Math.random()<.45) aiAction='retreat';
     else if(dist>reach+15) aiAction=Math.random()<.82?'approach':'wait';
