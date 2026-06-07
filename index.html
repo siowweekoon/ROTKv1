@@ -167,6 +167,9 @@ const SPRITES = {
   "sunquan_atk": "Sprites/portraits/sunquan_atk.png",
   "sunquan_charge": "Sprites/portraits/sunquan_charge.png",
   "sunquan_idle": "Sprites/portraits/sunquan_idle.png",
+  "xiahoudun_atk": "Sprites/portraits/xiahoudun_atk.png",
+  "xiahoudun_charge": "Sprites/portraits/xiahoudun_charge.png",
+  "xiahoudun_idle": "Sprites/portraits/xiahoudun_idle.png",
   "xiahouden_atk": "Sprites/portraits/xiahoudun_atk.png",
   "xiahouden_charge": "Sprites/portraits/xiahoudun_charge.png",
   "xiahouden_idle": "Sprites/portraits/xiahoudun_idle.png",
@@ -218,7 +221,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(1.1em,5.5vw,2.6em);color:var(--gold);letter-spacing:clamp(1px,1vw,5px);text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.2.8</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.2.9</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -297,7 +300,7 @@ const SPRITES = {
 
 <!-- EQUIP MODAL -->
 <div id="equip-modal" class="gmodal-bg" onclick="closeEquip()">
-  <div class="gmodal-box" onclick="event.stopPropagation()" style="flex-direction:column;max-width:480px;max-height:92vh;overflow-y:auto;padding:18px;gap:0">
+  <div class="gmodal-box" onclick="event.stopPropagation()" style="flex-direction:column;max-width:480px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px;gap:0">
     <div style="color:var(--gold);font-size:1.1em;font-weight:bold;letter-spacing:2px;margin-bottom:4px;text-align:center">⚔ EQUIPMENT</div>
     <div style="color:var(--dim);font-size:.75em;text-align:center;margin-bottom:12px">Equip one of each — bonuses apply every battle</div>
     <div id="equip-content"></div>
@@ -530,11 +533,17 @@ const GENS=[
      fn:(p,e,PB,EB)=>{const d1=Math.floor(p.war*.95+rand(5,20)),d2=Math.floor(p.war*.95+rand(5,20));EB.hp=Math.max(0,EB.hp-(d1+d2));spawnHit(EB.x,GNDX-50,d1+d2,true,'#6699ff');spawnHit(EB.x+rand(-20,20),GNDX-70,d2,false,'#88aaff');}},
    q:{win:["Wei's finest stands unbroken!"],los:["My sword arm finally meets its match."]}},
 
+  {id:'xiahoudun', name:'Xiahou Dun',   title:'One-Eyed Titan',      f:'WEI',char:'惇',wep:'sword',sig:{weapon:'ironclad_sabre',armor:'xiahoudun_armor'},
+   war:90,str:75,dex:72,spd:74,maxHp:540,
+   special:{name:'Iron Will',desc:'Become invincible for 3 seconds',
+     fn:(p,e,PB,EB)=>{PB.invincTimer=180;addFx('⚡ IRON WILL — INVINCIBLE!','#ff8800');}},
+   q:{win:["One eye is all I need to see you fall!"],los:["...Pain finally found my limit."]}},
+
   {id:'xiahouden', name:'Xia Hou En',   title:'Sword-Bearer of Wei', f:'WEI',char:'恩',wep:'sword',sig:{weapon:'ironclad_sabre',armor:'xiahoudun_armor'},
    war:90,str:75,dex:72,spd:74,maxHp:540,
    special:{name:'Iron Will',desc:'Become invincible for 3 seconds',
      fn:(p,e,PB,EB)=>{if(storyMode){const d=Math.floor(p.war*1.6+rand(25,50));EB.hp=Math.max(0,EB.hp-d);EB.hurtTimer=35;EB.x=Math.max(ARENA_L,EB.x-90);spawnHit(EB.x,GNDX-60,d,true,'#ff6600');addFx('💥 IRON FIST — SHOCKWAVE!','#ff8800');}else{PB.invincTimer=180;addFx('⚡ IRON WILL — INVINCIBLE!','#ff8800');}}},
-   q:{win:["One eye is all I need to see you fall!"],los:["...Pain finally found my limit."]}},
+   q:{win:["Cao Cao's blade never falters!"],los:["The Blue Steel sword falls with me..."]}},
 
   {id:'sunquan',   name:'Sun Quan',     title:'Tiger of Jiangdong',  f:'WU', char:'孫',wep:'sword',sig:{weapon:'tiger_dao',armor:'sunquan_armor'},
    war:80,str:82,dex:88,spd:76,maxHp:550,
@@ -767,6 +776,7 @@ const SPECIAL_SFX={
   liubei:       ()=>{const c=getAC();if(!c)return;[523,659,784,1047].forEach((f,i)=>{const t=c.currentTime+i*0.09;_tone(f,'sine',0.2,0.35,undefined,t);});},
   caocao:       ()=>{_tone(100,'sawtooth',0.42,0.6,35);_noise(0.25,0.4,200,0.6);},
   zhangliao:    ()=>{_tone(310,'sawtooth',0.3,0.14,75);setTimeout(()=>_tone(310,'sawtooth',0.3,0.14,75),170);},
+  xiahoudun:    ()=>{_tone(440,'sine',0.3,1.2,900);_noise(0.1,1.0,3500,2);},
   xiahouden:    ()=>{_tone(440,'sine',0.3,1.2,900);_noise(0.1,1.0,3500,2);},
   sunquan:      ()=>{_tone(210,'sine',0.3,0.6,75);_noise(0.2,0.5,400,1.5);},
   zhouyu:       ()=>{_noise(0.5,1.2,420,0.55);_tone(150,'sawtooth',0.22,0.7,55);},
@@ -869,6 +879,9 @@ function drawCombatant(cb, gd, isPlayer, frame) {
       caocao_atk:      {sc:1.0, yOff:18,  xOff:0},
       guanyu_idle:     {sc:1.0, yOff:-2,  xOff:0},
       guanyu_charge:   {sc:1.0, yOff:-2,  xOff:0},
+      xiahoudun_idle:  {sc:1.02, yOff:23,  xOff:0},
+      xiahoudun_charge:{sc:1.02, yOff:23,  xOff:0},
+      xiahoudun_atk:   {sc:1.02, yOff:23,  xOff:0},
       xiahouden_idle:  {sc:1.02, yOff:23,  xOff:0},
       xiahouden_charge:{sc:1.02, yOff:23,  xOff:0},
       xiahouden_atk:   {sc:1.02, yOff:23,  xOff:0},
@@ -1000,7 +1013,7 @@ let streakPool=[];
 let b3Victory=false;
 const STRONG_ENEMIES=['guanyu','zhangfei','zhaoyun','lubu'];
 const TIER1=['lvmeng','zhugeliang','zhouyu','sunquan','caocao','liubei','huangzhong'];
-const TIER2=['zhangfei','zhaoyun','machao','xiahouden','zhangliao','lubu','asiainvincible','dongzhuo'];
+const TIER2=['zhangfei','zhaoyun','machao','xiahoudun','xiahouden','zhangliao','lubu','asiainvincible','dongzhuo'];
 function pickTierEnemy(tier,excludeId,excludeFac){
   let pool=GENS.filter(g=>tier.includes(g.id)&&g.id!==excludeId);
   const pref=pool.filter(g=>g.f!==excludeFac);
@@ -1019,7 +1032,7 @@ const IMG = {};        // HTMLImageElement objects for canvas drawImage
 const GENERAL_IMG = {
   guanyu:'Portraits/GuanYu.png', zhangfei:'Portraits/ZhangFei.png', zhaoyun:'Portraits/ZhaoYun.png',
   huangzhong:'Portraits/HuangZhong.png', zhugeliang:'Portraits/ZhugeLiang1.png', machao:'Portraits/Ma Chao.png', liubei:'Portraits/LiuBei.png',
-  caocao:'Portraits/CaoCao1.png', zhangliao:'Portraits/ZhangLiao1.png', xiahouden:'Portraits/XiaoHuoDun1.png',
+  caocao:'Portraits/CaoCao1.png', zhangliao:'Portraits/ZhangLiao1.png', xiahoudun:'Portraits/XiaoHuoDun1.png', xiahouden:'Portraits/XiaoHuoDun1.png',
   sunquan:'Portraits/SunQuan1.png', zhouyu:'Portraits/ZhouYu1.png', lubu:'Portraits/LuBu1.png', asiainvincible:'Portraits/Asiatheinvicinble.png',
   dongzhuo:'Portraits/DongZhuo.png',
 };
@@ -1089,6 +1102,18 @@ const SHEET_DEFS = {
   },
   sunquan:{
     src:'Sprites/clean/SunQuan_idle_back_atk_charge_Special.png',
+    displayH:140, yOff:-25, useDarkBg:true,
+    anims:{
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
+      move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
+    }
+  },
+  xiahoudun:{
+    src:'Sprites/clean/XiaHouDun_back_atk_charge_Special.png',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
