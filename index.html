@@ -167,9 +167,9 @@ const SPRITES = {
   "sunquan_atk": "Sprites/portraits/sunquan_atk.png",
   "sunquan_charge": "Sprites/portraits/sunquan_charge.png",
   "sunquan_idle": "Sprites/portraits/sunquan_idle.png",
-  "xiahoudun_atk": "Sprites/portraits/xiahoudun_atk.png",
-  "xiahoudun_charge": "Sprites/portraits/xiahoudun_charge.png",
-  "xiahoudun_idle": "Sprites/portraits/xiahoudun_idle.png",
+  "xiahouden_atk": "Sprites/portraits/xiahoudun_atk.png",
+  "xiahouden_charge": "Sprites/portraits/xiahoudun_charge.png",
+  "xiahouden_idle": "Sprites/portraits/xiahoudun_idle.png",
   "zhangfei_atk": "Sprites/portraits/zhangfei_atk.png",
   "zhangfei_charge": "Sprites/portraits/zhangfei_charge.png",
   "zhangfei_idle": "Sprites/portraits/zhangfei_idle.png",
@@ -218,7 +218,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:2.6em;color:var(--gold);letter-spacing:5px;text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.2.2</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px">v2.2.3</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -235,7 +235,7 @@ const SPRITES = {
 
     <!-- Story + Battle right -->
     <div style="display:flex;flex-direction:column;align-items:stretch;gap:6px">
-      <button onclick="startStory()" class="title-nav-btn" style="border-color:#aa8833;color:#ffdd88">📖<br><span>Story</span></button>
+      <button onclick="showStoryIntro()" class="title-nav-btn" style="border-color:#aa8833;color:#ffdd88">📖<br><span>Story</span></button>
       <button onclick="showSelect()" class="title-nav-btn title-nav-battle">⚔<br><span>Battle</span></button>
     </div>
   </div>
@@ -530,7 +530,7 @@ const GENS=[
      fn:(p,e,PB,EB)=>{const d1=Math.floor(p.war*.95+rand(5,20)),d2=Math.floor(p.war*.95+rand(5,20));EB.hp=Math.max(0,EB.hp-(d1+d2));spawnHit(EB.x,GNDX-50,d1+d2,true,'#6699ff');spawnHit(EB.x+rand(-20,20),GNDX-70,d2,false,'#88aaff');}},
    q:{win:["Wei's finest stands unbroken!"],los:["My sword arm finally meets its match."]}},
 
-  {id:'xiahoudun', name:'Xiahou Dun',   title:'One-Eyed Titan',      f:'WEI',char:'惇',wep:'sword',sig:{weapon:'ironclad_sabre',armor:'xiahoudun_armor'},
+  {id:'xiahouden', name:'Xia Hou En',   title:'Sword-Bearer of Wei', f:'WEI',char:'恩',wep:'sword',sig:{weapon:'ironclad_sabre',armor:'xiahoudun_armor'},
    war:90,str:75,dex:72,spd:74,maxHp:540,
    special:{name:'Iron Will',desc:'Become invincible for 3 seconds',
      fn:(p,e,PB,EB)=>{if(storyMode){const d=Math.floor(p.war*1.6+rand(25,50));EB.hp=Math.max(0,EB.hp-d);EB.hurtTimer=35;EB.x=Math.max(ARENA_L,EB.x-90);spawnHit(EB.x,GNDX-60,d,true,'#ff6600');addFx('💥 IRON FIST — SHOCKWAVE!','#ff8800');}else{PB.invincTimer=180;addFx('⚡ IRON WILL — INVINCIBLE!','#ff8800');}}},
@@ -766,7 +766,7 @@ const SPECIAL_SFX={
   liubei:       ()=>{const c=getAC();if(!c)return;[523,659,784,1047].forEach((f,i)=>{const t=c.currentTime+i*0.09;_tone(f,'sine',0.2,0.35,undefined,t);});},
   caocao:       ()=>{_tone(100,'sawtooth',0.42,0.6,35);_noise(0.25,0.4,200,0.6);},
   zhangliao:    ()=>{_tone(310,'sawtooth',0.3,0.14,75);setTimeout(()=>_tone(310,'sawtooth',0.3,0.14,75),170);},
-  xiahoudun:    ()=>{_tone(440,'sine',0.3,1.2,900);_noise(0.1,1.0,3500,2);},
+  xiahouden:    ()=>{_tone(440,'sine',0.3,1.2,900);_noise(0.1,1.0,3500,2);},
   sunquan:      ()=>{_tone(210,'sine',0.3,0.6,75);_noise(0.2,0.5,400,1.5);},
   zhouyu:       ()=>{_noise(0.5,1.2,420,0.55);_tone(150,'sawtooth',0.22,0.7,55);},
   lvmeng:       ()=>{_tone(240,'sawtooth',0.35,0.42,58);_noise(0.3,0.22,900,1);},
@@ -868,9 +868,9 @@ function drawCombatant(cb, gd, isPlayer, frame) {
       caocao_atk:      {sc:1.0, yOff:18,  xOff:0},
       guanyu_idle:     {sc:1.0, yOff:-2,  xOff:0},
       guanyu_charge:   {sc:1.0, yOff:-2,  xOff:0},
-      xiahoudun_idle:  {sc:1.02, yOff:23,  xOff:0},
-      xiahoudun_charge:{sc:1.02, yOff:23,  xOff:0},
-      xiahoudun_atk:   {sc:1.02, yOff:23,  xOff:0},
+      xiahouden_idle:  {sc:1.02, yOff:23,  xOff:0},
+      xiahouden_charge:{sc:1.02, yOff:23,  xOff:0},
+      xiahouden_atk:   {sc:1.02, yOff:23,  xOff:0},
       zhugeliang_idle: {sc:1.0,  yOff:23, xOff:0},
       zhugeliang_charge:{sc:1.0, yOff:23, xOff:0},
       zhugeliang_atk:  {sc:1.0,  yOff:23, xOff:0},
@@ -999,7 +999,7 @@ let streakPool=[];
 let b3Victory=false;
 const STRONG_ENEMIES=['guanyu','zhangfei','zhaoyun','lubu'];
 const TIER1=['lvmeng','zhugeliang','zhouyu','sunquan','caocao','liubei','huangzhong'];
-const TIER2=['zhangfei','zhaoyun','machao','xiahoudun','zhangliao','lubu','asiainvincible','dongzhuo'];
+const TIER2=['zhangfei','zhaoyun','machao','xiahouden','zhangliao','lubu','asiainvincible','dongzhuo'];
 function pickTierEnemy(tier,excludeId,excludeFac){
   let pool=GENS.filter(g=>tier.includes(g.id)&&g.id!==excludeId);
   const pref=pool.filter(g=>g.f!==excludeFac);
@@ -1018,7 +1018,7 @@ const IMG = {};        // HTMLImageElement objects for canvas drawImage
 const GENERAL_IMG = {
   guanyu:'Portraits/GuanYu.png', zhangfei:'Portraits/ZhangFei.png', zhaoyun:'Portraits/ZhaoYun.png',
   huangzhong:'Portraits/HuangZhong.png', zhugeliang:'Portraits/ZhugeLiang1.png', machao:'Portraits/Ma Chao.png', liubei:'Portraits/LiuBei.png',
-  caocao:'Portraits/CaoCao1.png', zhangliao:'Portraits/ZhangLiao1.png', xiahoudun:'Portraits/XiaoHuoDun1.png',
+  caocao:'Portraits/CaoCao1.png', zhangliao:'Portraits/ZhangLiao1.png', xiahouden:'Portraits/XiaoHuoDun1.png',
   sunquan:'Portraits/SunQuan1.png', zhouyu:'Portraits/ZhouYu1.png', lubu:'Portraits/LuBu1.png', asiainvincible:'Portraits/Asiatheinvicinble.png',
   dongzhuo:'Portraits/DongZhuo.png',
 };
@@ -1098,7 +1098,7 @@ const SHEET_DEFS = {
       special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
     }
   },
-  xiahoudun:{
+  xiahouden:{
     src:'Sprites/clean/XiaHouDun_back_atk_charge_Special.png',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
@@ -2375,6 +2375,41 @@ function mkStoryEnemy(id,slot){
   return {gen,battle,aiTimer:rand(10,24)+slot*7,aiAction:'approach'};
 }
 
+function showStoryIntro(){
+  const ov=document.createElement('div');
+  ov.id='story-intro-ov';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;font-family:Georgia,serif';
+  ov.innerHTML=`
+    <div style="max-width:460px;width:100%;background:linear-gradient(180deg,#1c1100 0%,#0d0800 100%);border:2px solid #8b6914;border-radius:8px;padding:26px 24px;text-align:center;color:#e8c44d;box-shadow:0 0 50px rgba(180,120,0,.3)">
+      <div style="font-size:1.45em;letter-spacing:2px;margin-bottom:4px">⚔ SAVING OF THE PRINCE</div>
+      <div style="font-size:.7em;color:#aa8844;letter-spacing:3px;margin-bottom:14px">Battle of Changban — 208 AD</div>
+      <div style="width:50px;height:1px;background:#8b6914;margin:0 auto 16px"></div>
+      <p style="font-size:.82em;color:#ffddaa;line-height:1.8;text-align:left;margin:0 0 20px">
+        Liu Bei's forces are routed at Changban. In the chaos, his infant son <em style="color:#e8c44d">Liu A-Dou</em> is left behind, surrounded by Cao Cao's army.<br><br>
+        Zhao Yun rides back <em style="color:#e8c44d">alone</em> into ten thousand Wei soldiers. He must cut through wave after wave of infantry and defeat two of Cao Cao's generals to deliver the prince to safety.
+      </p>
+      <div style="display:flex;justify-content:center;gap:12px;margin-bottom:22px">
+        <div style="background:#0d0800;border:1px solid #6b4f10;border-radius:6px;padding:12px 8px;width:136px">
+          <img src="Portraits/ZhangLiao1.png" onerror="this.style.display='none'" style="width:72px;height:72px;object-fit:cover;border-radius:4px;border:1px solid #4a3800;display:block;margin:0 auto 8px">
+          <div style="font-size:.88em;font-weight:bold;color:#e8c44d">Zhang Liao</div>
+          <div style="font-size:.67em;color:#aa8844;margin-top:2px">Terror of Wu</div>
+          <div style="font-size:.63em;color:#cc7744;margin-top:7px;letter-spacing:1px">⚔ PHASE 1 BOSS</div>
+        </div>
+        <div style="background:#0d0800;border:1px solid #6b4f10;border-radius:6px;padding:12px 8px;width:136px">
+          <img src="Portraits/XiaoHuoDun1.png" onerror="this.style.display='none'" style="width:72px;height:72px;object-fit:cover;border-radius:4px;border:1px solid #4a3800;display:block;margin:0 auto 8px">
+          <div style="font-size:.88em;font-weight:bold;color:#e8c44d">Xia Hou En</div>
+          <div style="font-size:.67em;color:#aa8844;margin-top:2px">Sword-Bearer of Wei</div>
+          <div style="font-size:.63em;color:#cc7744;margin-top:7px;letter-spacing:1px">⚔ PHASE 2 BOSS</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="document.getElementById('story-intro-ov').remove()" style="padding:9px 18px;background:#1a1000;border:1px solid #664400;color:#887755;font-family:Georgia,serif;font-size:.85em;cursor:pointer;border-radius:4px">← Back</button>
+        <button onclick="document.getElementById('story-intro-ov').remove();startStory()" style="padding:9px 26px;background:#2a1800;border:2px solid #e8c44d;color:#e8c44d;font-family:Georgia,serif;font-size:.95em;cursor:pointer;border-radius:4px;font-weight:bold">⚔ Begin Mission</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+
 function startStory(){
   storyMode=true;
   SM={phase:1,waveIdx:0,fightingBoss:false,bossId:null,waveClearing:false};
@@ -2511,13 +2546,13 @@ function storyWaveClear(){
   SM.waveIdx++;
   if(SM.waveIdx>=waves.length){
     addFx('⚔ A general approaches...','#e8c44d');
-    setTimeout(()=>storyBossEntry(SM.phase===1?'zhangliao':'xiahoudun'),1800);
+    setTimeout(()=>storyBossEntry(SM.phase===1?'zhangliao':'xiahouden'),1800);
   }else{storyStartWave();}
 }
 
 function storyBossEntry(bossId){
   SM.fightingBoss=true;SM.bossId=bossId;storyEnemies=[];
-  const bossName=bossId==='zhangliao'?'Zhang Liao':'Xiahou Dun';
+  const bossName=bossId==='zhangliao'?'Zhang Liao':'Xia Hou En';
   EG=storyMakeEG(bossId);
   EB=mkBattle(EG,false);
   PB.hp=PG.maxHp; // Full HP restore for boss fight; SP carries forward
