@@ -1703,8 +1703,8 @@ function gameLoop(){
     else{drawCombatant(PB,PG,true,frameCount);drawCombatant(EB,EG,false,frameCount);}
   }
   drawParts();
-  // Overlay: show DEFEATED in foot mode; VICTORY/DEFEATED in boss/normal
-  if(!battleRunning&&PB){
+  // Overlay: show DEFEATED/VICTORY only when a combatant actually died
+  if(!battleRunning&&PB&&(PB.state==='dead'||(EB&&EB.state==='dead'))){
     if(storyFoot&&PB.hp<=0){
       CX.save();CX.globalAlpha=.7;CX.fillStyle='rgba(0,0,0,.5)';CX.fillRect(0,0,CW,CH);
       CX.fillStyle='#cc2222';CX.font='bold 36px Georgia';CX.textAlign='center';
