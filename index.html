@@ -2168,33 +2168,41 @@ function renderMarket(){
           Buy 🪙${r.price}</button>
       </div>`).join('');
   } else {
-    // Sell: scriptures, horses, general cards (equipped protected)
+    // ── GENERALS section (grouped by id, ×N count) ──────────────────
+    const cardGroups={};
+    PR.deck.forEach(c=>{
+      const g=GENS.find(x=>x.id===c.id);if(!g)return;
+      if(!cardGroups[c.id]){
+        const tier=TIER2.includes(c.id)?2:1;
+        cardGroups[c.id]={id:c.id,name:g.name,tier,price:tier===2?GOLD.sell.cardT2:GOLD.sell.cardT1,count:0};
+      }
+      cardGroups[c.id].count++;
+    });
+    const sortedCards=Object.values(cardGroups).sort((a,b)=>a.name.localeCompare(b.name));
+    const cardRows=sortedCards.map(r=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;margin:4px 0;border:1px solid var(--gold2);border-radius:4px">
+        <span style="font-size:1.4em;width:34px;text-align:center">🎴</span>
+        <div style="flex:1">
+          <div style="color:var(--gold);font-size:.88em;font-weight:bold">${r.name}${r.count>1?` <span style="color:#ffcc44">×${r.count}</span>`:''} <span style="color:#aaa;font-size:.75em">${r.tier===2?'Elite':'Common'}</span></div>
+          <div style="color:var(--dim);font-size:.72em">General card · 🪙${r.price} each</div>
+        </div>
+        <button onclick="sellCard('${r.id}')" class="btn" style="font-size:.8em;padding:5px 10px;border-color:#44aa44;color:#88ff88;white-space:nowrap">Sell ×1</button>
+      </div>`).join('');
+
+    // ── INVENTORY section (scriptures + horses, grouped, equipped protected) ──
     const equippedIds={scripture:PR.equipped.scripture?.id,horse:PR.equipped.horse?.id};
     const sellable=[
       ...PR.scriptures.map(r=>({...r,_t:'scripture'})),
       ...PR.horses.map(r=>({...r,_t:'horse'})),
     ];
-    // Group by id+type, sorted alphabetically by id
-    const groups={};
-    sellable.forEach(r=>{const k=r._t+'_'+r.id;if(!groups[k])groups[k]={...r,count:0};groups[k].count++;});
-    const sortedGroups=Object.values(groups).sort((a,b)=>a.id.localeCompare(b.id));
-    // General cards (listed individually by index)
-    const cardRows=PR.deck.map((c,i)=>{
-      const g=GENS.find(x=>x.id===c.id);if(!g)return '';
-      const tier=TIER2.includes(c.id)?2:1;
-      const price=tier===2?GOLD.sell.cardT2:GOLD.sell.cardT1;
-      return `<div style="display:flex;align-items:center;gap:10px;padding:8px;margin:4px 0;border:1px solid var(--gold2);border-radius:4px">
-        <span style="font-size:1.4em;width:34px;text-align:center">🎴</span>
-        <div style="flex:1"><div style="color:var(--gold);font-size:.88em;font-weight:bold">${g.name} <span style="color:#aaa;font-size:.78em">${tier===2?'(Elite)':'(Common)'}</span></div>
-        <div style="color:var(--dim);font-size:.72em">General card</div></div>
-        <button onclick="sellCard('${c.id}')" class="btn" style="font-size:.8em;padding:5px 10px;border-color:#44aa44;color:#88ff88;white-space:nowrap">Sell +🪙${price}</button>
-      </div>`;
-    }).filter(Boolean).join('');
-    const rewardRows=sortedGroups.map(r=>{
+    const invGroups={};
+    sellable.forEach(r=>{const k=r._t+'_'+r.id;if(!invGroups[k])invGroups[k]={...r,count:0};invGroups[k].count++;});
+    const sortedInv=Object.values(invGroups).sort((a,b)=>a.id.localeCompare(b.id));
+    const rewardRows=sortedInv.map(r=>{
       const price=r._t==='horse'?GOLD.sell.horse:GOLD.sell.scripture;
       const isEquipped=equippedIds[r._t]===r.id;
       const btnStyle=isEquipped?'font-size:.8em;padding:5px 10px;border-color:#555;color:#666;white-space:nowrap;pointer-events:none':'font-size:.8em;padding:5px 10px;border-color:#44aa44;color:#88ff88;white-space:nowrap';
-      const btnLabel=isEquipped?'Equipped':'Sell +🪙'+price;
+      const btnLabel=isEquipped?'🔒 Equipped':'Sell +🪙'+price;
       const onclick=isEquipped?'':'sellReward(\''+r._t+'\',\''+r.id+'\')';
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px;margin:4px 0;border:1px solid var(--gold2);border-radius:4px">
         ${r.img?`<img src="${r.img}" onclick="showLightbox('${r.img}')" style="width:34px;height:44px;object-fit:cover;object-position:top;border:1px solid var(--gold2);cursor:zoom-in;flex-shrink:0">`:`<span style="font-size:1.5em;width:34px;text-align:center">${r.icon}</span>`}
@@ -2203,14 +2211,17 @@ function renderMarket(){
         <button onclick="${onclick}" class="btn" style="${btnStyle}">${btnLabel}</button>
       </div>`;
     }).join('');
-    // Undo section
+
+    // ── Undo section ───────────────────────────────────────────────
     const undoHtml=PR.sellHistory&&PR.sellHistory.length?`<div style="margin:10px 0 4px;padding:8px;border:1px solid #444;border-radius:4px;background:rgba(0,0,0,.3)">
       <div style="color:#aaa;font-size:.72em;margin-bottom:6px;letter-spacing:1px">↩ UNDO LAST SALE (max 2)</div>
       ${PR.sellHistory.map((_,i)=>`<button onclick="undoSale(${i})" class="btn" style="font-size:.78em;padding:4px 12px;margin:2px;border-color:#aa6644;color:#ffaa66">Undo ${PR.sellHistory[i].name}</button>`).join('')}
     </div>`:'';
-    const allRows=cardRows+rewardRows;
-    if(!allRows&&!undoHtml){el.innerHTML='<div style="color:var(--dim);text-align:center;padding:16px">Nothing to sell</div>';return;}
-    el.innerHTML=undoHtml+allRows;
+
+    const genSection=sortedCards.length?`<div style="color:var(--gold2);font-size:.7em;letter-spacing:2px;margin:10px 0 4px">🎴 GENERALS</div>`+cardRows:'';
+    const invSection=sortedInv.length?`<div style="color:var(--gold2);font-size:.7em;letter-spacing:2px;margin:10px 0 4px">📦 INVENTORY</div>`+rewardRows:'';
+    if(!genSection&&!invSection&&!undoHtml){el.innerHTML='<div style="color:var(--dim);text-align:center;padding:16px">Nothing to sell</div>';return;}
+    el.innerHTML=undoHtml+genSection+invSection;
   }
 }
 
