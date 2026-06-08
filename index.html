@@ -110,6 +110,8 @@ body{background:var(--bg);color:var(--text);font-family:'Georgia',serif;min-heig
 .ctrl-hint{display:none}
 /* CANVAS MOBILE SCALING */
 #bc{display:block;width:100%;aspect-ratio:640/280;height:auto}
+/* Battle screen: exact viewport height, canvas centered vertically */
+#s-battle.active{justify-content:center;align-items:stretch;overflow:hidden;min-height:unset;height:100svh;background:#060200}
 /* MOBILE RESPONSIVE */
 @media(max-width:640px) and (orientation:portrait){
   .gmodal-box,.imgmodal-box{flex-direction:column;max-height:96vh;overflow-y:auto}
@@ -221,7 +223,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.3</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.6</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -358,9 +360,9 @@ const SPRITES = {
     <div id="tut-title" style="color:var(--gold);font-size:1.2em;font-weight:bold;margin-bottom:10px;letter-spacing:1px"></div>
     <div id="tut-body" style="color:var(--text);font-size:.88em;line-height:1.7;margin-bottom:20px"></div>
     <div style="display:flex;gap:10px;justify-content:center">
-      <button class="btn" onclick="tutPrev()" id="tut-prev" style="font-size:.85em;padding:8px 18px">◀ Back</button>
+      <button class="btn" id="tut-prev" style="font-size:.85em;padding:8px 18px">◀ Back</button>
       <button class="btn" onclick="tutNext()" id="tut-next" style="font-size:.85em;padding:8px 18px;background:var(--gold2);color:#000">Next ▶</button>
-      <button class="btn" onclick="closeTutorial()" style="font-size:.8em;padding:8px 14px;opacity:.6">Skip</button>
+      <button class="btn" id="tut-skip" onclick="closeTutorial()" style="font-size:.8em;padding:8px 14px;opacity:.6">Skip</button>
     </div>
   </div>
 </div>
@@ -539,7 +541,7 @@ const GENS=[
      fn:(p,e,PB,EB)=>{const cut=Math.floor(EB.maxHp*.20);EB.maxHp=Math.floor(EB.maxHp*.80);EB.hp=Math.min(EB.hp,EB.maxHp);const d=Math.floor((p.war+p.str)*.65+rand(10,25));EB.hp=Math.max(0,EB.hp-d);spawnHit(EB.x,GNDX-60,d,true,'#6699ff');}},
    q:{win:["The strong survive. The weak submit."],los:["A worthy foe. I respect this defeat."]}},
 
-  {id:'zhangliao', name:'Zhang Liao',   title:'Terror of Wu',        f:'WEI',char:'遼',wep:'sword',sig:{weapon:'terror_sword',armor:'zhangliao_armor'},
+  {id:'zhangliao', name:'Zhang Liao',   title:'Terror of Hefei',        f:'WEI',char:'遼',wep:'sword',sig:{weapon:'terror_sword',armor:'zhangliao_armor'},
    war:83,str:73,dex:75,spd:82,maxHp:550,
    special:{name:'Fierce Assault',desc:'Attack twice instantly',
      fn:(p,e,PB,EB)=>{const d1=Math.floor(p.war*.95+rand(5,20)),d2=Math.floor(p.war*.95+rand(5,20));EB.hp=Math.max(0,EB.hp-(d1+d2));spawnHit(EB.x,GNDX-50,d1+d2,true,'#6699ff');spawnHit(EB.x+rand(-20,20),GNDX-70,d2,false,'#88aaff');}},
@@ -736,6 +738,14 @@ function showConfirm(title,msg,onYes){
   document.getElementById('confirm-modal').style.display='flex';
 }
 function closeConfirm(){document.getElementById('confirm-modal').style.display='none';}
+
+function showToast(msg,col){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:'+(col||'#e8c44d')+';padding:9px 20px;border-radius:6px;font-size:.88em;z-index:9999;pointer-events:none;white-space:nowrap;border:1px solid '+(col||'#e8c44d');
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .5s';t.style.opacity='0';setTimeout(()=>t.remove(),500);},2200);
+}
 
 function newGame(){
   showConfirm('⚠ Restart Game?','All generals, gold and rewards will be permanently lost.',
@@ -947,13 +957,20 @@ function drawCombatant(cb, gd, isPlayer, frame) {
   CX.fillRect(bx, by, bw*hpPct, bh);
   CX.strokeStyle = "#555"; CX.lineWidth = 1; CX.strokeRect(bx, by, bw, bh);
 
-  // Name + HP number
-  CX.textAlign = "center"; CX.shadowColor = "#000"; CX.shadowBlur = 4;
-  CX.fillStyle = "#fff"; CX.font = "bold 11px Georgia";
-  CX.fillText(gd.name, cb.x, by - 14);
+  // Name + HP number — pinned to screen edges to avoid overlap
+  CX.shadowColor = "#000"; CX.shadowBlur = 4;
   const hpCol=hpPct>.5?"#44ee44":hpPct>.25?"#ffaa22":"#ff4444";
-  CX.fillStyle=hpCol; CX.font="bold 12px Georgia";
-  CX.fillText(`HP: ${Math.ceil(cb.hp)}`, cb.x, by - 3);
+  if(isPlayer){
+    CX.textAlign="left"; CX.fillStyle="#fff"; CX.font="bold 11px Georgia";
+    CX.fillText(gd.name, 6, 14);
+    CX.fillStyle=hpCol; CX.font="bold 12px Georgia";
+    CX.fillText(`HP: ${Math.ceil(cb.hp)}`, 6, 26);
+  }else{
+    CX.textAlign="right"; CX.fillStyle="#fff"; CX.font="bold 11px Georgia";
+    CX.fillText(gd.name, CW-6, 14);
+    CX.fillStyle=hpCol; CX.font="bold 12px Georgia";
+    CX.fillText(`HP: ${Math.ceil(cb.hp)}`, CW-6, 26);
+  }
   CX.shadowBlur = 0;
 
   // SP bar + READY (player only)
@@ -1410,7 +1427,15 @@ function cancelGuard(){
   guardToggled=false;TK.KeyX=false;
   const btn=document.getElementById('tc-grd');if(btn)btn.style.background='rgba(0,0,0,0.65)';
 }
-window.addEventListener('keydown',e=>{KEYS[e.code]=true;e.code==='Space'&&e.preventDefault();});
+window.addEventListener('keydown',e=>{
+  KEYS[e.code]=true;
+  if(e.code==='Space')e.preventDefault();
+  if(e.code==='Escape'){
+    closeLightbox();
+    closeConfirm();
+    if(document.getElementById('tutorial-modal').style.display==='flex')closeTutorial();
+  }
+});
 window.addEventListener('keyup',e=>{KEYS[e.code]=false;});
 function KD(c){return !!(KEYS[c]||TK[c]);}
 // Prevent scroll/zoom on touch during battle
@@ -1677,14 +1702,26 @@ function gameLoop(){
       updateStoryEnemies();
       checkStoryHits();
       if(PB.hp<=0&&PB.state!=='dead'){
-        PB.state='dead';battleRunning=false;setTimeout(()=>endBattle(false),800);
+        PB.state='dead';battleRunning=false;
+        document.querySelector('.tc-move-wrap').style.display='none';
+        document.querySelector('.tc-actions-wrap').style.display='none';
+        setTimeout(()=>endBattle(false),800);
       }else if(storyEnemies.every(e=>e.battle.hp<=0)&&!SM.waveClearing){
         SM.waveClearing=true;battleRunning=false;setTimeout(storyWaveClear,700);
       }
     }else{
       updateEnemy();checkHits();
-      if(PB.hp<=0&&PB.state!=='dead'){PB.state='dead';battleRunning=false;setTimeout(()=>endBattle(false),800);}
-      else if(EB&&EB.hp<=0&&EB.state!=='dead'){EB.state='dead';battleRunning=false;setTimeout(()=>endBattle(true),800);}
+      if(PB.hp<=0&&PB.state!=='dead'){
+        PB.state='dead';battleRunning=false;
+        document.querySelector('.tc-move-wrap').style.display='none';
+        document.querySelector('.tc-actions-wrap').style.display='none';
+        setTimeout(()=>endBattle(false),800);
+      }else if(EB&&EB.hp<=0&&EB.state!=='dead'){
+        EB.state='dead';battleRunning=false;
+        document.querySelector('.tc-move-wrap').style.display='none';
+        document.querySelector('.tc-actions-wrap').style.display='none';
+        setTimeout(()=>endBattle(true),800);
+      }
     }
   }
   tickParts();
@@ -1759,15 +1796,27 @@ function showTutorial(autoShow){
 function closeTutorial(){document.getElementById('tutorial-modal').style.display='none';}
 function renderTutStep(){
   const s=TUTORIAL[tutIdx];
+  const isFirst=tutIdx===0, isLast=tutIdx===TUTORIAL.length-1;
   document.getElementById('tut-step-indicator').textContent=`Step ${tutIdx+1} of ${TUTORIAL.length}`;
   document.getElementById('tut-icon').textContent=s.icon;
   document.getElementById('tut-title').textContent=s.title;
   document.getElementById('tut-body').innerHTML=s.body.replace(/\n/g,'<br>');
-  document.getElementById('tut-prev').style.opacity=tutIdx===0?'.3':'1';
-  document.getElementById('tut-prev').style.pointerEvents=tutIdx===0?'none':'auto';
+  const prevBtn=document.getElementById('tut-prev');
+  if(isFirst){
+    prevBtn.textContent='✕ Close';
+    prevBtn.style.opacity='1';
+    prevBtn.style.pointerEvents='auto';
+    prevBtn.onclick=closeTutorial;
+  }else{
+    prevBtn.textContent='◀ Back';
+    prevBtn.style.opacity='1';
+    prevBtn.style.pointerEvents='auto';
+    prevBtn.onclick=tutPrev;
+  }
   const nextBtn=document.getElementById('tut-next');
-  nextBtn.textContent=tutIdx===TUTORIAL.length-1?'Done ✓':'Next ▶';
-  nextBtn.onclick=tutIdx===TUTORIAL.length-1?closeTutorial:tutNext;
+  nextBtn.textContent=isLast?'Done ✓':'Next ▶';
+  nextBtn.onclick=isLast?closeTutorial:tutNext;
+  document.getElementById('tut-skip').style.display=isLast?'none':'inline-block';
 }
 function tutNext(){if(tutIdx<TUTORIAL.length-1){tutIdx++;renderTutStep();}}
 function tutPrev(){if(tutIdx>0){tutIdx--;renderTutStep();}}
@@ -1778,11 +1827,13 @@ function navBack(){
   stopLoop();leaveFullscreen();closeAllModals();showTitle();
 }
 function closeAllModals(){
-  ['market-modal','equip-modal','sacrifice-modal','rwdmodal','imgmodal','lightbox','tutorial-modal','gmodal'].forEach(id=>{
+  ['market-modal','equip-modal','sacrifice-modal','rwdmodal','imgmodal','lightbox','gmodal'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el){el.classList.remove('open');el.style.display='';}
+    if(el)el.classList.remove('open');
   });
+  closeTutorial();
   closeConfirm();
+  const bso=document.getElementById('battle-start-ov');if(bso)bso.style.display='none';
   const b3=document.getElementById('b3choice-ov');if(b3)b3.remove();
   const mp=document.getElementById('medal-popup-ov');if(mp)mp.remove();
 }
@@ -2227,7 +2278,8 @@ function renderMarket(){
 
 function buyCard(tier){
   const price=tier===1?200:GOLD.buy.cardT2;
-  if(PR.gold<price||tier!==1)return; // only T1 allowed in market
+  if(tier!==1)return;
+  if(PR.gold<price){showToast(`❌ Need ${price}g — you have ${PR.gold}g`,'#cc4444');return;}
   PR.gold-=price;
   const id=pick(TIER1);
   PR.deck.push({id});
@@ -2235,7 +2287,7 @@ function buyCard(tier){
 }
 function buyNormal(type){
   const price=GOLD.buy[type];
-  if(PR.gold<price)return;
+  if(PR.gold<price){showToast(`❌ Need ${price}g — you have ${PR.gold}g`,'#cc4444');return;}
   PR.gold-=price;
   const pool=(type==='scripture'?RWDS.scriptures:RWDS.horses).filter(r=>!r.elite&&!r.rewardOnly);
   const r=pick(pool);
@@ -2246,7 +2298,7 @@ function buyNormal(type){
   savePR();renderMarket();showTitle();
 }
 function showBuyWeaponPicker(){
-  if(PR.gold<GOLD.buy.weapon){return;}
+  if(PR.gold<GOLD.buy.weapon){showToast(`❌ Need ${GOLD.buy.weapon}g — you have ${PR.gold}g`,'#cc4444');return;}
   const sigIds=GENS.map(g=>g.sig?.weapon||g.sig?.horse).filter(Boolean);
   const pool=RWDS.weapons.filter(r=>!r.elite&&!sigIds.includes(r.id));
   if(!pool.length)return;
@@ -2486,10 +2538,10 @@ function showBattleStartOverlay(title,vsText,fxMsg,fxCol){
   const ov=document.getElementById('battle-start-ov');
   document.getElementById('bso-title').textContent=title;
   document.getElementById('bso-vs').textContent=vsText;
-  ov.classList.add('open');
+  ov.style.display='flex';
 }
 function hideBattleStartOverlay(){
-  document.getElementById('battle-start-ov').classList.remove('open');
+  document.getElementById('battle-start-ov').style.display='none';
 }
 function beginBattle(){
   hideBattleStartOverlay();
@@ -2613,31 +2665,46 @@ function showStoryIntro(){
   ov.id='story-intro-ov';
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9998;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;font-family:Georgia,serif';
   ov.innerHTML=`
-    <div style="max-width:460px;width:100%;margin:0 auto;background:linear-gradient(180deg,#1c1100 0%,#0d0800 100%);border:2px solid #8b6914;border-radius:8px;padding:26px 24px;text-align:center;color:#e8c44d;box-shadow:0 0 50px rgba(180,120,0,.3)">
-      <div style="font-size:1.45em;letter-spacing:2px;margin-bottom:4px">⚔ SAVING OF THE PRINCE</div>
-      <div style="font-size:.7em;color:#aa8844;letter-spacing:3px;margin-bottom:14px">Battle of Changban — 208 AD</div>
-      <div style="width:50px;height:1px;background:#8b6914;margin:0 auto 16px"></div>
-      <p style="font-size:.82em;color:#ffddaa;line-height:1.8;text-align:left;margin:0 0 20px">
-        Liu Bei's forces are routed at Changban. In the chaos, his infant son <em style="color:#e8c44d">Liu A-Dou</em> is left behind, surrounded by Cao Cao's army.<br><br>
-        Zhao Yun rides back <em style="color:#e8c44d">alone</em> into ten thousand Wei soldiers. He must cut through wave after wave of infantry and defeat two of Cao Cao's generals to deliver the prince to safety.
-      </p>
-      <div style="display:flex;justify-content:center;gap:12px;margin-bottom:22px">
-        <div style="background:#0d0800;border:1px solid #6b4f10;border-radius:6px;padding:12px 8px;width:136px">
-          <img src="Portraits/ZhangLiao1.png" onerror="this.style.display='none'" style="width:72px;height:72px;object-fit:cover;border-radius:4px;border:1px solid #4a3800;display:block;margin:0 auto 8px">
-          <div style="font-size:.88em;font-weight:bold;color:#e8c44d">Zhang Liao</div>
-          <div style="font-size:.67em;color:#aa8844;margin-top:2px">Terror of Wu</div>
-          <div style="font-size:.63em;color:#cc7744;margin-top:7px;letter-spacing:1px">⚔ PHASE 1 BOSS</div>
+    <div style="max-width:480px;width:100%;margin:0 auto;padding:10px 0">
+      <div style="text-align:center;color:#e8c44d;font-size:1.1em;letter-spacing:3px;margin-bottom:14px;text-shadow:0 0 12px #e8c44d44">📖 STORY MISSIONS</div>
+
+      <!-- Mission 1 — AVAILABLE -->
+      <div style="background:linear-gradient(180deg,#1c1100 0%,#0d0800 100%);border:2px solid #8b6914;border-radius:8px;padding:20px 20px;text-align:center;color:#e8c44d;margin-bottom:10px">
+        <div style="font-size:1.1em;letter-spacing:2px;margin-bottom:2px">⚔ SAVING OF THE PRINCE</div>
+        <div style="font-size:.68em;color:#aa8844;letter-spacing:3px;margin-bottom:12px">Battle of Changban — 208 AD</div>
+        <p style="font-size:.8em;color:#ffddaa;line-height:1.7;text-align:left;margin:0 0 14px">
+          Zhao Yun rides back <em style="color:#e8c44d">alone</em> into ten thousand Wei soldiers to save Liu Bei's infant son. Cut through waves of infantry, defeat Zhang Liao and Xia Hou En to deliver the prince to safety.
+        </p>
+        <div style="display:flex;justify-content:center;gap:10px;margin-bottom:16px">
+          <div style="background:#0d0800;border:1px solid #6b4f10;border-radius:6px;padding:10px 6px;width:120px">
+            <img src="Portraits/ZhangLiao1.png" onerror="this.style.display='none'" style="width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #4a3800;display:block;margin:0 auto 6px">
+            <div style="font-size:.82em;font-weight:bold;color:#e8c44d">Zhang Liao</div>
+            <div style="font-size:.6em;color:#cc7744;margin-top:5px">⚔ PHASE 1 BOSS</div>
+          </div>
+          <div style="background:#0d0800;border:1px solid #6b4f10;border-radius:6px;padding:10px 6px;width:120px">
+            <img src="Portraits/XiaoHuoDun1.png" onerror="this.style.display='none'" style="width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #4a3800;display:block;margin:0 auto 6px">
+            <div style="font-size:.82em;font-weight:bold;color:#e8c44d">Xia Hou En</div>
+            <div style="font-size:.6em;color:#cc7744;margin-top:5px">⚔ PHASE 2 BOSS</div>
+          </div>
         </div>
-        <div style="background:#0d0800;border:1px solid #6b4f10;border-radius:6px;padding:12px 8px;width:136px">
-          <img src="Portraits/XiaoHuoDun1.png" onerror="this.style.display='none'" style="width:72px;height:72px;object-fit:cover;border-radius:4px;border:1px solid #4a3800;display:block;margin:0 auto 8px">
-          <div style="font-size:.88em;font-weight:bold;color:#e8c44d">Xia Hou En</div>
-          <div style="font-size:.67em;color:#aa8844;margin-top:2px">Sword-Bearer of Wei</div>
-          <div style="font-size:.63em;color:#cc7744;margin-top:7px;letter-spacing:1px">⚔ PHASE 2 BOSS</div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button onclick="document.getElementById('story-intro-ov').remove()" style="padding:8px 16px;background:#1a1000;border:1px solid #664400;color:#887755;font-family:Georgia,serif;font-size:.82em;cursor:pointer;border-radius:4px">← Back</button>
+          <button onclick="document.getElementById('story-intro-ov').remove();startStory()" style="padding:8px 22px;background:#2a1800;border:2px solid #e8c44d;color:#e8c44d;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:4px;font-weight:bold">⚔ Begin Mission</button>
         </div>
       </div>
-      <div style="display:flex;gap:10px;justify-content:center">
-        <button onclick="document.getElementById('story-intro-ov').remove()" style="padding:9px 18px;background:#1a1000;border:1px solid #664400;color:#887755;font-family:Georgia,serif;font-size:.85em;cursor:pointer;border-radius:4px">← Back</button>
-        <button onclick="document.getElementById('story-intro-ov').remove();startStory()" style="padding:9px 26px;background:#2a1800;border:2px solid #e8c44d;color:#e8c44d;font-family:Georgia,serif;font-size:.95em;cursor:pointer;border-radius:4px;font-weight:bold">⚔ Begin Mission</button>
+
+      <!-- Mission 2 — LOCKED -->
+      <div style="background:#0a0800;border:1px solid #3a2a00;border-radius:8px;padding:16px 20px;text-align:center;opacity:.55;margin-bottom:10px">
+        <div style="font-size:1em;letter-spacing:2px;color:#886622;margin-bottom:2px">🔒 RED CLIFFS</div>
+        <div style="font-size:.65em;color:#664400;letter-spacing:2px;margin-bottom:8px">Battle of Chibi — 208 AD</div>
+        <div style="font-size:.78em;color:#665522;line-height:1.6">Zhou Yu leads Wu's navy against Cao Cao's armada. Command the fire ships — coming soon.</div>
+      </div>
+
+      <!-- Mission 3 — LOCKED -->
+      <div style="background:#0a0800;border:1px solid #3a2a00;border-radius:8px;padding:16px 20px;text-align:center;opacity:.45">
+        <div style="font-size:1em;letter-spacing:2px;color:#886622;margin-bottom:2px">🔒 HULAO GATE</div>
+        <div style="font-size:.65em;color:#664400;letter-spacing:2px;margin-bottom:8px">Alliance of Lords — 190 AD</div>
+        <div style="font-size:.78em;color:#665522;line-height:1.6">Eighteen lords unite against Dong Zhuo. Face Lü Bu at the gates — coming soon.</div>
       </div>
     </div>`;
   document.body.appendChild(ov);
