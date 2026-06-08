@@ -1785,18 +1785,17 @@ function closeAllModals(){
   const b3=document.getElementById('b3choice-ov');if(b3)b3.remove();
   const mp=document.getElementById('medal-popup-ov');if(mp)mp.remove();
 }
+function _doExit(){
+  if(window.AndroidBridge&&window.AndroidBridge.exitApp)window.AndroidBridge.exitApp();
+  else window.close();
+}
 function navClose(){
   if(battleRunning){
-    showConfirm('Abandon Battle?','Your general card will be lost and replaced with a Common card.',()=>{
-      battleRunning=false;battleStreak=0;streakPool=[];
-      document.body.classList.remove('in-battle');
-      stopLoop();leaveFullscreen();
-      addCardToDecK(1);savePR();closeAllModals();showTitle();
+    showConfirm('Exit Game?','Current battle will be lost. Your general card will not be returned.',()=>{
+      battleRunning=false;stopLoop();savePR();_doExit();
     });
   }else{
-    battleRunning=false;battleStreak=0;streakPool=[];
-    document.body.classList.remove('in-battle');
-    stopLoop();leaveFullscreen();closeAllModals();showTitle();
+    _doExit();
   }
 }
 function goFullscreen(){

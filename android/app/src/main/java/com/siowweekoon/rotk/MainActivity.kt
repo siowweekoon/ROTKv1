@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
+import android.webkit.JavascriptInterface
 import android.webkit.JsResult
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -87,6 +88,11 @@ class MainActivity : AppCompatActivity() {
             loadWithOverviewMode = true
             builtInZoomControls = false
         }
+
+        webView.addJavascriptInterface(object {
+            @JavascriptInterface
+            fun exitApp() { finish() }
+        }, "AndroidBridge")
 
         webView.loadUrl("https://appassets.androidplatform.net/assets/index.html")
     }
