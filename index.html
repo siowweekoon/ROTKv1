@@ -73,7 +73,7 @@ body{background:var(--bg);color:var(--text);font-family:'Georgia',serif;min-heig
 @keyframes cdpop{0%{transform:scale(2);opacity:0}50%{opacity:1}100%{transform:scale(1);opacity:1}}
 /* NAV BUTTONS */
 #btn-nav-back{position:fixed;top:10px;left:12px;z-index:600;width:44px;height:44px;border-radius:50%;border:2px solid var(--gold2);background:rgba(0,0,0,.75);color:var(--gold);font-size:1.3em;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;-webkit-tap-highlight-color:transparent}
-#btn-nav-close{position:fixed;top:10px;right:12px;z-index:600;width:44px;height:44px;border-radius:50%;border:2px solid #cc4444;background:rgba(0,0,0,.75);color:#ff6666;font-size:1.3em;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;-webkit-tap-highlight-color:transparent}
+#btn-nav-close{position:fixed;top:8px;right:8px;z-index:600;width:28px;height:28px;border-radius:50%;border:1px solid #cc4444;background:rgba(0,0,0,.75);color:#ff6666;font-size:.85em;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;-webkit-tap-highlight-color:transparent}
 /* LIGHTBOX */
 #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:10000;align-items:center;justify-content:center;cursor:zoom-out}
 #lightbox.open{display:flex}
@@ -81,7 +81,7 @@ body{background:var(--bg);color:var(--text);font-family:'Georgia',serif;min-heig
 #lightbox .lb-close{position:fixed;top:16px;right:22px;color:#aaa;font-size:2em;cursor:pointer;z-index:10001;line-height:1}
 #lightbox .lb-close:hover{color:#fff}
 /* BATTLE */
-#s-battle{background:#060200;flex-direction:column;align-items:stretch}
+#s-battle{background:#060200;flex-direction:column;align-items:stretch;position:relative}
 .bhdr{display:none!important}
 .bhp-block{flex:1;padding:8px 12px}
 .bhp-name{font-size:.82em;color:var(--gold);font-weight:bold;margin-bottom:4px;letter-spacing:1px}
@@ -219,9 +219,9 @@ const SPRITES = {
   <!-- Title centered -->
   <div style="position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:100%">
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
-      <span style="font-size:clamp(1.1em,5.5vw,2.6em);color:var(--gold);letter-spacing:clamp(1px,1vw,5px);text-transform:uppercase;white-space:nowrap;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
+      <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.2</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.3</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -301,7 +301,11 @@ const SPRITES = {
 <!-- EQUIP MODAL -->
 <div id="equip-modal" class="gmodal-bg" onclick="closeEquip()">
   <div class="gmodal-box" onclick="event.stopPropagation()" style="flex-direction:column;max-width:480px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px;gap:0">
-    <div style="color:var(--gold);font-size:1.1em;font-weight:bold;letter-spacing:2px;margin-bottom:4px;text-align:center">⚔ EQUIPMENT</div>
+    <div style="display:flex;align-items:center;margin-bottom:4px">
+      <button class="btn" onclick="closeEquip()" style="font-size:.75em;padding:4px 12px;border-color:#555;color:#aaa;margin-right:auto">← Back</button>
+      <div style="color:var(--gold);font-size:1.1em;font-weight:bold;letter-spacing:2px;text-align:center;flex:1">⚔ EQUIPMENT</div>
+      <div style="width:60px"></div>
+    </div>
     <div style="color:var(--dim);font-size:.75em;text-align:center;margin-bottom:12px">Equip one of each — bonuses apply every battle</div>
     <div id="equip-content"></div>
     <button class="btn" onclick="closeEquip()" style="margin-top:14px">Done ✓</button>
@@ -397,6 +401,13 @@ const SPRITES = {
       <button class="tc-btn tc-skl" ontouchstart="cancelGuard();TK.KeyS=true" ontouchend="TK.KeyS=false" ontouchcancel="TK.KeyS=false">✨<br>SPEC</button>
       <button class="tc-btn tc-atk" ontouchstart="cancelGuard();TK.KeyZ=true" ontouchend="TK.KeyZ=false" ontouchcancel="TK.KeyZ=false">⚔<br>ATTACK</button>
     </div>
+  </div>
+  <!-- START BATTLE OVERLAY (inside s-battle so position:absolute works) -->
+  <div id="battle-start-ov" style="display:none;position:absolute;inset:0;z-index:60;background:rgba(0,0,0,.88);flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:Georgia,serif">
+    <div id="bso-title" style="color:#e8c44d;font-size:1.3em;font-weight:bold;letter-spacing:2px;text-align:center;text-shadow:0 0 14px #e8c44d88"></div>
+    <div id="bso-vs" style="color:#fff;font-size:.9em;letter-spacing:1px;text-align:center;opacity:.8"></div>
+    <div style="color:#aaa;font-size:.72em;text-align:center;margin-top:4px">Rotate screen to landscape, then tap when ready</div>
+    <button onclick="beginBattle()" class="btn" style="font-size:1em;padding:12px 36px;border-color:#e8c44d;color:#e8c44d;box-shadow:0 0 18px #e8c44d44;letter-spacing:2px;margin-top:6px">⚔ START BATTLE</button>
   </div>
 </div>
 
@@ -660,9 +671,9 @@ const RWDS={
   ],
 };
 
-let PR={deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:0,wins:0,genEquipped:{},b3Played:false,medals:{}};
+let PR={deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:0,wins:0,genEquipped:{},b3Played:false,medals:{},sellHistory:[]};
 let usedCardId=null;
-function freshPR(){return{deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:500,wins:0,genEquipped:{},b3Played:false,medals:{}};}
+function freshPR(){return{deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:500,wins:0,genEquipped:{},b3Played:false,medals:{},sellHistory:[]};}
 const GOLD={
   earn:{midWin:20,fullWin:50,lose:10},
   buy:{cardT1:50,cardT2:150,wife:80,scripture:100,horse:120,weapon:130},
@@ -701,6 +712,7 @@ function loadPR(){
       if(!PR.genEquipped)PR.genEquipped={};
       if(!PR.b3Played)PR.b3Played=false;
       if(!PR.medals)PR.medals={};
+      if(!PR.sellHistory)PR.sellHistory=[];
       // Strip old wife/scripture/horse from genEquipped (now global)
       Object.keys(PR.genEquipped).forEach(k=>{
         const ge=PR.genEquipped[k];
@@ -715,9 +727,19 @@ function loadPR(){
   refreshRWDSDescs();
 }
 function savePR(){localStorage.setItem('tkd3',JSON.stringify(PR));}
-function newGame(){if(confirm('Start fresh? All generals and rewards will be lost.')){
-  PR=freshPR();initDeck();savePR();showTitle();
-}}
+
+function showConfirm(title,msg,onYes){
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-msg').textContent=msg;
+  document.getElementById('confirm-yes').onclick=()=>{closeConfirm();onYes();};
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm(){document.getElementById('confirm-modal').classList.remove('open');}
+
+function newGame(){
+  showConfirm('⚠ Restart Game?','All generals, gold and rewards will be permanently lost.',
+    ()=>{PR=freshPR();initDeck();savePR();showTitle();});
+}
 function sacrificeReward(type,id){
   const pool=type==='wife'?PR.wives:type==='scripture'?PR.scriptures:type==='weapon'?PR.weapons:PR.horses;
   const i=pool.findIndex(r=>r.id===id);if(i<0)return;
@@ -1719,12 +1741,12 @@ function showScreen(id){
 // ── TUTORIAL ────────────────────────────────────────────────────────────────
 const TUTORIAL=[
   {icon:'⚔️',title:'Welcome, Warrior!',body:'Three Kingdoms Duel is a 1v1 real-time battle game. Build your deck of legendary generals, collect powerful rewards, and fight your way to glory!'},
-  {icon:'🎴',title:'Your General Cards',body:'You start with 2 random general cards. Only generals you own can be selected for battle. Win battles to earn Elite (Tier 2) cards. Lose and your card is replaced by a weaker Common card.'},
+  {icon:'🎴',title:'Your General Cards',body:'You start with 2 random general cards. Only generals you own can be selected for battle. Win Battles to earn \'general cards\'. Lose and your card is replaced by a weaker Common card.'},
   {icon:'⚔️',title:'Two-Round Battles',body:'Each run has 2 battles:\n• Round 1 — face a Common general (easier)\n• Round 2 — face an Elite general (tough!)\n\nWin BOTH to earn a reward. Win Round 1 only, your card is returned. Lose = card gone, Common card issued.'},
   {icon:'🕹️',title:'Battle Controls',body:'← → Move your general\n⚔ ATTACK button (or Z key)\n✨ SPECIAL when SP bar is full (S key)\n🛡 Moving away from enemy = Auto-Guard\n\nTip: Auto-guard only works vs Common enemies — Elite generals break through!'},
   {icon:'💡',title:'SP & Special Moves',body:'Every hit you land or take fills your SP bar. When it reaches 100%, press SPECIAL for your general\'s unique ability — massive damage, stuns, heals and more!'},
-  {icon:'🎁',title:'Rewards & Loadout',body:'Win to pick 1 reward from 3 cards:\n• Slot 1: Wife or Scripture\n• Slot 2: Scripture or Weapon\n• Slot 3: Horse\n\nEquip one of each type via 🎒 Inventory. Each gives a passive bonus every battle.'},
-  {icon:'🏪',title:'The Market',body:'Earn 🪙 Gold from every battle. Spend it at the Market to buy:\n• Common general cards (200g)\n• Normal scriptures, horses, weapons\n\nSell unwanted scriptures, horses or weapons. Wives cannot be bought or sold.'},
+  {icon:'🎁',title:'Rewards',body:'Win to pick 1 reward from 3 cards:\n• Slot 1: Wife or Scripture\n• Slot 2: Scripture\n• Slot 3: Horse\n\nEquip one of each type via 🎒 Inventory. Each gives a passive bonus every battle.'},
+  {icon:'🏪',title:'The Market',body:'Earn 🪙 Gold from every battle. Spend it at the Market to buy:\n• Common general cards (200g)\n• Normal scriptures, horses\n\nSell unwanted scriptures, horses or generals. Wives cannot be sold.'},
   {icon:'🌟',title:'Elite vs Normal Items',body:'Elite items (Nine Yin Manual, Shadow Runner, Serpent Spear) can ONLY be won from battles — never bought. They give 3+ powerful bonuses.\n\nNormal items give 1-2 bonuses and are available in the Market.'},
   {icon:'🀄',title:'Ready to Fight!',body:'Pick your general wisely, fight smart, and accumulate rewards over many battles. The more you win, the stronger your deck becomes!\n\n加油！ (Jia You — Go for it!)'},
 ];
@@ -1755,9 +1777,17 @@ function navBack(){
   stopLoop();leaveFullscreen();showTitle();
 }
 function navClose(){
-  if(confirm('Exit game?')){
-    try{window.close();}catch(e){}
-    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#888;font-family:serif;font-size:1.2em">You may close this tab.</div>';
+  if(battleRunning){
+    showConfirm('Abandon Battle?','Your general card will be lost and replaced with a Common card.',()=>{
+      battleRunning=false;battleStreak=0;streakPool=[];
+      document.body.classList.remove('in-battle');
+      stopLoop();leaveFullscreen();
+      addCardToDecK(1);savePR();showTitle();
+    });
+  }else{
+    battleRunning=false;battleStreak=0;streakPool=[];
+    document.body.classList.remove('in-battle');
+    stopLoop();leaveFullscreen();showTitle();
   }
 }
 function goFullscreen(){
@@ -1850,7 +1880,6 @@ function showInventory(){
         <img src="${m.img}" style="width:58px;height:auto;flex-shrink:0;filter:drop-shadow(0 0 10px ${m.glow})">
         <div style="flex:1">
           <div style="color:#ffd700;font-size:.85em;font-weight:bold;letter-spacing:1px">${m.name}</div>
-          <div style="color:${m.border};font-size:.58em;letter-spacing:3px;margin-top:2px">${m.chinese}</div>
           <div style="color:#aaa;font-size:.68em;margin-top:5px;line-height:1.5;font-style:italic">${m.desc}</div>
           <div style="color:#ffd70077;font-size:.58em;margin-top:5px;letter-spacing:1px">✦ Tap to view ✦</div>
         </div>
@@ -1879,7 +1908,7 @@ function showInventory(){
 }
 
 function showSelect(){
-  if(PR.deck.length===0){alert('No general cards left! Start a New Game.');return;}
+  if(PR.deck.length===0){showConfirm('No General Cards','You have no general cards left. Start a New Game to play again.',()=>{});return;}
   selGen=null;renderSel();goFullscreen();showScreen('s-select');
 }
 
@@ -2116,12 +2145,11 @@ function renderMarket(){
   const el=document.getElementById('market-content');
 
   if(marketTabCur==='buy'){
-    // Buy: T1 card only, normal (non-elite) scripture/horse/weapon
+    // Buy: T1 card only, normal (non-elite) scripture/horse
     const rows=[
       {label:'Common General Card',desc:'Random Tier 1 general',price:200,action:"buyCard(1)"},
       {label:'Normal Scripture',   desc:'Random non-elite manual',price:GOLD.buy.scripture,action:"buyNormal('scripture')"},
       {label:'Normal Horse',       desc:'Random non-elite horse', price:GOLD.buy.horse,    action:"buyNormal('horse')"},
-      {label:'Normal Weapon',      desc:'Assign to a general',    price:GOLD.buy.weapon,   action:"showBuyWeaponPicker()"},
     ];
     el.innerHTML=rows.map(r=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;margin:4px 0;border:1px solid var(--gold2);border-radius:4px">
@@ -2131,23 +2159,48 @@ function renderMarket(){
           Buy 🪙${r.price}</button>
       </div>`).join('');
   } else {
-    // Sell: scriptures only (weapons/horses go direct to generals)
+    // Sell: scriptures, horses, general cards (equipped protected)
+    const equippedIds={scripture:PR.equipped.scripture?.id,horse:PR.equipped.horse?.id};
     const sellable=[
       ...PR.scriptures.map(r=>({...r,_t:'scripture'})),
+      ...PR.horses.map(r=>({...r,_t:'horse'})),
     ];
-    if(!sellable.length){el.innerHTML='<div style="color:var(--dim);text-align:center;padding:16px">Nothing to sell</div>';return;}
-    // Group by id
+    // Group by id+type, sorted alphabetically by id
     const groups={};
-    sellable.forEach(r=>{if(!groups[r.id])groups[r.id]={...r,count:0};groups[r.id].count++;});
-    el.innerHTML=Object.values(groups).map(r=>{
-      const price=r._t==='horse'?GOLD.sell.horse:r._t==='weapon'?GOLD.sell.weapon:GOLD.sell.scripture;
+    sellable.forEach(r=>{const k=r._t+'_'+r.id;if(!groups[k])groups[k]={...r,count:0};groups[k].count++;});
+    const sortedGroups=Object.values(groups).sort((a,b)=>a.id.localeCompare(b.id));
+    // General cards (listed individually by index)
+    const cardRows=PR.deck.map((c,i)=>{
+      const g=GENS.find(x=>x.id===c.id);if(!g)return '';
+      const tier=TIER2.includes(c.id)?2:1;
+      const price=tier===2?GOLD.sell.cardT2:GOLD.sell.cardT1;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px;margin:4px 0;border:1px solid var(--gold2);border-radius:4px">
+        <span style="font-size:1.4em;width:34px;text-align:center">🎴</span>
+        <div style="flex:1"><div style="color:var(--gold);font-size:.88em;font-weight:bold">${g.name} <span style="color:#aaa;font-size:.78em">${tier===2?'(Elite)':'(Common)'}</span></div>
+        <div style="color:var(--dim);font-size:.72em">General card</div></div>
+        <button onclick="sellCard('${c.id}')" class="btn" style="font-size:.8em;padding:5px 10px;border-color:#44aa44;color:#88ff88;white-space:nowrap">Sell +🪙${price}</button>
+      </div>`;
+    }).filter(Boolean).join('');
+    const rewardRows=sortedGroups.map(r=>{
+      const price=r._t==='horse'?GOLD.sell.horse:GOLD.sell.scripture;
+      const isEquipped=equippedIds[r._t]===r.id;
+      const btnStyle=isEquipped?'font-size:.8em;padding:5px 10px;border-color:#555;color:#666;white-space:nowrap;pointer-events:none':'font-size:.8em;padding:5px 10px;border-color:#44aa44;color:#88ff88;white-space:nowrap';
+      const btnLabel=isEquipped?'Equipped':'Sell +🪙'+price;
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px;margin:4px 0;border:1px solid var(--gold2);border-radius:4px">
         ${r.img?`<img src="${r.img}" onclick="showLightbox('${r.img}')" style="width:34px;height:44px;object-fit:cover;object-position:top;border:1px solid var(--gold2);cursor:zoom-in;flex-shrink:0">`:`<span style="font-size:1.5em;width:34px;text-align:center">${r.icon}</span>`}
         <div style="flex:1"><div style="color:var(--gold);font-size:.88em;font-weight:bold">${r.name}${r.count>1?` <span style="color:#ffcc44">×${r.count}</span>`:''}</div>
         <div style="color:var(--dim);font-size:.72em">${r.desc}</div></div>
-        <button onclick="sellReward('${r._t}','${r.id}')" class="btn" style="font-size:.8em;padding:5px 10px;border-color:#44aa44;color:#88ff88;white-space:nowrap">Sell +🪙${price}</button>
+        <button onclick="${isEquipped?'':``sellReward('${r._t}','${r.id}')``}" class="btn" style="${btnStyle}">${btnLabel}</button>
       </div>`;
     }).join('');
+    // Undo section
+    const undoHtml=PR.sellHistory&&PR.sellHistory.length?`<div style="margin:10px 0 4px;padding:8px;border:1px solid #444;border-radius:4px;background:rgba(0,0,0,.3)">
+      <div style="color:#aaa;font-size:.72em;margin-bottom:6px;letter-spacing:1px">↩ UNDO LAST SALE (max 2)</div>
+      ${PR.sellHistory.map((_,i)=>`<button onclick="undoSale(${i})" class="btn" style="font-size:.78em;padding:4px 12px;margin:2px;border-color:#aa6644;color:#ffaa66">Undo ${PR.sellHistory[i].name}</button>`).join('')}
+    </div>`:'';
+    const allRows=cardRows+rewardRows;
+    if(!allRows&&!undoHtml){el.innerHTML='<div style="color:var(--dim);text-align:center;padding:16px">Nothing to sell</div>';return;}
+    el.innerHTML=undoHtml+allRows;
   }
 }
 
@@ -2209,22 +2262,46 @@ function buyReward(type){
   if(!PR.equipped[type])PR.equipped[type]=r;
   savePR();renderMarket();showTitle();
 }
-function sellCard(idx){
-  const c=PR.deck[idx];if(!c)return;
+function sellCard(cardId){
+  const idx=PR.deck.findIndex(c=>c.id===cardId);
+  if(idx<0)return;
+  const c=PR.deck[idx];
   const tier=TIER2.includes(c.id)?2:1;
-  PR.gold+=tier===2?GOLD.sell.cardT2:GOLD.sell.cardT1;
+  const price=tier===2?GOLD.sell.cardT2:GOLD.sell.cardT1;
+  const name=GENS.find(g=>g.id===c.id)?.name||c.id;
+  _pushSellHistory({type:'card',id:c.id,name,tier,price});
+  PR.gold+=price;
   PR.deck.splice(idx,1);
   savePR();renderMarket();showTitle();
 }
 function sellReward(type,idOrIdx){
   const pool=type==='wife'?PR.wives:type==='scripture'?PR.scriptures:type==='weapon'?PR.weapons:PR.horses;
-  // Support both id (string) and index (number) for backward compat
   const idx=typeof idOrIdx==='string'?pool.findIndex(r=>r.id===idOrIdx):idOrIdx;
   const r=pool[idx];if(!r)return;
-  PR.gold+=type==='horse'?GOLD.sell.horse:type==='weapon'?GOLD.sell.weapon:GOLD.sell.scripture;
+  const price=type==='horse'?GOLD.sell.horse:type==='weapon'?GOLD.sell.weapon:GOLD.sell.scripture;
+  _pushSellHistory({type,id:r.id,name:r.name,item:JSON.parse(JSON.stringify(r)),price});
+  PR.gold+=price;
   pool.splice(idx,1);
   const slot={wife:'wife',scripture:'scripture',horse:'horse',weapon:'weapon'}[type]||type;
   if(PR.equipped[slot]?.id===r.id&&!pool.some(x=>x.id===r.id))PR.equipped[slot]=null;
+  savePR();renderMarket();showTitle();
+}
+function _pushSellHistory(entry){
+  if(!PR.sellHistory)PR.sellHistory=[];
+  PR.sellHistory.unshift(entry);
+  if(PR.sellHistory.length>2)PR.sellHistory.length=2;
+}
+function undoSale(idx){
+  if(!PR.sellHistory||!PR.sellHistory[idx])return;
+  const h=PR.sellHistory.splice(idx,1)[0];
+  PR.gold=Math.max(0,PR.gold-h.price);
+  if(h.type==='card'){
+    PR.deck.push({id:h.id});
+    initGenEquip(h.id);
+  } else {
+    const pool=h.type==='wife'?PR.wives:h.type==='scripture'?PR.scriptures:h.type==='weapon'?PR.weapons:PR.horses;
+    pool.push(h.item);
+  }
   savePR();renderMarket();showTitle();
 }
 
@@ -2368,11 +2445,8 @@ function startBattle(){
   showScreen('s-battle');
   CV=document.getElementById('bc');CX=CV.getContext('2d');
   CV.width=CW;CV.height=CH;
-  goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
-  startCountdown(()=>{
-    battleRunning=true;
-    addFx('⚔ FIGHT! ⚔','#e8c44d');
-  });
+  stopLoop();RAF=requestAnimationFrame(gameLoop);
+  showBattleStartOverlay('⚔ BATTLE 1/2',`${PG.name}  vs  ${EG.name}`,'⚔ FIGHT! ⚔','#e8c44d');
 }
 
 function addCardToDecK(tier){
@@ -2383,6 +2457,24 @@ function addCardToDecK(tier){
   const name=GENS.find(g=>g.id===id)?.name||id;
   addFx(`🎴 +${name} (${tier===2?'Elite':'Common'})`,tier===2?'#e8c44d':'#888888');
   savePR();
+}
+
+let _bsoFxMsg='⚔ FIGHT! ⚔';let _bsoFxCol='#e8c44d';
+function showBattleStartOverlay(title,vsText,fxMsg,fxCol){
+  _bsoFxMsg=fxMsg||'⚔ FIGHT! ⚔';_bsoFxCol=fxCol||'#e8c44d';
+  const ov=document.getElementById('battle-start-ov');
+  document.getElementById('bso-title').textContent=title;
+  document.getElementById('bso-vs').textContent=vsText;
+  ov.classList.add('open');
+}
+function hideBattleStartOverlay(){
+  document.getElementById('battle-start-ov').classList.remove('open');
+}
+function beginBattle(){
+  hideBattleStartOverlay();
+  goFullscreenLandscape();
+  const msg=_bsoFxMsg,col=_bsoFxCol;
+  startCountdown(()=>{battleRunning=true;addFx(msg,col);});
 }
 
 function applyLossPenalty(isBattle2){
@@ -2472,28 +2564,26 @@ function showMedalPopup(id){
   const gold='#ffd700';
   const ov=document.createElement('div');
   ov.id='medal-popup-ov';
-  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:11000;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;padding:16px;box-sizing:border-box';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:11000;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:Georgia,serif;box-sizing:border-box';
   ov.innerHTML=`
+    <div style="min-height:100%;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box">
     <div style="text-align:center;max-width:340px;width:100%">
       <div style="font-size:.68em;color:#666;letter-spacing:4px;margin-bottom:6px">ACHIEVEMENT UNLOCKED</div>
       <div style="font-size:1.15em;color:${gold};letter-spacing:3px;margin-bottom:18px;text-shadow:0 0 14px ${gold}88">✦ MEDAL EARNED ✦</div>
 
-      <!-- Medal image -->
       <div style="position:relative;display:inline-block">
         <img src="${m.img}" style="width:210px;height:auto;display:block;margin:0 auto;
              filter:drop-shadow(0 0 22px ${m.glow}) drop-shadow(0 0 44px ${m.glow})">
       </div>
 
-      <!-- Medal name block -->
       <div style="margin-top:18px">
-        <div style="font-size:.58em;color:${gold}88;letter-spacing:4px;margin-bottom:4px">${m.chinese}</div>
         <div style="font-size:1.05em;font-weight:bold;color:${gold};letter-spacing:2px;text-shadow:0 0 10px ${gold}66">${m.name}</div>
         <div style="width:60px;height:1px;background:${gold}44;margin:10px auto"></div>
         <div style="font-size:.75em;color:#ccaa88;line-height:1.7;font-style:italic">${m.desc}</div>
       </div>
 
       <button onclick="document.getElementById('medal-popup-ov').remove()" style="margin-top:22px;padding:10px 34px;background:#110800;border:2px solid ${gold};color:${gold};font-family:Georgia,serif;font-size:.88em;cursor:pointer;border-radius:4px;letter-spacing:1px;box-shadow:0 0 12px ${gold}44">Honour Received</button>
-    </div>`;
+    </div></div>`;
   document.body.appendChild(ov);
 }
 
@@ -2688,8 +2778,8 @@ function storyBossEntry(bossId){
   aiTimer=0;aiAction='approach';frameCount=0;
   document.getElementById('e-name').textContent=EG.name;
   battleRunning=false;
-  goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
-  startCountdown(()=>{battleRunning=true;addFx(`⚔ BOSS — ${bossName} appears!`,'#e8c44d');});
+  stopLoop();RAF=requestAnimationFrame(gameLoop);
+  showBattleStartOverlay(`⚔ STORY BOSS`,`${PG.name}  vs  ${bossName}`,`⚔ BOSS — ${bossName} appears!`,'#e8c44d');
 }
 
 function storyBattleWon(){
@@ -2749,7 +2839,8 @@ function endBattle(won){
       addFx(`🏆 MONKEY GOD DEFEATED — LEGENDARY VICTORY! 🏆`,'#ff4444');
       setTimeout(openReward,2200);
     } else if(battleStreak>=2){
-      // Win Battle 2: offer optional B3 Insane
+      // Win Battle 2: give +1 general card reward, offer optional B3
+      addCardToDecK(2);
       PR.gold+=GOLD.earn.midWin;savePR();
       addFx(`⚔ BATTLE 2/2 CLEARED! ⚔`,'#e8c44d');
       setTimeout(showB3Choice,2000);
@@ -2827,8 +2918,8 @@ function startNextEnemy(){
   aiTimer=0;aiAction='approach';frameCount=0;
   document.getElementById('e-name').textContent=EG.name;
   battleRunning=false;
-  goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
-  startCountdown(()=>{battleRunning=true;addFx(`⚔ BATTLE 2/2 — ${EG.name}! ⚔`,'#e8c44d');});
+  stopLoop();RAF=requestAnimationFrame(gameLoop);
+  showBattleStartOverlay('⚔ BATTLE 2/2',`${PG.name}  vs  ${EG.name}`,`⚔ BATTLE 2/2 — ${EG.name}! ⚔`,'#e8c44d');
 }
 
 function startB3(){
@@ -2855,8 +2946,8 @@ function startB3(){
   aiTimer=0;aiAction='approach';frameCount=0;
   document.getElementById('e-name').textContent='🐒 Monkey God [INSANE]';
   battleRunning=false;
-  goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
-  startCountdown(()=>{battleRunning=true;addFx(`🔥 BATTLE 3/3 — MONKEY GOD! 🔥`,'#ff2222');});
+  stopLoop();RAF=requestAnimationFrame(gameLoop);
+  showBattleStartOverlay('🔥 BATTLE 3/3 — INSANE',`${PG.name}  vs  🐒 Monkey God`,'🔥 BATTLE 3/3 — MONKEY GOD! 🔥','#ff2222');
 }
 
 function showB3Choice(){
@@ -2953,5 +3044,32 @@ if(PR.wins===0&&!localStorage.getItem('tkd_tutorial'))setTimeout(()=>{showTutori
 document.getElementById('btn-nav-close').style.display='flex';
 document.getElementById('btn-nav-close').style.display='flex';
 </script>
+
+<!-- CONFIRM MODAL -->
+<div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,.82);align-items:center;justify-content:center;font-family:Georgia,serif">
+  <div style="background:#12090a;border:2px solid #cc4444;border-radius:8px;padding:24px 28px;max-width:320px;width:90%;text-align:center">
+    <div id="confirm-title" style="color:#e84444;font-size:1.05em;font-weight:bold;margin-bottom:10px;letter-spacing:1px"></div>
+    <div id="confirm-msg" style="color:#ccc;font-size:.82em;line-height:1.6;margin-bottom:20px"></div>
+    <div style="display:flex;gap:12px;justify-content:center">
+      <button onclick="closeConfirm()" class="btn" style="padding:8px 22px;border-color:#555;color:#aaa">Cancel</button>
+      <button id="confirm-yes" class="btn" style="padding:8px 22px;border-color:#cc4444;color:#ff6666">Confirm</button>
+    </div>
+  </div>
+</div>
+<style>#confirm-modal.open{display:flex}</style>
+
+<!-- SPLASH SCREEN -->
+<div id="splash-screen" style="position:fixed;inset:0;z-index:30000;background:#000;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="dismissSplash()">
+  <img src="Start_screen.png" style="max-width:100%;max-height:100%;object-fit:contain">
+</div>
+<script>
+function dismissSplash(){
+  const s=document.getElementById('splash-screen');
+  if(s){s.style.transition='opacity .4s';s.style.opacity='0';setTimeout(()=>s.remove(),400);}
+}
+</script>
+
+<style>#battle-start-ov.open{display:flex}</style>
+
 </body>
 </html>
