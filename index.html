@@ -1774,7 +1774,15 @@ function tutPrev(){if(tutIdx>0){tutIdx--;renderTutStep();}}
 function navBack(){
   battleRunning=false;battleStreak=0;streakPool=[];
   document.body.classList.remove('in-battle');
-  stopLoop();leaveFullscreen();showTitle();
+  stopLoop();leaveFullscreen();closeAllModals();showTitle();
+}
+function closeAllModals(){
+  ['confirm-modal','market-modal','equip-modal','sacrifice-modal','rwdmodal','imgmodal','lightbox','tutorial-modal','gmodal'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.classList.remove('open');el.style.display='';}
+  });
+  const b3=document.getElementById('b3choice-ov');if(b3)b3.remove();
+  const mp=document.getElementById('medal-popup-ov');if(mp)mp.remove();
 }
 function navClose(){
   if(battleRunning){
@@ -1782,12 +1790,12 @@ function navClose(){
       battleRunning=false;battleStreak=0;streakPool=[];
       document.body.classList.remove('in-battle');
       stopLoop();leaveFullscreen();
-      addCardToDecK(1);savePR();showTitle();
+      addCardToDecK(1);savePR();closeAllModals();showTitle();
     });
   }else{
     battleRunning=false;battleStreak=0;streakPool=[];
     document.body.classList.remove('in-battle');
-    stopLoop();leaveFullscreen();showTitle();
+    stopLoop();leaveFullscreen();closeAllModals();showTitle();
   }
 }
 function goFullscreen(){
