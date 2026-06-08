@@ -732,9 +732,9 @@ function showConfirm(title,msg,onYes){
   document.getElementById('confirm-title').textContent=title;
   document.getElementById('confirm-msg').textContent=msg;
   document.getElementById('confirm-yes').onclick=()=>{closeConfirm();onYes();};
-  document.getElementById('confirm-modal').classList.add('open');
+  document.getElementById('confirm-modal').style.display='flex';
 }
-function closeConfirm(){document.getElementById('confirm-modal').classList.remove('open');}
+function closeConfirm(){document.getElementById('confirm-modal').style.display='none';}
 
 function newGame(){
   showConfirm('⚠ Restart Game?','All generals, gold and rewards will be permanently lost.',
@@ -1777,10 +1777,11 @@ function navBack(){
   stopLoop();leaveFullscreen();closeAllModals();showTitle();
 }
 function closeAllModals(){
-  ['confirm-modal','market-modal','equip-modal','sacrifice-modal','rwdmodal','imgmodal','lightbox','tutorial-modal','gmodal'].forEach(id=>{
+  ['market-modal','equip-modal','sacrifice-modal','rwdmodal','imgmodal','lightbox','tutorial-modal','gmodal'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){el.classList.remove('open');el.style.display='';}
   });
+  closeConfirm();
   const b3=document.getElementById('b3choice-ov');if(b3)b3.remove();
   const mp=document.getElementById('medal-popup-ov');if(mp)mp.remove();
 }
