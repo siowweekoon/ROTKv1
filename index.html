@@ -980,11 +980,13 @@ function drawCombatant(cb, gd, isPlayer, frame) {
     CX.fillStyle = "#aa44ff";        CX.fillRect(bx, by+bh+2, bw*spPct, 5);
     if (cb.sp >= 100) {
       CX.fillStyle = "#ff88ff"; CX.font = "bold 9px Georgia";
+      CX.textAlign = "center";
       CX.shadowColor = "#440066"; CX.shadowBlur = 4;
       CX.fillText("✨ SPECIAL READY", cb.x, by+bh+14);
       CX.shadowBlur = 0;
     }
   }
+  CX.restore();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1016,7 +1018,7 @@ function spawnMagicBolt(fromX,toX,y,dmg){
   setTimeout(()=>spawnHit(toX,y,dmg,true,'#cc88ff'),240);
 }
 
-function addFx(txt,col){FXTXT.push({txt,col,life:2.2,y:CH/2-20});}
+function addFx(txt,col){FXTXT.push({txt,col,life:2.2,y:CH/2+10});}
 
 function tickParts(){
   PARTS=PARTS.filter(p=>p.life>0);
@@ -1838,8 +1840,14 @@ function closeAllModals(){
   const mp=document.getElementById('medal-popup-ov');if(mp)mp.remove();
 }
 function _doExit(){
-  if(window.AndroidBridge&&window.AndroidBridge.exitApp)window.AndroidBridge.exitApp();
-  else window.close();
+  if(window.AndroidBridge&&window.AndroidBridge.exitApp){window.AndroidBridge.exitApp();return;}
+  window.close();
+  // window.close() is blocked by browsers for user-opened tabs.
+  // If still running after 80ms, fall back to title and explain.
+  setTimeout(()=>{
+    showTitle();
+    showToast('To fully exit, close this browser tab ✕','#888888');
+  },80);
 }
 function navClose(){
   if(battleRunning){
