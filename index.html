@@ -2539,6 +2539,16 @@ function addCardToDecK(tier){
   addFx(`🎴 +${name} (${tier===2?'Elite':'Common'})`,tier===2?'#e8c44d':'#888888');
   savePR();
 }
+function addB2RewardCard(){
+  const tier=Math.random()<0.3?1:2;
+  const pool=(tier===2?TIER2:TIER1).filter(id=>id!==usedCardId);
+  const id=pick(pool)||pick(tier===2?TIER2:TIER1);
+  PR.deck.push({id});
+  initGenEquip(id);
+  const name=GENS.find(g=>g.id===id)?.name||id;
+  addFx(`🎴 +${name} (General Card)`,'#e8c44d');
+  savePR();
+}
 
 let _bsoFxMsg='⚔ FIGHT! ⚔';let _bsoFxCol='#e8c44d';
 function showBattleStartOverlay(title,vsText,fxMsg,fxCol){
@@ -2559,6 +2569,11 @@ function beginBattle(){
 }
 
 function applyLossPenalty(isBattle2){
+  if(isBattle2){
+    // Card was returned to deck after winning B1; remove it again (Lose B2: card gone)
+    const i=PR.deck.findIndex(c=>c.id===usedCardId);
+    if(i>=0)PR.deck.splice(i,1);
+  }
   addCardToDecK(1);
   PR.gold+=GOLD.earn.lose;
   savePR();
@@ -2925,9 +2940,8 @@ function endBattle(won){
   if(won){
     battleStreak++;
     if(battleStreak>=3){
-      // Win Battle 3 Insane: return card + 1 Elite + 4 rewards
+      // Win Battle 3 Insane: 1 Elite + 4 rewards (used card already in deck since B1 win)
       battleStreak=0;streakPool=[];
-      PR.deck.push({id:usedCardId});
       addCardToDecK(2);
       PR.gold+=GOLD.earn.fullWin;
       PR.wins++;b3Victory=true;savePR();
@@ -2935,8 +2949,8 @@ function endBattle(won){
       addFx(`🏆 MONKEY GOD DEFEATED — LEGENDARY VICTORY! 🏆`,'#ff4444');
       setTimeout(openReward,2200);
     } else if(battleStreak>=2){
-      // Win Battle 2: give +1 general card reward, offer optional B3
-      addCardToDecK(2);
+      // Win Battle 2: give +1 random general card reward, offer optional B3
+      addB2RewardCard();
       PR.gold+=GOLD.earn.midWin;savePR();
       addFx(`⚔ BATTLE 2/2 CLEARED! ⚔`,'#e8c44d');
       setTimeout(showB3Choice,2000);
@@ -3055,7 +3069,7 @@ function showB3Choice(){
       ⚔ BOTH BATTLES CLEARED!<br><span style="font-size:.7em;color:#ff8800">A supreme challenge awaits...</span>
     </div>
     <div style="color:#ddd;font-size:.9em;text-align:center;max-width:270px;line-height:1.5">
-      Face <b style="color:#ff4444">Monkey God [INSANE]</b> for a 4th reward card,<br>or collect your 3 rewards now.
+      Face <b style="color:#ff4444">Monkey God [INSANE]</b> for a General Card + 4th reward,<br>or collect your 3 rewards now.
       <br><span style="color:#aaa;font-size:.85em">Lose B3: still collect 3 rewards, no penalty.</span>
     </div>
     <button onclick="closeB3Choice(false)" style="background:#336633;color:#fff;font-size:1em;padding:13px 30px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
