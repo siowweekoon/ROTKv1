@@ -687,7 +687,7 @@ function initGenEquip(id){
   PR.genEquipped[id]={weapon:null,armor:null};
 }
 function initDeck(){
-  const pool=[...GENS];
+  const pool=GENS.filter(g=>!g.storyOnly);
   const a=pick(pool),b=pick(pool.filter(g=>g.id!==a.id));
   PR.deck=[{id:a.id},{id:b.id}];
   PR.deck.forEach(c=>initGenEquip(c.id));
@@ -1109,14 +1109,15 @@ const SHEET_DEFS = {
     }
   },
   lubu:{
-    src:'Sprites/clean/LuBu_charging_Special%20Ability.png',
-    displayH:160, yOff:-20, useDarken:true,
+    src:'Sprites/clean/LuBu_idle_back_atk_charge_Special.png',
+    displayH:140, yOff:-25, useDarkBg:true,
     anims:{
-      charge: {x:121, y:141,w:613,h:344,frames:1,dur:6, dw:228,dh:127},
-      move:   {x:121, y:141,w:613,h:344,frames:1,dur:6, dw:228,dh:127},
-      back:   {altSrc:'Sprites/clean/LuBu_idle_charge_atk.png',x:654, y:3,  w:538,h:673,frames:1,dur:6, dw:134,dh:165},
-      atk:    {altSrc:'Sprites/clean/LuBu_idle_charge_atk.png',x:1200,y:175,w:768,h:526,frames:1,dur:4, dw:186,dh:127},
-      special:{x:779, y:7,  w:448,h:500,frames:1,dur:8, dw:185,dh:206},
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
+      move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
     }
   },
   machao:{
@@ -1168,6 +1169,18 @@ const SHEET_DEFS = {
   },
   xiahouden:{
     src:'Sprites/clean/XiaHouDun_back_atk_charge_Special.png',
+    displayH:140, yOff:-25, useDarkBg:true,
+    anims:{
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
+      move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
+    }
+  },
+  zhangliao:{
+    src:'Sprites/clean/ZhangLiao_idle_back_atk_charge_Special.png',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1824,6 +1837,18 @@ function tutNext(){if(tutIdx<TUTORIAL.length-1){tutIdx++;renderTutStep();}}
 function tutPrev(){if(tutIdx>0){tutIdx--;renderTutStep();}}
 
 function navBack(){
+  const inBattle=document.getElementById('s-battle').classList.contains('active');
+  if(inBattle && battleStreak===0){
+    const gName=GENS.find(g=>g.id===usedCardId)?.name||'your general';
+    showConfirm('Leave Battle?',
+      `Leaving now will permanently lose your ${gName} card. No replacement card will be issued.`,
+      ()=>{
+        battleRunning=false;battleStreak=0;streakPool=[];
+        document.body.classList.remove('in-battle');
+        stopLoop();leaveFullscreen();closeAllModals();showTitle();
+      });
+    return;
+  }
   battleRunning=false;battleStreak=0;streakPool=[];
   document.body.classList.remove('in-battle');
   stopLoop();leaveFullscreen();closeAllModals();showTitle();
@@ -2230,7 +2255,7 @@ function renderMarket(){
     // ── GENERALS section (grouped by id, ×N count) ──────────────────
     const cardGroups={};
     PR.deck.forEach(c=>{
-      const g=GENS.find(x=>x.id===c.id);if(!g)return;
+      const g=GENS.find(x=>x.id===c.id);if(!g||g.storyOnly)return;
       if(!cardGroups[c.id]){
         const tier=TIER2.includes(c.id)?2:1;
         cardGroups[c.id]={id:c.id,name:g.name,tier,price:tier===2?GOLD.sell.cardT2:GOLD.sell.cardT1,count:0};
@@ -2346,6 +2371,7 @@ function buyReward(type){
 function sellCard(cardId){
   const idx=PR.deck.findIndex(c=>c.id===cardId);
   if(idx<0)return;
+  if(GENS.find(g=>g.id===cardId)?.storyOnly)return;
   const c=PR.deck[idx];
   const tier=TIER2.includes(c.id)?2:1;
   const price=tier===2?GOLD.sell.cardT2:GOLD.sell.cardT1;
