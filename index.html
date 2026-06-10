@@ -1881,18 +1881,21 @@ function _doExit(){
 }
 function navClose(){
   const inBattle=document.getElementById('s-battle').classList.contains('active');
-  if(battleRunning){
-    const msg=battleStreak>=1
-      ?'Battle will be abandoned. Your general card is safe, but unclaimed rewards will be forfeit.'
-      :'Battle will be abandoned. Your general card will NOT be returned.';
-    showConfirm('Exit Game?',msg,()=>{battleRunning=false;stopLoop();savePR();_doExit();});
-  }else if(inBattle && battleStreak>=1){
+  const doExit=()=>{battleRunning=false;stopLoop();savePR();_doExit();};
+  if(inBattle && battleStreak===0){
+    const gName=GENS.find(g=>g.id===usedCardId)?.name||'your general';
+    showConfirm('Exit Game?',
+      `Leaving now will permanently lose your ${gName} card. No replacement card will be issued.`,
+      doExit);
+    return;
+  }
+  if(inBattle && battleStreak>=1){
     showConfirm('Exit Game?',
       'Your general card is safe, but unclaimed battle rewards will be forfeit.',
-      ()=>{savePR();_doExit();});
-  }else{
-    _doExit();
+      doExit);
+    return;
   }
+  _doExit();
 }
 function goFullscreen(){
   const el=document.documentElement;
