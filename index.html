@@ -1838,20 +1838,25 @@ function tutPrev(){if(tutIdx>0){tutIdx--;renderTutStep();}}
 
 function navBack(){
   const inBattle=document.getElementById('s-battle').classList.contains('active');
+  const doLeave=()=>{
+    battleRunning=false;battleStreak=0;streakPool=[];
+    document.body.classList.remove('in-battle');
+    stopLoop();leaveFullscreen();closeAllModals();showTitle();
+  };
   if(inBattle && battleStreak===0){
     const gName=GENS.find(g=>g.id===usedCardId)?.name||'your general';
     showConfirm('Leave Battle?',
       `Leaving now will permanently lose your ${gName} card. No replacement card will be issued.`,
-      ()=>{
-        battleRunning=false;battleStreak=0;streakPool=[];
-        document.body.classList.remove('in-battle');
-        stopLoop();leaveFullscreen();closeAllModals();showTitle();
-      });
+      doLeave);
     return;
   }
-  battleRunning=false;battleStreak=0;streakPool=[];
-  document.body.classList.remove('in-battle');
-  stopLoop();leaveFullscreen();closeAllModals();showTitle();
+  if(inBattle && battleStreak>=1){
+    showConfirm('Leave Battle?',
+      'Your general card is safe, but leaving now will forfeit all unclaimed battle rewards.',
+      doLeave);
+    return;
+  }
+  doLeave();
 }
 function closeAllModals(){
   ['market-modal','equip-modal','sacrifice-modal','rwdmodal','imgmodal','lightbox','gmodal'].forEach(id=>{
@@ -1875,14 +1880,16 @@ function _doExit(){
   },80);
 }
 function navClose(){
+  const inBattle=document.getElementById('s-battle').classList.contains('active');
   if(battleRunning){
-    const cardSafe=battleStreak>=1;
-    const msg=cardSafe
-      ?'Battle will be abandoned. Your general card is safe — it was secured after Battle 1.'
+    const msg=battleStreak>=1
+      ?'Battle will be abandoned. Your general card is safe, but unclaimed rewards will be forfeit.'
       :'Battle will be abandoned. Your general card will NOT be returned.';
-    showConfirm('Exit Game?',msg,()=>{
-      battleRunning=false;stopLoop();savePR();_doExit();
-    });
+    showConfirm('Exit Game?',msg,()=>{battleRunning=false;stopLoop();savePR();_doExit();});
+  }else if(inBattle && battleStreak>=1){
+    showConfirm('Exit Game?',
+      'Your general card is safe, but unclaimed battle rewards will be forfeit.',
+      ()=>{savePR();_doExit();});
   }else{
     _doExit();
   }
