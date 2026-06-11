@@ -5,6 +5,11 @@ android/app/release/
 android/local.properties
 android/.idea/
 
+# Signing keys — NEVER commit (repo is public)
+*.jks
+*.keystore
+key.properties
+
 # General
 *.DS_Store
 Thumbs.db
