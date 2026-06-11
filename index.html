@@ -1787,7 +1787,7 @@ function showScreen(id){
   const isBattle=id==='s-battle';
   document.body.classList.toggle('in-battle',isBattle);
   document.getElementById('btn-nav-back').style.display=isTitle?'none':'flex';
-  document.getElementById('btn-nav-close').style.display='flex';
+  document.getElementById('btn-nav-close').style.display=isBattle?'none':'flex';
   document.querySelector('.tc-move-wrap').style.display=isBattle?'flex':'none';
   document.querySelector('.tc-actions-wrap').style.display=isBattle?'flex':'none';
 }
