@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.16</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.17</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -2179,46 +2179,28 @@ function showArmoury(){
   const card=(item,type)=>{
     const isWep=type==='weapon';
     const accent=isWep?'#c88820':'#4488bb';
-    const bg=isWep?'linear-gradient(160deg,#1a0d00,#2a1600,#1a0d00)':'linear-gradient(160deg,#000d1a,#001828,#000d1a)';
-    const glow=isWep?'rgba(200,130,0,0.3)':'rgba(50,130,200,0.25)';
+    const bg=isWep?'linear-gradient(175deg,#1a0d00,#2a1800,#140a00)':'linear-gradient(175deg,#00101a,#001828,#000d14)';
+    const glow=isWep?'rgba(200,130,0,0.35)':'rgba(50,130,200,0.3)';
     const lbl=isWep?'⚔ WEAPON':'🛡 ARMOR';
-    if(!item)return`<div style="flex:1;min-width:130px;max-width:260px;background:#0c0c0c;border:1px dashed #2a2a2a;border-radius:14px;padding:20px 10px;text-align:center;opacity:.35;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px">
-      <div style="font-size:2.5em;margin-bottom:8px;opacity:.4">${isWep?'⚔️':'🛡'}</div>
-      <div style="font-size:.68em;color:#555;letter-spacing:1px">No ${type} yet</div>
-      <div style="font-size:.58em;color:#444;margin-top:4px">Win battles to earn</div></div>`;
-    return`<div style="flex:1;min-width:130px;max-width:260px;background:${bg};border:1px solid ${accent};border-radius:14px;padding:14px 10px 12px;text-align:center;box-shadow:0 0 24px ${glow},inset 0 0 30px rgba(0,0,0,0.5)">
-      <div style="font-size:.58em;color:${accent};letter-spacing:3px;margin-bottom:10px;font-weight:bold">${lbl}</div>
-      ${item.img?`<img src="${item.img}" onclick="showLightbox('${item.img}')" style="width:110px;height:145px;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,1));margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;cursor:zoom-in">`:`<div style="font-size:3.5em;margin-bottom:10px">${item.icon||'⚔️'}</div>`}
-      <div style="color:var(--gold);font-size:.85em;font-weight:bold;margin-bottom:4px;line-height:1.3">${item.name}</div>
-      <div style="color:#999;font-size:.68em;line-height:1.5;margin-bottom:6px">${item.desc}</div>
-      <div style="font-size:.55em;color:${accent};letter-spacing:2px;opacity:.8">✦ UNIQUE ✦</div>
+    if(!item)return`<div style="flex:1;background:#080808;border:1px dashed #252525;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:320px;opacity:.3">
+      <div style="font-size:3.5em;margin-bottom:10px">${isWep?'⚔️':'🛡'}</div>
+      <div style="font-size:.65em;color:#555;letter-spacing:1px">${lbl}</div>
+      <div style="font-size:.56em;color:#3a3a3a;margin-top:5px">Win battles to unlock</div></div>`;
+    return`<div style="flex:1;background:${bg};border:1px solid ${accent};border-radius:12px;overflow:hidden;text-align:center;box-shadow:0 0 28px ${glow},inset 0 0 40px rgba(0,0,0,.6);display:flex;flex-direction:column">
+      <div style="font-size:.56em;color:${accent};letter-spacing:3px;padding:9px 6px 7px;font-weight:bold;border-bottom:1px solid ${accent}44">${lbl}</div>
+      ${item.img
+        ?`<div style="flex:1;min-height:200px;background:rgba(0,0,0,.35);overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:zoom-in" onclick="showLightbox('${item.img}')">
+            <img src="${item.img}" style="width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 8px 24px rgba(0,0,0,1))">
+          </div>`
+        :`<div style="flex:1;font-size:4.5em;display:flex;align-items:center;justify-content:center;min-height:200px">${item.icon||'⚔️'}</div>`}
+      <div style="padding:10px 10px 12px;border-top:1px solid ${accent}33">
+        <div style="color:var(--gold);font-size:.82em;font-weight:bold;margin-bottom:4px;line-height:1.3">${item.name}</div>
+        <div style="color:#999;font-size:.62em;line-height:1.6;margin-bottom:7px">${item.desc}</div>
+        <div style="font-size:.52em;color:${accent};letter-spacing:2px;opacity:.75">✦ UNIQUE ✦</div>
+      </div>
     </div>`;
   };
-  const ref=ARMOURY_REF[g.id];
-  const hasWp=!!ge.weapon,hasAr=!!ge.armor;
-  let heroSrc=null;
-  if(ref){
-    if(hasWp&&hasAr)heroSrc=ref.both;
-    else if(hasWp)  heroSrc=ref.weapon_only;
-    else if(hasAr)  heroSrc=ref.armor_only;
-  }
-  if(heroSrc){
-    const heroStyle='max-height:60vh;max-width:88%';
-    document.getElementById('armoury-cards').innerHTML=`
-      <div class="armoury-hero-layout">
-        <div style="text-align:center;flex-shrink:0">
-          <img src="${heroSrc}" class="armoury-hero-img" style="${heroStyle}">
-        </div>
-        <div class="armoury-hero-details">
-          <div class="armoury-scroll-hint" style="opacity:.55">↓ &nbsp;ITEM DETAILS&nbsp; ↓</div>
-          <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
-            ${hasWp?card(ge.weapon,'weapon'):''}${hasAr?card(ge.armor,'armor'):''}
-          </div>
-        </div>
-      </div>`;
-  } else {
-    document.getElementById('armoury-cards').innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%">${card(ge.weapon,'weapon')}${card(ge.armor,'armor')}</div>`;
-  }
+  document.getElementById('armoury-cards').innerHTML=`<div style="display:flex;gap:10px;width:100%;box-sizing:border-box;align-items:stretch">${card(ge.weapon,'weapon')}${card(ge.armor,'armor')}</div>`;
   closeGModal();
   showScreen('s-armoury');
 }
