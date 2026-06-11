@@ -82,19 +82,7 @@ body{background:var(--bg);color:var(--text);font-family:'Georgia',serif;min-heig
 #lightbox .lb-close:hover{color:#fff}
 /* BATTLE */
 #s-battle{background:#060200;flex-direction:column;align-items:stretch;position:relative}
-.bhdr{display:flex;flex-direction:column;padding:4px 8px 3px;background:#0d0500;border-bottom:1px solid #2a1400;gap:3px}
-.bhud-r1{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;font-family:Georgia,serif}
-.bhud-pname{color:var(--gold);font-size:.8em;font-weight:bold;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bhud-label{color:#bbaa66;font-size:.68em;letter-spacing:1px;text-align:center;white-space:nowrap;padding:0 8px}
-.bhud-ename{color:var(--gold);font-size:.8em;font-weight:bold;letter-spacing:.5px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bhud-r2,.bhud-r3{display:flex;align-items:center}
-.bhud-hpblock{flex:1;display:flex;flex-direction:column;gap:2px}
-.bhud-div{width:8px;flex-shrink:0}
-.bhp-bar-wrap{height:13px;background:#1a0000;border:1px solid #440000;border-radius:2px;overflow:hidden}
-.bhp-bar{height:100%;border-radius:2px;transition:width .15s ease}
-.bhud-hpnum{font-size:.62em;color:var(--dim);line-height:1.3}
-.bhud-hpnum.right{text-align:right}
-.bhud-spblock{flex:1}
+.bhdr{display:none!important}
 .sp-bar-wrap{height:7px;background:#1a1400;border:1px solid #443300;border-radius:2px;overflow:hidden}
 .sp-bar{height:100%;background:linear-gradient(to right,#884499,#cc88ff);border-radius:2px;transition:width .1s}
 .tc-pause{border-color:#446688;color:#88aacc;width:52px;height:48px;font-size:1.3em}
@@ -226,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.14</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.15</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1685,23 +1673,62 @@ function updateEnemy(){
 }
 
 // ═══════════════════════════════════════════════════
-//  HP BARS UI
+//  HUD (drawn on canvas)
 // ═══════════════════════════════════════════════════
-function updateHUD(){
-  if(!PB||!EB)return;
-  const php=clamp(PB.hp/PB.maxHp*100,0,100);
-  const ehp=clamp(EB.hp/EB.maxHp*100,0,100);
-  const phc=php>50?'#44bb44':php>25?'#dd8822':'#ee2222';
-  const ehc=ehp>50?'#44bb44':ehp>25?'#dd8822':'#ee2222';
-  document.getElementById('p-hpbar').style.cssText=`width:${php}%;background:${phc}`;
-  document.getElementById('e-hpbar').style.cssText=`width:${ehp}%;background:${ehc}`;
-  const pShield=PB.invincTimer>0?' 🛡':'';
-  const eShield=EB.invincTimer>0?' 🛡':'';
-  const pReady=PB.sp>=100?' ✨':'';
-  document.getElementById('p-hpnum').textContent=`HP ${Math.max(0,Math.ceil(PB.hp))}/${PB.maxHp}${pReady}${pShield}`;
-  document.getElementById('e-hpnum').textContent=`HP ${Math.max(0,Math.ceil(EB.hp))}/${EB.maxHp}${eShield}`;
-  document.getElementById('p-spbar').style.width=PB.sp+'%';
+let hudBattleLabel='Battle 1';
+function drawHUD(){
+  if(!PB)return;
+  CX.save();
+  // Semi-transparent dark band across full canvas top
+  const HH=46,mx=CW*0.25,bw=CW*0.5-6,hbH=10,spH=5;
+  CX.fillStyle='rgba(0,0,0,.78)';CX.fillRect(0,0,CW,HH);
+
+  // Row 1 — names + battle label (y≈12)
+  CX.shadowColor='#000';CX.shadowBlur=3;
+  CX.font='bold 11px Georgia';CX.fillStyle='#e8c44d';
+  CX.textAlign='left'; CX.fillText(PG?.name||'', mx+2, 12);
+  CX.textAlign='right';CX.fillText(EG?.name||'', mx+bw*2+2, 12);
+  CX.font='10px Georgia';CX.fillStyle='#bbaa66';CX.textAlign='center';
+  CX.fillText(hudBattleLabel, CW/2, 12);
+  CX.shadowBlur=0;
+
+  // Row 2 — HP bars (y 18-28)
+  const barY=18;
+  if(PB){
+    const php=clamp(PB.hp/PB.maxHp,0,1);
+    const phc=php>.5?'#44ee44':php>.25?'#ffaa22':'#ff2222';
+    CX.fillStyle='#1a0000';CX.fillRect(mx,barY,bw,hbH);
+    CX.fillStyle=phc;CX.fillRect(mx,barY,bw*php,hbH);
+    CX.strokeStyle='#555';CX.lineWidth=1;CX.strokeRect(mx,barY,bw,hbH);
+    // HP text
+    const pShield=PB.invincTimer>0?' 🛡':'';
+    const pReady=PB.sp>=100?' ✨':'';
+    CX.font='bold 9px Georgia';CX.fillStyle='#ccc';CX.textAlign='left';
+    CX.fillText(`HP ${Math.max(0,Math.ceil(PB.hp))}/${PB.maxHp}${pReady}${pShield}`, mx, barY+hbH+8);
+  }
+  if(EB){
+    const ehp=clamp(EB.hp/EB.maxHp,0,1);
+    const ehc=ehp>.5?'#44ee44':ehp>.25?'#ffaa22':'#ff2222';
+    const ex=CW/2+4;
+    CX.fillStyle='#1a0000';CX.fillRect(ex,barY,bw,hbH);
+    // Enemy bar fills from right
+    CX.fillStyle=ehc;CX.fillRect(ex+bw*(1-ehp),barY,bw*ehp,hbH);
+    CX.strokeStyle='#555';CX.lineWidth=1;CX.strokeRect(ex,barY,bw,hbH);
+    const eShield=EB.invincTimer>0?' 🛡':'';
+    CX.font='bold 9px Georgia';CX.fillStyle='#ccc';CX.textAlign='right';
+    CX.fillText(`HP ${Math.max(0,Math.ceil(EB.hp))}/${EB.maxHp}${eShield}`, ex+bw, barY+hbH+8);
+  }
+
+  // Row 3 — player SP bar only (y 40-45)
+  const spY=40;
+  const spp=clamp(PB.sp/100,0,1);
+  CX.fillStyle='#1a1400';CX.fillRect(mx,spY,bw,spH);
+  CX.fillStyle='#aa44ff';CX.fillRect(mx,spY,bw*spp,spH);
+  CX.strokeStyle='#443300';CX.lineWidth=1;CX.strokeRect(mx,spY,bw,spH);
+
+  CX.restore();
 }
+function updateHUD(){} // DOM HUD replaced by canvas drawHUD()
 
 // ═══════════════════════════════════════════════════
 //  MAIN GAME LOOP
@@ -1749,12 +1776,13 @@ function gameLoop(){
     const liv=storyEnemies.filter(e=>e.battle.hp>0).length;
     CX.save();CX.fillStyle='rgba(0,0,0,.65)';CX.fillRect(CW/2-72,6,144,22);
     CX.fillStyle='#ffcc44';CX.font='bold 12px Georgia';CX.textAlign='center';
-    CX.fillText(`⚔ ${liv} of ${storyEnemies.length} enemies remaining`,CW/2,21);CX.restore();
+    CX.fillText(`⚔ ${liv} of ${storyEnemies.length} enemies remaining`,CW/2,64);CX.restore();
   }else if(PB&&EB){
     if(PB.usingSpecial){drawCombatant(EB,EG,false,frameCount);drawCombatant(PB,PG,true,frameCount);}
     else{drawCombatant(PB,PG,true,frameCount);drawCombatant(EB,EG,false,frameCount);}
   }
   drawParts();
+  drawHUD();
   // Overlay: show DEFEATED/VICTORY only when a combatant actually died
   if(!battleRunning&&PB&&(PB.state==='dead'||(EB&&EB.state==='dead'))){
     if(storyFoot&&PB.hp<=0){
@@ -2596,7 +2624,7 @@ function showBattleStartOverlay(title,vsText,fxMsg,fxCol){
   const ov=document.getElementById('battle-start-ov');
   document.getElementById('bso-title').textContent=title;
   document.getElementById('bso-vs').textContent=vsText;
-  document.getElementById('battle-label').textContent=title.replace(/[⚔🔥]/g,'').trim();
+  hudBattleLabel=title.replace(/[⚔🔥]/g,'').trim();
   ov.style.display='flex';
 }
 function hideBattleStartOverlay(){
@@ -2800,7 +2828,7 @@ function startStory(){
   CV=document.getElementById('bc');CX=CV.getContext('2d');
   CV.width=CW;CV.height=CH;
   document.getElementById('p-name').textContent=PG.name;
-  document.getElementById('battle-label').textContent='Story Mode';
+  hudBattleLabel='Story Mode';
   isPaused=false;
   goFullscreenLandscape();stopLoop();RAF=requestAnimationFrame(gameLoop);
   storyStartWave();
