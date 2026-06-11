@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(dir \"C:\\\\Users\\\\weeko\\\\Desktop\\\\ROTK\\\\Sprites\\\\clean\\\\\" | findstr LuBu)",
+      "Bash(git checkout *)",
+      "Bash(node --input-type=module)",
+      "Bash(node -e \"require\\('fs'\\).readFileSync\\('index.html','utf8'\\).match\\(/<script[\\\\s\\\\S]*?<\\\\/script>/g\\)?.forEach\\(\\(s,i\\)=>{try{new Function\\(s.replace\\(/<\\\\/?script[^>]*>/g,''\\)\\)}catch\\(e\\){console.log\\('Block',i,e.message\\)}}\\)\")",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\weeko\\\\Desktop\\\\ROTK\\\\DongZhou Set\" -File | ForEach-Object { Write-Host $_.Name })",
+      "Bash(git update-index *)",
+      "Bash(git hash-object *)",
+      "Bash(git ls-tree *)"
+    ],
+    "additionalDirectories": [
+      "D:\\clean",
+      "D:\\Touchup\\LiuBei Set"
+    ]
+  }
+}
