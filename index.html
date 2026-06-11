@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.25</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.26</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1714,14 +1714,18 @@ function drawHUD(){
   const sFoot=storyMode&&!SM.fightingBoss&&storyEnemies.length>0;
   CX.save();
   // Semi-transparent dark band across full canvas top
-  const HH=46,mx=CW*0.25,bw=CW*0.5-6,hbH=10,spH=5;
+  // Layout: player owns 25%→50% of width, enemy owns 50%→75%. No crossover.
+  const HH=46,hbH=10,spH=5;
+  const pbw=CW*0.25-8;            // each bar = quarter canvas
+  const pX=CW*0.25;               // player bar: 25% → just left of center
+  const eX=CW*0.5+8;              // enemy bar: just right of center → 75%
   CX.fillStyle='rgba(0,0,0,.78)';CX.fillRect(0,0,CW,HH);
 
   // Row 1 — names + battle label (y≈12)
   CX.shadowColor='#000';CX.shadowBlur=3;
   CX.font='bold 11px Georgia';CX.fillStyle='#e8c44d';
-  CX.textAlign='left'; CX.fillText(PG?.name||'', mx+2, 12);
-  if(!sFoot){CX.textAlign='right';CX.fillText(EG?.name||'', mx+bw*2+2, 12);}
+  CX.textAlign='left'; CX.fillText(PG?.name||'', pX, 12);
+  if(!sFoot){CX.textAlign='right';CX.fillText(EG?.name||'', eX+pbw, 12);}
   CX.font='10px Georgia';CX.fillStyle='#bbaa66';CX.textAlign='center';
   CX.fillText(hudBattleLabel, CW/2, 12);
   CX.shadowBlur=0;
@@ -1731,34 +1735,32 @@ function drawHUD(){
   if(PB){
     const php=clamp(PB.hp/PB.maxHp,0,1);
     const phc=php>.5?'#44ee44':php>.25?'#ffaa22':'#ff2222';
-    CX.fillStyle='#1a0000';CX.fillRect(mx,barY,bw,hbH);
-    CX.fillStyle=phc;CX.fillRect(mx,barY,bw*php,hbH);
-    CX.strokeStyle='#555';CX.lineWidth=1;CX.strokeRect(mx,barY,bw,hbH);
-    // HP text
+    CX.fillStyle='#1a0000';CX.fillRect(pX,barY,pbw,hbH);
+    CX.fillStyle=phc;CX.fillRect(pX,barY,pbw*php,hbH);
+    CX.strokeStyle='#555';CX.lineWidth=1;CX.strokeRect(pX,barY,pbw,hbH);
     const pShield=PB.invincTimer>0?' 🛡':'';
     const pReady=PB.sp>=100?' ✨':'';
     CX.font='bold 9px Georgia';CX.fillStyle='#ccc';CX.textAlign='left';
-    CX.fillText(`HP ${Math.max(0,Math.ceil(PB.hp))}/${PB.maxHp}${pReady}${pShield}`, mx, barY+hbH+8);
+    CX.fillText(`HP ${Math.max(0,Math.ceil(PB.hp))}/${PB.maxHp}${pReady}${pShield}`, pX, barY+hbH+8);
   }
   if(EB&&!sFoot){
     const ehp=clamp(EB.hp/EB.maxHp,0,1);
     const ehc=ehp>.5?'#44ee44':ehp>.25?'#ffaa22':'#ff2222';
-    const ex=CW/2+4;
-    CX.fillStyle='#1a0000';CX.fillRect(ex,barY,bw,hbH);
+    CX.fillStyle='#1a0000';CX.fillRect(eX,barY,pbw,hbH);
     // Enemy bar fills from right
-    CX.fillStyle=ehc;CX.fillRect(ex+bw*(1-ehp),barY,bw*ehp,hbH);
-    CX.strokeStyle='#555';CX.lineWidth=1;CX.strokeRect(ex,barY,bw,hbH);
+    CX.fillStyle=ehc;CX.fillRect(eX+pbw*(1-ehp),barY,pbw*ehp,hbH);
+    CX.strokeStyle='#555';CX.lineWidth=1;CX.strokeRect(eX,barY,pbw,hbH);
     const eShield=EB.invincTimer>0?' 🛡':'';
     CX.font='bold 9px Georgia';CX.fillStyle='#ccc';CX.textAlign='right';
-    CX.fillText(`HP ${Math.max(0,Math.ceil(EB.hp))}/${EB.maxHp}${eShield}`, ex+bw, barY+hbH+8);
+    CX.fillText(`HP ${Math.max(0,Math.ceil(EB.hp))}/${EB.maxHp}${eShield}`, eX+pbw, barY+hbH+8);
   }
 
-  // Row 3 — player SP bar only (y 40-45)
+  // Row 3 — player SP bar only, same length as player HP bar (y 40-45)
   const spY=40;
   const spp=clamp(PB.sp/100,0,1);
-  CX.fillStyle='#1a1400';CX.fillRect(mx,spY,bw,spH);
-  CX.fillStyle='#aa44ff';CX.fillRect(mx,spY,bw*spp,spH);
-  CX.strokeStyle='#443300';CX.lineWidth=1;CX.strokeRect(mx,spY,bw,spH);
+  CX.fillStyle='#1a1400';CX.fillRect(pX,spY,pbw,spH);
+  CX.fillStyle='#aa44ff';CX.fillRect(pX,spY,pbw*spp,spH);
+  CX.strokeStyle='#443300';CX.lineWidth=1;CX.strokeRect(pX,spY,pbw,spH);
 
   CX.restore();
 }
