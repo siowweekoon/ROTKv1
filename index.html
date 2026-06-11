@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.20</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.21</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -955,7 +955,7 @@ function drawCombatant(cb, gd, isPlayer, frame) {
   // HP bar near sprite
   const bw=92,bh=9;
   const hpPct=clamp(cb.hp/cb.maxHp,0,1);
-  const bx=cb.x-bw/2,by=sprY-8;
+  const bx=cb.x-bw/2,by=sprY+2;
   CX.fillStyle="rgba(0,0,0,.8)";CX.fillRect(bx,by,bw,bh);
   CX.fillStyle=hpPct>.5?"#44ee44":hpPct>.25?"#ffaa22":"#ff2222";
   CX.fillRect(bx,by,bw*hpPct,bh);
@@ -2846,10 +2846,9 @@ function startStory(){
   CV.width=CW;CV.height=CH;
   document.getElementById('p-name').textContent=PG.name;
   hudBattleLabel='Story Mode';
-  isPaused=false;storyAwaitStart=true;
+  isPaused=false;
   stopLoop();RAF=requestAnimationFrame(gameLoop);
   storyStartWave();
-  showBattleStartOverlay('⚔ STORY — CHANG BAN','Zhao Yun  vs  the Wei Army','⚔ FOR THE PRINCE! ⚔','#e8c44d');
 }
 
 function storyStartWave(){
@@ -2874,8 +2873,10 @@ function storyStartWave(){
   battleRunning=false;
   document.querySelector('.tc-move-wrap').style.display='flex';
   document.querySelector('.tc-actions-wrap').style.display='flex';
-  addFx(`⚔ Wave ${SM.waveIdx+1}/${waves.length} — ${wLen} soldiers!`,'#cc8833');
-  setTimeout(()=>{if(storyMode&&!SM.fightingBoss&&!storyAwaitStart)battleRunning=true;},1000);
+  storyAwaitStart=true;
+  showBattleStartOverlay(`⚔ WAVE ${SM.waveIdx+1}/${waves.length}`,
+    `${PG.name}  vs  ${wLen} Wei soldier${wLen>1?'s':''}`,
+    `⚔ Wave ${SM.waveIdx+1}/${waves.length} — ${wLen} soldiers!`,'#cc8833');
 }
 
 function updateStoryEnemies(){
