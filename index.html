@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.18</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.19</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -728,8 +728,9 @@ function loadPR(){
       });
       PR.deck.forEach(c=>initGenEquip(c.id));
     }
-    else{PR=freshPR();initDeck();}
-  }}catch(e){PR=freshPR();initDeck();}
+    else{PR=freshPR();initDeck();savePR();}
+  }else{PR=freshPR();initDeck();savePR();}
+  }catch(e){PR=freshPR();initDeck();}
   refreshRWDSDescs();
 }
 function savePR(){localStorage.setItem('tkd3',JSON.stringify(PR));}
@@ -1907,10 +1908,16 @@ function tutPrev(){if(tutIdx>0){tutIdx--;renderTutStep();}}
 function navBack(){
   const inBattle=document.getElementById('s-battle').classList.contains('active');
   const doLeave=()=>{
-    battleRunning=false;battleStreak=0;streakPool=[];
+    battleRunning=false;battleStreak=0;streakPool=[];storyMode=false;
     document.body.classList.remove('in-battle');
     stopLoop();leaveFullscreen();closeAllModals();showTitle();
   };
+  if(inBattle && storyMode){
+    showConfirm('Leave Story Mode?',
+      'Story progress will be lost, but no cards are at risk. You can retry anytime.',
+      doLeave);
+    return;
+  }
   if(inBattle && battleStreak===0){
     const gName=GENS.find(g=>g.id===usedCardId)?.name||'your general';
     showConfirm('Leave Battle?',
@@ -1950,6 +1957,7 @@ function _doExit(){
 function navClose(){
   const inBattle=document.getElementById('s-battle').classList.contains('active');
   const doExit=()=>{battleRunning=false;stopLoop();savePR();_doExit();};
+  if(inBattle && storyMode){_doExit();return;}
   if(inBattle && battleStreak===0){
     const gName=GENS.find(g=>g.id===usedCardId)?.name||'your general';
     showConfirm('Exit Game?',
@@ -2828,14 +2836,8 @@ function showStoryIntro(){
 }
 
 function tryStartStory(){
-  const hasCard=PR.deck.some(c=>c.id==='zhaoyun');
-  if(hasCard){
-    showConfirm('Enter Story Mode?',
-      'Story mode uses your Zhao Yun card. If you are defeated, the card will be lost. Continue?',
-      ()=>{document.getElementById('story-intro-ov')?.remove();startStory();});
-  }else{
-    document.getElementById('story-intro-ov')?.remove();startStory();
-  }
+  // Story mode is card-free: no card is consumed or at risk
+  document.getElementById('story-intro-ov')?.remove();startStory();
 }
 function startStory(){
   storyMode=true;
@@ -2876,6 +2878,8 @@ function storyStartWave(){
   // Pre-seed EG/EB so updatePlayer references are valid before syncStoryEB runs
   EG=storyEnemies[0].gen; EB=storyEnemies[0].battle;
   battleRunning=false;
+  document.querySelector('.tc-move-wrap').style.display='flex';
+  document.querySelector('.tc-actions-wrap').style.display='flex';
   addFx(`⚔ Wave ${SM.waveIdx+1}/${waves.length} — ${wLen} soldiers!`,'#cc8833');
   setTimeout(()=>{if(storyMode&&!SM.fightingBoss)battleRunning=true;},1000);
 }
@@ -2995,6 +2999,8 @@ function storyBossEntry(bossId){
   aiTimer=0;aiAction='approach';frameCount=0;
   document.getElementById('e-name').textContent=EG.name;
   battleRunning=false;
+  document.querySelector('.tc-move-wrap').style.display='flex';
+  document.querySelector('.tc-actions-wrap').style.display='flex';
   stopLoop();RAF=requestAnimationFrame(gameLoop);
   showBattleStartOverlay(`⚔ STORY BOSS`,`${PG.name}  vs  ${bossName}`,`⚔ BOSS — ${bossName} appears!`,'#e8c44d');
 }
@@ -3173,8 +3179,9 @@ function startB3(){
 function showB3Choice(){
   const ov=document.createElement('div');
   ov.id='b3choice-ov';
-  ov.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:50;font-family:Georgia;';
+  ov.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;overflow-y:auto;z-index:50;font-family:Georgia;-webkit-overflow-scrolling:touch;';
   ov.innerHTML=`
+   <div style="margin:auto;display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px 10px">
     <div style="color:#e8c44d;font-size:1.35em;font-weight:bold;text-shadow:0 0 14px #e8c44d;text-align:center">
       ⚔ BOTH BATTLES CLEARED!<br><span style="font-size:.7em;color:#ff8800">A supreme challenge awaits...</span>
     </div>
@@ -3187,7 +3194,8 @@ function showB3Choice(){
     </button>
     <button onclick="closeB3Choice(true)" style="background:#8b1a1a;color:#fff;font-size:1em;padding:13px 30px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
       🔥 Battle 3 — INSANE Monkey God (Risk it!)
-    </button>`;
+    </button>
+   </div>`;
   document.getElementById('s-battle').appendChild(ov);
 }
 function closeB3Choice(doB3){
