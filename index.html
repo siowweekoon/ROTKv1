@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.23</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.24</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -752,8 +752,8 @@ function showToast(msg,col){
 }
 
 function newGame(){
-  showConfirm('⚠ Restart Game?','All generals, gold and rewards will be permanently lost.',
-    ()=>{PR=freshPR();initDeck();savePR();showTitle();});
+  showConfirm('⚠ Restart Game?','All generals, gold and rewards will be permanently lost. (Medals are kept.)',
+    ()=>{const m=PR.medals||{};PR=freshPR();PR.medals=m;initDeck();savePR();showTitle();});
 }
 function sacrificeReward(type,id){
   const pool=type==='wife'?PR.wives:type==='scripture'?PR.scriptures:type==='weapon'?PR.weapons:PR.horses;
