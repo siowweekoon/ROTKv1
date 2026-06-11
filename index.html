@@ -3181,20 +3181,22 @@ function showB3Choice(){
   ov.id='b3choice-ov';
   ov.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;overflow-y:auto;z-index:50;font-family:Georgia;-webkit-overflow-scrolling:touch;';
   ov.innerHTML=`
-   <div style="margin:auto;display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px 10px">
-    <div style="color:#e8c44d;font-size:1.35em;font-weight:bold;text-shadow:0 0 14px #e8c44d;text-align:center">
-      ⚔ BOTH BATTLES CLEARED!<br><span style="font-size:.7em;color:#ff8800">A supreme challenge awaits...</span>
+   <div style="margin:auto;display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 10px">
+    <div style="color:#e8c44d;font-size:1.1em;font-weight:bold;text-shadow:0 0 14px #e8c44d;text-align:center">
+      ⚔ BOTH BATTLES CLEARED!
     </div>
-    <div style="color:#ddd;font-size:.9em;text-align:center;max-width:270px;line-height:1.5">
-      Face <b style="color:#ff4444">Monkey God [INSANE]</b> for a General Card + 4th reward,<br>or collect your 3 rewards now.
-      <br><span style="color:#aaa;font-size:.85em">Lose B3: still collect 3 rewards, no penalty.</span>
+    <div style="color:#ddd;font-size:.82em;text-align:center;max-width:420px;line-height:1.45">
+      Face <b style="color:#ff4444">Monkey God [INSANE]</b> for a General Card + 4th reward.
+      <span style="color:#aaa">Lose: still keep 3 rewards, no penalty.</span>
     </div>
-    <button onclick="closeB3Choice(false)" style="background:#336633;color:#fff;font-size:1em;padding:13px 30px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
-      ✅ Collect 3 Rewards &amp; Rest
-    </button>
-    <button onclick="closeB3Choice(true)" style="background:#8b1a1a;color:#fff;font-size:1em;padding:13px 30px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
-      🔥 Battle 3 — INSANE Monkey God (Risk it!)
-    </button>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <button onclick="closeB3Choice(false)" style="background:#336633;color:#fff;font-size:.9em;padding:11px 22px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
+        ✅ Collect 3 Rewards
+      </button>
+      <button onclick="closeB3Choice(true)" style="background:#8b1a1a;color:#fff;font-size:.9em;padding:11px 22px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
+        🔥 Fight Monkey God!
+      </button>
+    </div>
    </div>`;
   document.getElementById('s-battle').appendChild(ov);
 }
