@@ -66,11 +66,11 @@ Special damage capped at 50% of skill fn result
 
 ## General card (roguelike deck) system
 - `PR.deck = [{id:'guanyu'}, ...]` — player's hand of general cards
-- Start: 2 random cards (no free Asia card — that line was removed)
+- Start (New Game): 2 cards of every playable general (28 cards), 1000 gold
 - Select screen only shows generals in deck (others greyed/locked with 🔒)
-- Win B2: card returned + 1 Elite card + choose 1 reward (3 slots)
+- Win B2: card returned + 1 random card (70% T2/30% T1) + choose 1 reward
 - Lose B1: card gone, Common card issued
-- Lose B2: card gone, Common card issued, player picks 1 item to lose
+- Lose B2: card KEPT (was returned after B1 win), no common card, player picks 1 item to lose
 - 0 cards = cannot fight, must New Game
 
 ## Reward system (4 slots)

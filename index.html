@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.24</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.25</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -2666,19 +2666,20 @@ function beginBattle(){
 
 function applyLossPenalty(isBattle2){
   if(isBattle2){
-    // Card was returned to deck after winning B1; remove it again (Lose B2: card gone)
-    const i=PR.deck.findIndex(c=>c.id===usedCardId);
-    if(i>=0)PR.deck.splice(i,1);
-  }
-  addCardToDecK(1);
-  PR.gold+=GOLD.earn.lose;
-  savePR();
-  if(isBattle2){
+    // Lose B2: card already safely returned after B1 win — KEEP it.
+    // Penalty is only gold consolation + losing one item (if any).
+    PR.gold+=GOLD.earn.lose;
+    savePR();
     const pool=[
       ...PR.scriptures.map((r,i)=>({...r,_type:'scripture',_i:i})),
     ];
     if(pool.length) return pool; // caller shows choice modal
+    return null;
   }
+  // Lose B1: card gone (removed at battle start), Common card issued
+  addCardToDecK(1);
+  PR.gold+=GOLD.earn.lose;
+  savePR();
   return null;
 }
 
