@@ -1,27 +1,58 @@
 # Three Kingdoms Duel — CLAUDE.md
 
+**Status (June 2026): in Google Play CLOSED TESTING (12 testers / 14 days) — see Android section.**
+
 ## How to run
 Open `C:\Users\weeko\Desktop\ROTK\index.html` in browser, OR visit `https://siowweekoon.github.io/ROTKv1/`
-After any change: `git add . && git commit -m "msg" && git push` to deploy.
+After any change: bump version pill in index.html (search `v2.3.`) then `git add index.html && git commit -m "v2.3.XX: desc" && git push` to deploy browser version.
+**Only commit explicitly changed files — Ob*.png/obs*.png, Construct materials/, Gemini raws, modified sprites are reference files; never stage them.**
 
 ## File structure
 ```
 C:\Users\weeko\Desktop\ROTK\
   index.html          ← entire game (HTML + CSS + JS, single file)
   CLAUDE.md           ← this file
-  *.png               ← portrait images (root level)
+  privacy.html        ← privacy policy (required by Play listing)
+  LICENSE             ← all-rights-reserved notice (repo is public)
+  *.png, * Set/       ← artwork; Ob*.png = reference only, not used by game
   Sprites/clean/      ← sprite sheet PNGs for battle animations
+  play_store/         ← Play listing kit: descriptions, screenshots, feature
+                        graphic, production_application.md (prepared answers),
+                        shot_*.html (headless-Chrome screenshot harnesses)
+  android/            ← Android Studio project (WebView wrapper)
 ```
 
-## Generals (13 playable + story-only units)
+## Android / Google Play release pipeline
+- Package: `com.siowweekoon.threekingdomsduel` (PERMANENT — locked at first upload)
+- App: WebView wrapper, `android/app/src/main/java/com/siowweekoon/threekingdomsduel/MainActivity.kt`
+  (asset loader at appassets.androidplatform.net, double-back-to-exit toast, immersive fullscreen)
+- **Release steps:** 1) bump `versionCode` + `versionName` in `android/app/build.gradle.kts`
+  2) run `android/copy_assets.ps1` (parses index.html, copies ONLY referenced images —
+  keeps bundle ~160MB; never copy whole folders) 3) Android Studio → Generate Signed
+  Bundle → upload AAB to Play Console track. Keystore is NOT in repo (gitignored) — user holds it.
+- Gradle CLI build (verification only, unsigned): `$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat bundleRelease`
+- Play status: closed testing track "Alpha" live since ~12 Jun 2026; needs 12+ testers
+  opted in for 14 continuous days, then "Apply for production" (answers prepared in
+  play_store/production_application.md). Last uploaded: versionCode 4 (2.3.26).
+- Browser version updates instantly via git push; the Android app needs a new signed AAB.
+
+## Screenshot harnesses (play_store/shot_*.html)
+Headless Chrome + iframe harness drives the game to any screen:
+`& "C:\Program Files\Google\Chrome\Application\chrome.exe" --headless=new --disable-gpu --allow-file-access-from-files --window-size=1080,1920 --hide-scrollbars --virtual-time-budget=12000 --screenshot="out.png" "file:///.../shot_X.html"`
+Note: top-level `let` vars (PR etc.) are NOT on window — drive via global functions
+(dismissSplash, closeTutorial, renderSel, showScreen, pickG, startBattle, beginBattle, awardMedal, swFac).
+
+## Generals (14 playable + story-only units)
 | Faction | Tier | Generals |
 |---|---|---|
 | SHU | T2 | Guan Yu, Zhang Fei, Zhao Yun, Ma Chao |
 | SHU | T1 | Huang Zhong, Zhuge Liang, Liu Bei |
 | WEI | T2 | Zhang Liao, Xiahou Dun |
 | WEI | T1 | Cao Cao |
-| WU | T1 | Sun Quan, Lv Meng, Zhou Yu |
+| WU | T1 | Sun Quan, Zhou Yu |
 | IND | T2 | Lü Bu, Dong Zhuo |
+
+(Lv Meng does NOT exist in GENS — he was removed; do not re-add to TIER1.)
 
 **storyOnly:true units (hidden from generals page, no free card, not acquirable):**
 - `asiainvincible` — Asia the Invincible (removed as general AND as opponent)
@@ -32,7 +63,7 @@ C:\Users\weeko\Desktop\ROTK\
 **Rule:** Any future NPC/story-only unit must get `storyOnly:true` in GENS. `renderSel()` filters with `!g.storyOnly`.
 
 **Tier system (for battle progression):**
-- TIER1 (round 1 opponents): lvmeng, zhugeliang, zhouyu, sunquan, caocao, liubei, huangzhong
+- TIER1 (round 1 opponents): zhugeliang, zhouyu, sunquan, caocao, liubei, huangzhong
 - TIER2 (round 2 opponents): zhangfei, zhaoyun, machao, xiahoudun, zhangliao, lubu, dongzhuo
 
 **Key special skills:**
@@ -134,9 +165,30 @@ Special damage capped at 50% of skill fn result
 | Serpent Spear | STR +12, knockback ×1.5 (elite) |
 
 ## Gold economy
-`PR.gold` — currency. Start: 500g. Earned: +20 mid-win, +50 full-win, +10 loss.
+`PR.gold` — currency. Start: 1000g (freshPR). Earned: +20 mid-win, +50 full-win, +10 loss.
 Market buy: T1 card 200g, normal scripture/horse/weapon (non-elite).
-Market sell: scriptures/horses/weapons only (stacked ×count view), no wives/cards.
+Market sell: cards + scriptures/horses (manuals listed above horses), no wives.
+
+## Story mode rules (Battle of Changban)
+- 100% card-free: no card consumed, no card at risk, no warnings on entry/leave
+- Zhao Yun fixed as hero; Phase 1 waves → boss Zhang Liao → Phase 2 waves → boss Xia Hou En
+- START overlay shown ONLY at wave 1 of each phase + each boss; mid-phase waves auto-flow
+- Top HUD hides enemy name/HP during soldier waves (sFoot check in drawHUD)
+- storyStartWave() and storyBossEntry() must restore .tc-move-wrap/.tc-actions-wrap
+  (gameLoop hides them on any death)
+
+## Battle HUD (drawn on canvas in drawHUD(), no DOM)
+- Top band 46px: names row, HP bars row, player SP row
+- Player bar: x=CW*0.25, width CW*0.25-8; Enemy bar: x=CW*0.5+8, same width —
+  EQUAL lengths, each confined to own half; enemy fills right-to-left
+- Per-sprite: name centered above floating HP bar at by=sprY+2; player also gets SP bar
+- updateHUD() is a no-op stub (old DOM HUD removed); hudBattleLabel set by showBattleStartOverlay
+
+## Other rules locked by playtesting
+- Medals survive New Game (newGame preserves PR.medals)
+- Fresh install (no localStorage) MUST get freshPR()+initDeck()+savePR() — see loadPR else-branch
+- Pause: ⏸ button above SPEC + P key (togglePause; gameLoop early-returns on isPaused)
+- B3 choice overlay: compact margin:auto wrapper, buttons side-by-side, scroll fallback
 
 ## Sprite system
 Two rendering paths in drawCombatant():
