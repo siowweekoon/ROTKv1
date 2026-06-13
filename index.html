@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.40</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.41</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -2094,6 +2094,7 @@ function showInventory(){
     <div style="display:flex;flex-direction:column;gap:8px">
       ${medalRow('monkeygod','Defeat the Monkey God in the Insane Challenge (Battle 3)')}
       ${medalRow('story','Complete Story Mode — Saving of the Prince')}
+      ${medalRow('redcliffs','Collect 75 arrows in the Red Cliffs Challenge')}
     </div>
   </div><hr style="border-color:#333;margin:14px 0 10px">`;
 
@@ -2760,12 +2761,21 @@ const MEDALS={
     glow:'rgba(80,140,220,.7)',
     border:'#88bbee',
   },
+  redcliffs:{
+    name:'CHAMPION OF THE RED CLIFFS CHALLENGE',
+    chinese:'',
+    char:'🏹',
+    desc:'Sailed straw boats into the fog of night and borrowed arrows from Cao Cao\'s own archers — turning the enemy\'s volleys into Wu\'s arsenal.',
+    img:'Medals/Champion%20of%20the%20Red%20Cliffs%20Challenge.png',
+    glow:'rgba(180,80,20,.7)',
+    border:'#d4882a',
+  },
 };
 
 function awardMedal(id){
   if(PR.medals[id])return;
   PR.medals[id]=true;savePR();
-  const delay=id==='story'?3500:500;
+  const delay=id==='story'?3500:id==='redcliffs'?2000:500;
   setTimeout(()=>showMedalPopup(id),delay);
 }
 
@@ -3461,10 +3471,11 @@ function rcDraw(cv,ctx,W,H){
 function rcShowResult(){
   const pct=rcCaught/RC_TOTAL;
   let rating,col;
-  if(rcCaught>=120){rating='Master Strategist';col='#ffd700';}
-  else if(rcCaught>=75){rating='Mission Success';col='#44ee44';}
-  else if(rcCaught>=40){rating='Partial Victory';col='#ffaa22';}
-  else{rating='Mission Failed';col='#ff4444';}
+  if(rcCaught>=75)awardMedal('redcliffs');
+  if(rcCaught>=120){rating='Champion of the Red Cliffs Challenge';col='#ffd700';}
+  else if(rcCaught>=75){rating='Champion of the Red Cliffs Challenge';col='#d4882a';}
+  else if(rcCaught>=40){rating='Arrows Recovered — Not Enough';col='#ffaa22';}
+  else{rating='The Ruse Has Failed';col='#ff4444';}
   const ov=document.createElement('div');ov.id='rc-result';
   ov.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.82);z-index:20;font-family:Georgia,serif;text-align:center;padding:24px;box-sizing:border-box';
   ov.innerHTML=`<div style="font-size:.85em;letter-spacing:3px;color:#886622;margin-bottom:10px">⚔ RED CLIFFS — BATTLE REPORT</div>
