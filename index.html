@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.32</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.33</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -401,7 +401,7 @@ const SPRITES = {
     <button class="tc-btn" id="tc-r" ontouchstart="TK.ArrowRight=true" ontouchend="TK.ArrowRight=false" ontouchcancel="TK.ArrowRight=false">▶</button>
   </div>
   <div class="tc-actions-wrap">
-    <button class="tc-btn tc-pause" id="tc-pause" ontouchstart="togglePause()" ontouchend="" ontouchcancel="">⏸</button>
+    <button class="tc-btn tc-pause" id="tc-pause" ontouchstart="togglePause();event.preventDefault()" ontouchend="" ontouchcancel="" onclick="togglePause()">⏸</button>
     <div class="tc-bottom-row">
       <button class="tc-btn tc-skl" ontouchstart="cancelGuard();TK.KeyS=true" ontouchend="TK.KeyS=false" ontouchcancel="TK.KeyS=false">✨<br>SPEC</button>
       <button class="tc-btn tc-atk" ontouchstart="cancelGuard();TK.KeyZ=true" ontouchend="TK.KeyZ=false" ontouchcancel="TK.KeyZ=false">⚔<br>ATTACK</button>
