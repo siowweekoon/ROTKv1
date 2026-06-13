@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.33</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.34</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -455,6 +455,23 @@ const SPRITES = {
       <button class="btn" onclick="closeArmoury()">← Back</button>
       <button class="btn" onclick="closeArmoury();startBattle()" style="background:var(--gold2);color:#000">⚔ Enter Battle →</button>
     </div>
+  </div>
+</div>
+
+<!-- RED CLIFFS — BORROW ARROWS SCREEN -->
+<div id="s-redcliff" class="screen" style="position:relative;overflow:hidden;padding:0;background:#000">
+  <canvas id="rc-canvas" style="display:block;position:absolute;top:0;left:0"></canvas>
+  <div style="position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:center;gap:22px;z-index:10">
+    <button id="rc-bl"
+      ontouchstart="TK.ArrowLeft=true;event.preventDefault()" ontouchend="TK.ArrowLeft=false" ontouchcancel="TK.ArrowLeft=false"
+      onmousedown="TK.ArrowLeft=true" onmouseup="TK.ArrowLeft=false" onmouseleave="TK.ArrowLeft=false"
+      style="width:90px;height:58px;background:rgba(10,5,0,.88);border:2px solid #664400;color:#e8c44d;font-size:1.7em;border-radius:8px;cursor:pointer;touch-action:none;user-select:none">◀</button>
+    <button onclick="exitRedCliff()"
+      style="width:60px;height:58px;background:rgba(20,0,0,.88);border:2px solid #882200;color:#cc4444;font-size:.9em;font-family:Georgia,serif;border-radius:8px;cursor:pointer;user-select:none">✕<br><span style="font-size:.6em">EXIT</span></button>
+    <button id="rc-br"
+      ontouchstart="TK.ArrowRight=true;event.preventDefault()" ontouchend="TK.ArrowRight=false" ontouchcancel="TK.ArrowRight=false"
+      onmousedown="TK.ArrowRight=true" onmouseup="TK.ArrowRight=false" onmouseleave="TK.ArrowRight=false"
+      style="width:90px;height:58px;background:rgba(10,5,0,.88);border:2px solid #664400;color:#e8c44d;font-size:1.7em;border-radius:8px;cursor:pointer;touch-action:none;user-select:none">▶</button>
   </div>
 </div>
 
@@ -2813,11 +2830,12 @@ function showStoryIntro(){
         </div>
       </div>
 
-      <!-- Mission 2 — LOCKED -->
-      <div style="background:#0a0800;border:1px solid #3a2a00;border-radius:8px;padding:16px 20px;text-align:center;opacity:.55;margin-bottom:10px">
-        <div style="font-size:1em;letter-spacing:2px;color:#886622;margin-bottom:2px">🔒 RED CLIFFS</div>
-        <div style="font-size:.65em;color:#664400;letter-spacing:2px;margin-bottom:8px">Battle of Chibi — 208 AD</div>
-        <div style="font-size:.78em;color:#665522;line-height:1.6">Zhou Yu leads Wu's navy against Cao Cao's armada. Command the fire ships — coming soon.</div>
+      <!-- Mission 2 -->
+      <div style="background:#0a1a10;border:2px solid #2a5a20;border-radius:8px;padding:16px 20px;text-align:center;margin-bottom:10px">
+        <div style="font-size:1em;letter-spacing:2px;color:#66cc44;margin-bottom:2px">⚔ RED CLIFFS</div>
+        <div style="font-size:.65em;color:#446633;letter-spacing:2px;margin-bottom:8px">Battle of Chibi — 208 AD</div>
+        <div style="font-size:.78em;color:#88aa66;line-height:1.6;margin-bottom:10px">Zhou Yu leads Wu's navy. Steer the straw boat and borrow 300 arrows from Cao Cao's armada in 60 seconds.</div>
+        <button onclick="startRedCliff()" style="padding:8px 22px;background:#1a3300;border:1px solid #446600;color:#88cc22;font-family:Georgia,serif;font-size:.85em;border-radius:5px;cursor:pointer">▶ Begin Mission</button>
       </div>
 
       <!-- Mission 3 — LOCKED -->
@@ -3271,6 +3289,185 @@ function spawnConfetti(){
     document.body.appendChild(el);setTimeout(()=>el.remove(),3300);
   },i*18);
 }
+
+// ─── RED CLIFFS — BORROW ARROWS ───────────────────────────────────────────
+const RC_DURATION=3600, RC_TOTAL=300, RC_SPAWN=Math.floor(3600/300);
+const RC_BOAT_SPD=3.5, RC_CATCH_R=55;
+let rcRunning=false,rcRaf=0,rcTimer=0,rcCaught=0,rcFired=0;
+let rcBoatX=0,rcBoatY=0,rcArrows=[],rcStuck=[],rcACv=null,rcBCv=null;
+
+function rcRemoveWhite(img,sx,sy,sw,sh){
+  const W=(sw!=null)?sw:(img.naturalWidth||img.width);
+  const H=(sh!=null)?sh:(img.naturalHeight||img.height);
+  const oc=document.createElement('canvas');oc.width=W;oc.height=H;
+  const oc2=oc.getContext('2d');
+  if(sx!=null)oc2.drawImage(img,sx,sy,sw,sh,0,0,W,H);else oc2.drawImage(img,0,0);
+  try{const d=oc2.getImageData(0,0,W,H),p=d.data;
+    for(let i=0;i<p.length;i+=4)if(p[i]>210&&p[i+1]>210&&p[i+2]>210)p[i+3]=0;
+    oc2.putImageData(d,0,0);}catch(e){}
+  return oc;
+}
+
+function startRedCliff(){
+  showScreen('s-redcliff');
+  let loaded=0;
+  const onLoad=()=>{if(++loaded<2)return;_rcBegin();};
+  const ai=new Image(),bi=new Image();
+  ai.onload=()=>{rcACv=rcRemoveWhite(ai,390,88,240,78);onLoad();};
+  ai.onerror=()=>{rcACv=null;onLoad();};
+  bi.onload=()=>{rcBCv=rcRemoveWhite(bi);onLoad();};
+  bi.onerror=()=>{rcBCv=null;onLoad();};
+  ai.src='RedCliff/Arrows%20Sprite1.png';
+  bi.src='RedCliff/Straw%20Gunboat1.png';
+}
+
+function _rcBegin(){
+  cancelAnimationFrame(rcRaf);
+  const cv=document.getElementById('rc-canvas');
+  cv.width=window.innerWidth;cv.height=window.innerHeight;
+  const ctx=cv.getContext('2d');
+  rcTimer=0;rcCaught=0;rcFired=0;rcRunning=true;
+  rcArrows=[];rcStuck=[];
+  rcBoatX=cv.width*0.5;rcBoatY=cv.height*0.78;
+  function loop(){
+    if(!document.getElementById('s-redcliff').classList.contains('active')){
+      rcRunning=false;TK.ArrowLeft=TK.ArrowRight=false;return;
+    }
+    rcLoop(cv,ctx);
+    rcRaf=requestAnimationFrame(loop);
+  }
+  rcRaf=requestAnimationFrame(loop);
+}
+
+function rcLoop(cv,ctx){
+  const W=cv.width,H=cv.height;
+  if(rcRunning){
+    if(TK.ArrowLeft)  rcBoatX=Math.max(60,rcBoatX-RC_BOAT_SPD);
+    if(TK.ArrowRight) rcBoatX=Math.min(W-60,rcBoatX+RC_BOAT_SPD);
+  }
+  if(rcRunning&&rcFired<RC_TOTAL&&rcTimer%RC_SPAWN===0){
+    const tx=Math.random()<0.6?rcBoatX+(Math.random()-0.5)*120:W*0.1+Math.random()*W*0.6;
+    rcArrows.push({
+      sx:W*0.9+Math.random()*W*0.08,sy:H*0.26+Math.random()*H*0.08,
+      tx,ty:rcBoatY-10,t:0,spd:0.006+Math.random()*0.004,
+      arc:H*(0.14+Math.random()*0.08)
+    });
+    rcFired++;
+  }
+  if(rcRunning)rcTimer++;
+  for(let i=rcArrows.length-1;i>=0;i--){
+    const a=rcArrows[i];a.t+=a.spd;
+    if(a.t>=1){
+      if(Math.abs(a.tx-rcBoatX)<RC_CATCH_R){
+        rcCaught++;
+        rcStuck.push({ox:a.tx-rcBoatX,oy:a.ty-rcBoatY,angle:Math.atan2(a.ty-a.sy,a.tx-a.sx)});
+        if(rcStuck.length>100)rcStuck.shift();
+      }
+      rcArrows.splice(i,1);
+    }
+  }
+  if(rcRunning&&rcTimer>=RC_DURATION){rcRunning=false;rcShowResult();}
+  rcDraw(cv,ctx,W,H);
+}
+
+function rcDraw(cv,ctx,W,H){
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#040a18');bg.addColorStop(0.5,'#060e22');bg.addColorStop(1,'#0a1228');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  // stars
+  ctx.fillStyle='rgba(255,255,200,0.7)';
+  for(let i=0;i<60;i++)ctx.fillRect((i*137.5+42)%W,(i*83.3+17)%(H*0.5),1.2,1.2);
+  // moon
+  ctx.save();ctx.beginPath();ctx.arc(W*0.15,H*0.1,20,0,Math.PI*2);
+  ctx.fillStyle='#fff8cc';ctx.shadowColor='#ffff88';ctx.shadowBlur=22;ctx.fill();ctx.restore();
+  // water shimmer
+  ctx.globalAlpha=0.07;ctx.fillStyle='#7a99bb';
+  for(let y=H*0.5;y<H;y+=12)ctx.fillRect(0,y,W,3);
+  ctx.globalAlpha=1;
+  // Wu shore left
+  ctx.fillStyle='#091508';ctx.beginPath();
+  ctx.moveTo(0,H*0.42);ctx.lineTo(W*0.1,H*0.37);ctx.lineTo(W*0.16,H*0.44);ctx.lineTo(0,H*0.47);ctx.fill();
+  // Cao Cao shore right
+  ctx.fillStyle='#120b03';ctx.beginPath();
+  ctx.moveTo(W,H*0.36);ctx.lineTo(W*0.82,H*0.31);ctx.lineTo(W*0.77,H*0.4);ctx.lineTo(W,H*0.45);ctx.fill();
+  // enemy torches
+  for(let i=0;i<5;i++){
+    const tx=W*0.83+i*(W*0.033),ty=H*0.33+Math.sin(rcTimer*0.08+i)*2;
+    ctx.save();ctx.fillStyle='#ff7700';ctx.shadowColor='#ff3300';ctx.shadowBlur=9;
+    ctx.fillRect(tx-2,ty,4,9);ctx.restore();
+  }
+  // boat
+  const bsc=0.24;
+  if(rcBCv){
+    const BW=rcBCv.width*bsc,BH=rcBCv.height*bsc;
+    ctx.drawImage(rcBCv,rcBoatX-BW/2,rcBoatY-BH*0.72,BW,BH);
+  }else{ctx.fillStyle='#8B5E2A';ctx.fillRect(rcBoatX-55,rcBoatY-20,110,24);}
+  // stuck arrows
+  const AW=54,AH=17;
+  for(const s of rcStuck){
+    if(rcACv){
+      ctx.save();ctx.translate(rcBoatX+s.ox,rcBoatY+s.oy);ctx.rotate(s.angle);
+      ctx.drawImage(rcACv,-AW/2,-AH/2,AW,AH);ctx.restore();
+    }
+  }
+  // in-flight arrows
+  for(const a of rcArrows){
+    const t=a.t;
+    const x=a.sx+(a.tx-a.sx)*t;
+    const y=a.sy+(a.ty-a.sy)*t-a.arc*t*(1-t)*4;
+    const nt=Math.min(t+0.015,1);
+    const nx=a.sx+(a.tx-a.sx)*nt;
+    const ny=a.sy+(a.ty-a.sy)*nt-a.arc*nt*(1-nt)*4;
+    const angle=Math.atan2(ny-y,nx-x);
+    ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+    if(rcACv){ctx.drawImage(rcACv,-27,-8,54,17);}
+    else{
+      ctx.fillStyle='#cc8822';ctx.fillRect(-22,-2,44,4);
+      ctx.beginPath();ctx.moveTo(22,-4);ctx.lineTo(22,4);ctx.lineTo(28,0);ctx.closePath();ctx.fill();
+    }
+    ctx.restore();
+  }
+  // HUD
+  const secsLeft=Math.max(0,Math.ceil((RC_DURATION-rcTimer)/60));
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,.62)';ctx.fillRect(W/2-118,8,236,40);
+  ctx.font='bold 15px Georgia';ctx.fillStyle='#e8c44d';ctx.textAlign='center';
+  ctx.fillText(`🏹 ${rcCaught} / ${RC_TOTAL} arrows   ⏱ ${secsLeft}s`,W/2,30);
+  ctx.font='10px Georgia';ctx.fillStyle='#887744';
+  ctx.fillText('BORROW ARROWS — Battle of Red Cliffs 208 AD',W/2,48);
+  ctx.restore();
+}
+
+function rcShowResult(){
+  const pct=rcCaught/RC_TOTAL;
+  let rating,col;
+  if(pct>=0.8){rating='Master Strategist';col='#ffd700';}
+  else if(pct>=0.6){rating='Mission Success';col='#44ee44';}
+  else if(pct>=0.4){rating='Partial Victory';col='#ffaa22';}
+  else{rating='Mission Failed';col='#ff4444';}
+  const ov=document.createElement('div');ov.id='rc-result';
+  ov.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.82);z-index:20;font-family:Georgia,serif;text-align:center;padding:24px;box-sizing:border-box';
+  ov.innerHTML=`<div style="font-size:.85em;letter-spacing:3px;color:#886622;margin-bottom:10px">⚔ RED CLIFFS — BATTLE REPORT</div>
+    <div style="font-size:1.9em;color:${col};font-weight:bold;margin-bottom:14px">${rating}</div>
+    <div style="font-size:1em;color:#e8c44d;margin-bottom:4px">🏹 Arrows Collected</div>
+    <div style="font-size:2.6em;color:#fff;font-weight:bold;margin-bottom:4px">${rcCaught} <span style="font-size:.5em;color:#aaa">/ ${RC_TOTAL}</span></div>
+    <div style="font-size:.8em;color:#887744;margin-bottom:28px">${Math.round(pct*100)}% captured</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+      <button onclick="document.getElementById('rc-result').remove();_rcBegin()"
+        style="padding:12px 28px;background:#1a3300;border:2px solid #446600;color:#88cc22;font-family:Georgia,serif;font-size:.95em;border-radius:6px;cursor:pointer">↺ Try Again</button>
+      <button onclick="exitRedCliff()"
+        style="padding:12px 28px;background:#1a0000;border:2px solid #552200;color:#cc6622;font-family:Georgia,serif;font-size:.95em;border-radius:6px;cursor:pointer">← Return</button>
+    </div>`;
+  document.getElementById('s-redcliff').appendChild(ov);
+}
+
+function exitRedCliff(){
+  cancelAnimationFrame(rcRaf);rcRunning=false;
+  TK.ArrowLeft=TK.ArrowRight=false;
+  const ov=document.getElementById('rc-result');if(ov)ov.remove();
+  showScreen('s-story');
+}
+// ─── END RED CLIFFS ────────────────────────────────────────────────────────
 
 loadPR();if(PR.deck.length===0)initDeck();
 loadSprites();loadSheets();showTitle();
