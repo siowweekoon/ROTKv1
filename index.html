@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.30</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.31</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1809,8 +1809,7 @@ function gameLoop(){
     drawCombatant(PB,PG,true,frameCount);
     // Enemy count overlay
     const liv=storyEnemies.filter(e=>e.battle.hp>0).length;
-    CX.save();CX.fillStyle='rgba(0,0,0,.65)';CX.fillRect(CW/2-72,6,144,22);
-    CX.fillStyle='#ffcc44';CX.font='bold 12px Georgia';CX.textAlign='center';
+    CX.save();CX.fillStyle='#ffcc44';CX.font='bold 12px Georgia';CX.textAlign='center';
     CX.fillText(`⚔ ${liv} of ${storyEnemies.length} enemies remaining`,CW/2,64);CX.restore();
   }else if(PB&&EB){
     if(PB.usingSpecial){drawCombatant(EB,EG,false,frameCount);drawCombatant(PB,PG,true,frameCount);}
