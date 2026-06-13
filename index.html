@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.26</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.27</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1719,10 +1719,8 @@ function drawHUD(){
   const pbw=CW*0.25-8;            // each bar = quarter canvas
   const pX=CW*0.25;               // player bar: 25% → just left of center
   const eX=CW*0.5+8;              // enemy bar: just right of center → 75%
-  CX.fillStyle='rgba(0,0,0,.78)';CX.fillRect(0,0,CW,HH);
-
   // Row 1 — names + battle label (y≈12)
-  CX.shadowColor='#000';CX.shadowBlur=3;
+  CX.shadowColor='#000';CX.shadowBlur=4;
   CX.font='bold 11px Georgia';CX.fillStyle='#e8c44d';
   CX.textAlign='left'; CX.fillText(PG?.name||'', pX, 12);
   if(!sFoot){CX.textAlign='right';CX.fillText(EG?.name||'', eX+pbw, 12);}
@@ -1741,7 +1739,9 @@ function drawHUD(){
     const pShield=PB.invincTimer>0?' 🛡':'';
     const pReady=PB.sp>=100?' ✨':'';
     CX.font='bold 9px Georgia';CX.fillStyle='#ccc';CX.textAlign='left';
+    CX.shadowColor='#000';CX.shadowBlur=4;
     CX.fillText(`HP ${Math.max(0,Math.ceil(PB.hp))}/${PB.maxHp}${pReady}${pShield}`, pX, barY+hbH+8);
+    CX.shadowBlur=0;
   }
   if(EB&&!sFoot){
     const ehp=clamp(EB.hp/EB.maxHp,0,1);
@@ -1752,7 +1752,9 @@ function drawHUD(){
     CX.strokeStyle='#555';CX.lineWidth=1;CX.strokeRect(eX,barY,pbw,hbH);
     const eShield=EB.invincTimer>0?' 🛡':'';
     CX.font='bold 9px Georgia';CX.fillStyle='#ccc';CX.textAlign='right';
+    CX.shadowColor='#000';CX.shadowBlur=4;
     CX.fillText(`HP ${Math.max(0,Math.ceil(EB.hp))}/${EB.maxHp}${eShield}`, eX+pbw, barY+hbH+8);
+    CX.shadowBlur=0;
   }
 
   // Row 3 — player SP bar only, same length as player HP bar (y 40-45)
