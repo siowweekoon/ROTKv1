@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.38</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.39</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -3346,8 +3346,8 @@ function _rcBegin(){
 function rcLoop(cv,ctx){
   const W=cv.width,H=cv.height;
   if(rcRunning){
-    if(TK.ArrowLeft)  rcBoatX=Math.max(60,rcBoatX-RC_BOAT_SPD);
-    if(TK.ArrowRight) rcBoatX=Math.min(W-60,rcBoatX+RC_BOAT_SPD);
+    if(KD('ArrowLeft'))  rcBoatX=Math.max(60,rcBoatX-RC_BOAT_SPD);
+    if(KD('ArrowRight')) rcBoatX=Math.min(W-60,rcBoatX+RC_BOAT_SPD);
   }
   if(rcRunning&&rcFired<RC_TOTAL&&rcTimer%RC_SPAWN===0){
     for(let j=0;j<2;j++){
