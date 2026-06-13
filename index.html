@@ -1720,7 +1720,7 @@ function drawHUD(){
   const pX=CW*0.25;               // player bar: 25% → just left of center
   const eX=CW*0.5+8;              // enemy bar: just right of center → 75%
   // Row 1 — names + battle label (y≈12)
-  CX.shadowColor='#000';CX.shadowBlur=4;
+  CX.shadowColor='#000';CX.shadowBlur=3;
   CX.font='bold 11px Georgia';CX.fillStyle='#e8c44d';
   CX.textAlign='left'; CX.fillText(PG?.name||'', pX, 12);
   if(!sFoot){CX.textAlign='right';CX.fillText(EG?.name||'', eX+pbw, 12);}
@@ -1739,9 +1739,7 @@ function drawHUD(){
     const pShield=PB.invincTimer>0?' 🛡':'';
     const pReady=PB.sp>=100?' ✨':'';
     CX.font='bold 9px Georgia';CX.fillStyle='#ccc';CX.textAlign='left';
-    CX.shadowColor='#000';CX.shadowBlur=4;
     CX.fillText(`HP ${Math.max(0,Math.ceil(PB.hp))}/${PB.maxHp}${pReady}${pShield}`, pX, barY+hbH+8);
-    CX.shadowBlur=0;
   }
   if(EB&&!sFoot){
     const ehp=clamp(EB.hp/EB.maxHp,0,1);
@@ -1752,9 +1750,7 @@ function drawHUD(){
     CX.strokeStyle='#555';CX.lineWidth=1;CX.strokeRect(eX,barY,pbw,hbH);
     const eShield=EB.invincTimer>0?' 🛡':'';
     CX.font='bold 9px Georgia';CX.fillStyle='#ccc';CX.textAlign='right';
-    CX.shadowColor='#000';CX.shadowBlur=4;
     CX.fillText(`HP ${Math.max(0,Math.ceil(EB.hp))}/${EB.maxHp}${eShield}`, eX+pbw, barY+hbH+8);
-    CX.shadowBlur=0;
   }
 
   // Row 3 — player SP bar only, same length as player HP bar (y 40-45)
