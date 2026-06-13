@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.27</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.28</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1727,9 +1727,11 @@ function drawHUD(){
   CX.font='10px Georgia';CX.fillStyle='#bbaa66';CX.textAlign='center';
   CX.fillText(hudBattleLabel, CW/2, 12);
   CX.shadowBlur=0;
+  if(sFoot){CX.restore();return;}
 
   // Row 2 — HP bars (y 18-28)
   const barY=18;
+  const hideEnemyHp=PB?.usingSpecial||EB?.usingSpecial;
   if(PB){
     const php=clamp(PB.hp/PB.maxHp,0,1);
     const phc=php>.5?'#44ee44':php>.25?'#ffaa22':'#ff2222';
@@ -1741,7 +1743,7 @@ function drawHUD(){
     CX.font='bold 9px Georgia';CX.fillStyle='#ccc';CX.textAlign='left';
     CX.fillText(`HP ${Math.max(0,Math.ceil(PB.hp))}/${PB.maxHp}${pReady}${pShield}`, pX, barY+hbH+8);
   }
-  if(EB&&!sFoot){
+  if(EB&&!sFoot&&!hideEnemyHp){
     const ehp=clamp(EB.hp/EB.maxHp,0,1);
     const ehc=ehp>.5?'#44ee44':ehp>.25?'#ffaa22':'#ff2222';
     CX.fillStyle='#1a0000';CX.fillRect(eX,barY,pbw,hbH);
