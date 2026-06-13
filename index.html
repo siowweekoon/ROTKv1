@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.36</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.37</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -3291,7 +3291,7 @@ function spawnConfetti(){
 }
 
 // ─── RED CLIFFS — BORROW ARROWS ───────────────────────────────────────────
-const RC_DURATION=3600, RC_TOTAL=150, RC_SPAWN=Math.floor(3600/150);
+const RC_DURATION=3600, RC_TOTAL=160, RC_SPAWN=Math.floor(3600/80);
 const RC_BOAT_SPD=3.5, RC_CATCH_R=55;
 let rcRunning=false,rcRaf=0,rcTimer=0,rcCaught=0,rcFired=0;
 let rcBoatX=0,rcBoatY=0,rcArrows=[],rcStuck=[],rcACv=null,rcBCv=null,rcArCv=null;
@@ -3350,13 +3350,16 @@ function rcLoop(cv,ctx){
     if(TK.ArrowRight) rcBoatX=Math.min(W-60,rcBoatX+RC_BOAT_SPD);
   }
   if(rcRunning&&rcFired<RC_TOTAL&&rcTimer%RC_SPAWN===0){
-    const tx=Math.random()<0.6?rcBoatX+(Math.random()-0.5)*120:W*0.1+Math.random()*W*0.6;
-    rcArrows.push({
-      sx:W*0.9+Math.random()*W*0.08,sy:H*0.26+Math.random()*H*0.08,
-      tx,ty:rcBoatY-10,t:0,spd:0.006+Math.random()*0.004,
-      arc:H*(0.14+Math.random()*0.08)
-    });
-    rcFired++;
+    for(let j=0;j<2;j++){
+      if(rcFired>=RC_TOTAL)break;
+      const tx=Math.random()<0.6?rcBoatX+(Math.random()-0.5)*140:W*0.1+Math.random()*W*0.6;
+      rcArrows.push({
+        sx:W*0.88+Math.random()*W*0.1,sy:H*0.24+Math.random()*H*0.1,
+        tx,ty:rcBoatY-10,t:0,spd:0.006+Math.random()*0.004,
+        arc:H*(0.14+Math.random()*0.08)
+      });
+      rcFired++;
+    }
   }
   if(rcRunning)rcTimer++;
   for(let i=rcArrows.length-1;i>=0;i--){
@@ -3482,7 +3485,7 @@ function exitRedCliff(){
   cancelAnimationFrame(rcRaf);rcRunning=false;
   TK.ArrowLeft=TK.ArrowRight=false;
   const ov=document.getElementById('rc-result');if(ov)ov.remove();
-  showScreen('s-story');
+  showScreen('s-story');showStoryIntro();
 }
 // ─── END RED CLIFFS ────────────────────────────────────────────────────────
 
