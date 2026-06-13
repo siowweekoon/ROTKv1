@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.35</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.36</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -3291,10 +3291,10 @@ function spawnConfetti(){
 }
 
 // ─── RED CLIFFS — BORROW ARROWS ───────────────────────────────────────────
-const RC_DURATION=3600, RC_TOTAL=300, RC_SPAWN=Math.floor(3600/300);
+const RC_DURATION=3600, RC_TOTAL=150, RC_SPAWN=Math.floor(3600/150);
 const RC_BOAT_SPD=3.5, RC_CATCH_R=55;
 let rcRunning=false,rcRaf=0,rcTimer=0,rcCaught=0,rcFired=0;
-let rcBoatX=0,rcBoatY=0,rcArrows=[],rcStuck=[],rcACv=null,rcBCv=null;
+let rcBoatX=0,rcBoatY=0,rcArrows=[],rcStuck=[],rcACv=null,rcBCv=null,rcArCv=null;
 
 function rcRemoveWhite(img,sx,sy,sw,sh){
   const W=(sw!=null)?sw:(img.naturalWidth||img.width);
@@ -3312,14 +3312,17 @@ function startRedCliff(){
   document.getElementById('story-intro-ov')?.remove();
   showScreen('s-redcliff');
   let loaded=0;
-  const onLoad=()=>{if(++loaded<2)return;_rcBegin();};
-  const ai=new Image(),bi=new Image();
-  ai.onload=()=>{rcACv=rcRemoveWhite(ai,390,88,240,78);onLoad();};
+  const onLoad=()=>{if(++loaded<3)return;_rcBegin();};
+  const ai=new Image(),bi=new Image(),ari=new Image();
+  ai.onload=()=>{rcACv=rcRemoveWhite(ai,430,90,310,80);onLoad();};
   ai.onerror=()=>{rcACv=null;onLoad();};
   bi.onload=()=>{rcBCv=rcRemoveWhite(bi);onLoad();};
   bi.onerror=()=>{rcBCv=null;onLoad();};
+  ari.onload=()=>{rcArCv=rcRemoveWhite(ari);onLoad();};
+  ari.onerror=()=>{rcArCv=null;onLoad();};
   ai.src='RedCliff/Arrows%20Sprite1.png';
   bi.src='RedCliff/Straw%20Gunboat1.png';
+  ari.src='RedCliff/Archer.png';
 }
 
 function _rcBegin(){
@@ -3397,6 +3400,19 @@ function rcDraw(cv,ctx,W,H){
     ctx.save();ctx.fillStyle='#ff7700';ctx.shadowColor='#ff3300';ctx.shadowBlur=9;
     ctx.fillRect(tx-2,ty,4,9);ctx.restore();
   }
+  // archers on right shore (Wei army)
+  if(rcArCv){
+    const AFW=Math.floor(rcArCv.width/3),AFH=rcArCv.height;
+    const asc=0.32,ADW=AFW*asc,ADH=AFH*asc;
+    [{x:W*0.845,fo:0},{x:W*0.91,fo:1}].forEach(p=>{
+      const fr=(Math.floor(rcTimer/18)+p.fo)%3;
+      ctx.save();
+      ctx.translate(p.x,H*0.32);
+      ctx.scale(-1,1);
+      ctx.drawImage(rcArCv,fr*AFW,0,AFW,AFH,-ADW/2,-ADH,ADW,ADH);
+      ctx.restore();
+    });
+  }
   // boat
   const bsc=0.24;
   if(rcBCv){
@@ -3404,7 +3420,7 @@ function rcDraw(cv,ctx,W,H){
     ctx.drawImage(rcBCv,rcBoatX-BW/2,rcBoatY-BH*0.72,BW,BH);
   }else{ctx.fillStyle='#8B5E2A';ctx.fillRect(rcBoatX-55,rcBoatY-20,110,24);}
   // stuck arrows
-  const AW=54,AH=17;
+  const AW=65,AH=20;
   for(const s of rcStuck){
     if(rcACv){
       ctx.save();ctx.translate(rcBoatX+s.ox,rcBoatY+s.oy);ctx.rotate(s.angle);
@@ -3421,7 +3437,7 @@ function rcDraw(cv,ctx,W,H){
     const ny=a.sy+(a.ty-a.sy)*nt-a.arc*nt*(1-nt)*4;
     const angle=Math.atan2(ny-y,nx-x);
     ctx.save();ctx.translate(x,y);ctx.rotate(angle);
-    if(rcACv){ctx.drawImage(rcACv,-27,-8,54,17);}
+    if(rcACv){ctx.drawImage(rcACv,-32,-10,65,20);}
     else{
       ctx.fillStyle='#cc8822';ctx.fillRect(-22,-2,44,4);
       ctx.beginPath();ctx.moveTo(22,-4);ctx.lineTo(22,4);ctx.lineTo(28,0);ctx.closePath();ctx.fill();
