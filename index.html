@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.41</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.42</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -1954,6 +1954,12 @@ function closeAllModals(){
   const b3=document.getElementById('b3choice-ov');if(b3)b3.remove();
   const mp=document.getElementById('medal-popup-ov');if(mp)mp.remove();
 }
+function onAdComplete(){
+  showBattleStartOverlay('⚔ BATTLE 1/2',`${PG.name}  vs  ${EG.name}`,'⚔ FIGHT! ⚔','#e8c44d');
+}
+function onAdCancelled(){
+  showScreen('s-select');
+}
 function _doExit(){
   if(window.AndroidBridge&&window.AndroidBridge.exitApp){window.AndroidBridge.exitApp();return;}
   window.close();
@@ -2637,7 +2643,11 @@ function startBattle(){
   CV=document.getElementById('bc');CX=CV.getContext('2d');
   CV.width=CW;CV.height=CH;
   stopLoop();RAF=requestAnimationFrame(gameLoop);
-  showBattleStartOverlay('⚔ BATTLE 1/2',`${PG.name}  vs  ${EG.name}`,'⚔ FIGHT! ⚔','#e8c44d');
+  if(window.AndroidBridge&&window.AndroidBridge.requestBattleStart){
+    AndroidBridge.requestBattleStart();
+  }else{
+    showBattleStartOverlay('⚔ BATTLE 1/2',`${PG.name}  vs  ${EG.name}`,'⚔ FIGHT! ⚔','#e8c44d');
+  }
 }
 
 function addCardToDecK(tier){
