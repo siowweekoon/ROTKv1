@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.42</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.43</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -2851,11 +2851,28 @@ function showStoryIntro(){
       </div>
 
       <!-- Mission 2 -->
-      <div style="background:#0a1a10;border:2px solid #2a5a20;border-radius:8px;padding:16px 20px;text-align:center;margin-bottom:10px">
-        <div style="font-size:1em;letter-spacing:2px;color:#66cc44;margin-bottom:2px">⚔ RED CLIFFS</div>
-        <div style="font-size:.65em;color:#446633;letter-spacing:2px;margin-bottom:8px">Battle of Chibi — 208 AD</div>
-        <div style="font-size:.78em;color:#cc3322;line-height:1.7;margin-bottom:10px">Wu faces Cao Cao's million-strong army — and they are dangerously low on arrows. Zhuge Liang devises a daring ruse: sail straw boats into the fog of night and let Cao Cao's panicked archers <em style="color:#ff6644">arm the enemy</em>. You have 60 seconds. Collect 75 arrows or the battle of Red Cliffs is lost before it begins.</div>
-        <button onclick="startRedCliff()" style="padding:8px 22px;background:#1a3300;border:1px solid #446600;color:#88cc22;font-family:Georgia,serif;font-size:.85em;border-radius:5px;cursor:pointer">▶ Begin Mission</button>
+      <div style="background:linear-gradient(180deg,#0a0d1c 0%,#06080f 100%);border:2px solid #8b1814;border-radius:8px;padding:20px 20px;text-align:center;color:#e84422;margin-bottom:10px">
+        <div style="font-size:1.1em;letter-spacing:2px;margin-bottom:2px">🔥 RED CLIFFS</div>
+        <div style="font-size:.68em;color:#6688aa;letter-spacing:3px;margin-bottom:12px">Battle of Chibi — 208 AD</div>
+        <p style="font-size:.8em;color:#ffbbaa;line-height:1.7;text-align:left;margin:0 0 14px">
+          Wu faces Cao Cao's million-strong army — dangerously low on arrows. Zhuge Liang devises a <em style="color:#e84422">daring ruse</em>: sail straw boats into the <em style="color:#e84422">fog of night</em> and let Cao Cao's panicked archers fill them with <em style="color:#e84422">ten thousand arrows</em> by dawn. You have 60 seconds. Collect 75 or the battle is lost before it begins.
+        </p>
+        <div style="display:flex;justify-content:center;gap:10px;margin-bottom:16px">
+          <div style="background:#050810;border:1px solid #3a1a14;border-radius:6px;padding:10px 6px;width:120px">
+            <img src="Portraits/ZhugeLiang1.png" onerror="this.style.display='none'" style="width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #2a1010;display:block;margin:0 auto 6px">
+            <div style="font-size:.82em;font-weight:bold;color:#e8c44d">Zhuge Liang</div>
+            <div style="font-size:.6em;color:#e84422;margin-top:5px">🪄 THE MASTERMIND</div>
+          </div>
+          <div style="background:#050810;border:1px solid #3a1a14;border-radius:6px;padding:10px 6px;width:120px">
+            <img src="Portraits/ZhouYu1.png" onerror="this.style.display='none'" style="width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #2a1010;display:block;margin:0 auto 6px">
+            <div style="font-size:.82em;font-weight:bold;color:#e8c44d">Zhou Yu</div>
+            <div style="font-size:.6em;color:#6699cc;margin-top:5px">⚓ WU COMMANDER</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button onclick="document.getElementById('story-intro-ov').remove()" style="padding:8px 16px;background:#0a0d1c;border:1px solid #441a14;color:#887766;font-family:Georgia,serif;font-size:.82em;cursor:pointer;border-radius:4px">← Back</button>
+          <button onclick="startRedCliff()" style="padding:8px 22px;background:#2a0a08;border:2px solid #e84422;color:#e84422;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:4px;font-weight:bold">🔥 Begin Mission</button>
+        </div>
       </div>
 
       <!-- Mission 3 — LOCKED -->
