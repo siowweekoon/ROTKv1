@@ -57,10 +57,11 @@ class MainActivity : AppCompatActivity() {
         webView = WebView(this)
         setContentView(webView)
 
-        // Initialise AdMob and pre-load both ad types
-        MobileAds.initialize(this)
-        loadRewardedInterstitial()
-        loadInterstitial()
+        // Initialise AdMob — load ads only after initialisation completes
+        MobileAds.initialize(this) {
+            loadRewardedInterstitial()
+            loadInterstitial()
+        }
 
         // Serve local assets from a safe HTTPS-like origin so canvas/storage work
         val assetLoader = WebViewAssetLoader.Builder()
