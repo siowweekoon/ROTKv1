@@ -33,8 +33,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
 
     // ── AdMob ad units — replace both IDs with real ones before production build ──
-    private val rewardedIntUnitId = "ca-app-pub-3940256099942544/5354046379"
-    private val interstitialUnitId = "ca-app-pub-3940256099942544/1033173712"
+    private val rewardedIntUnitId = "ca-app-pub-6373194906630225/8339095958"
+    private val interstitialUnitId = "ca-app-pub-6373194906630225/8487228205"
 
     private var rewardedIntAd: RewardedInterstitialAd? = null
     private var interstitialAd: InterstitialAd? = null
