@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.44</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.45</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -461,18 +461,23 @@ const SPRITES = {
 <!-- RED CLIFFS — BORROW ARROWS SCREEN -->
 <div id="s-redcliff" class="screen" style="position:relative;overflow:hidden;padding:0;background:#000">
   <canvas id="rc-canvas" style="display:block;position:absolute;top:0;left:0"></canvas>
+  <div id="rc-portrait-warn" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.95);z-index:100;flex-direction:column;align-items:center;justify-content:center;color:#e8c44d;font-family:Georgia,serif;text-align:center">
+    <div style="font-size:3.5em;margin-bottom:16px">📱↔</div>
+    <div style="font-size:1.2em;letter-spacing:3px;margin-bottom:8px">ROTATE DEVICE</div>
+    <div style="font-size:.8em;color:#887744">Red Cliffs requires landscape mode</div>
+  </div>
   <div style="position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 12px;z-index:10">
     <button id="rc-bl"
       ontouchstart="TK.ArrowLeft=true;event.preventDefault()" ontouchend="TK.ArrowLeft=false" ontouchcancel="TK.ArrowLeft=false"
       onmousedown="TK.ArrowLeft=true" onmouseup="TK.ArrowLeft=false" onmouseleave="TK.ArrowLeft=false"
       style="width:90px;height:68px;background:rgba(10,5,0,.88);border:2px solid #664400;color:#e8c44d;font-size:1.7em;border-radius:8px;cursor:pointer;touch-action:none;user-select:none">◀</button>
     <div style="display:flex;gap:10px">
+      <button onclick="exitRedCliff()"
+        style="width:60px;height:68px;background:rgba(20,0,0,.88);border:2px solid #882200;color:#cc4444;font-size:.9em;font-family:Georgia,serif;border-radius:8px;cursor:pointer;user-select:none">✕<br><span style="font-size:.6em">EXIT</span></button>
       <button id="rc-br"
         ontouchstart="TK.ArrowRight=true;event.preventDefault()" ontouchend="TK.ArrowRight=false" ontouchcancel="TK.ArrowRight=false"
         onmousedown="TK.ArrowRight=true" onmouseup="TK.ArrowRight=false" onmouseleave="TK.ArrowRight=false"
         style="width:90px;height:68px;background:rgba(10,5,0,.88);border:2px solid #664400;color:#e8c44d;font-size:1.7em;border-radius:8px;cursor:pointer;touch-action:none;user-select:none">▶</button>
-      <button onclick="exitRedCliff()"
-        style="width:60px;height:68px;background:rgba(20,0,0,.88);border:2px solid #882200;color:#cc4444;font-size:.9em;font-family:Georgia,serif;border-radius:8px;cursor:pointer;user-select:none">✕<br><span style="font-size:.6em">EXIT</span></button>
     </div>
   </div>
 </div>
@@ -3333,6 +3338,7 @@ function spawnConfetti(){
 const RC_DURATION=3600, RC_TOTAL=160, RC_SPAWN=Math.floor(3600/80);
 const RC_BOAT_SPD=3.5, RC_CATCH_R=55;
 let rcRunning=false,rcRaf=0,rcTimer=0,rcCaught=0,rcFired=0;
+let rcRound=1,rcTotalCaught=0,rcCounting=false,rcCountdown=0;
 let rcBoatX=0,rcBoatY=0,rcArrows=[],rcStuck=[],rcACv=null,rcBCv=null,rcArCv=null,rcBgImg=null;
 
 function rcRemoveWhite(img,sx,sy,sw,sh){
@@ -3347,9 +3353,16 @@ function rcRemoveWhite(img,sx,sy,sw,sh){
   return oc;
 }
 
+function rcCheckOrientation(){
+  const el=document.getElementById('rc-portrait-warn');
+  if(el)el.style.display=window.innerHeight>window.innerWidth?'flex':'none';
+}
 function startRedCliff(){
   document.getElementById('story-intro-ov')?.remove();
   showScreen('s-redcliff');
+  rcRound=1;rcTotalCaught=0;
+  rcCheckOrientation();
+  window.addEventListener('resize',rcCheckOrientation);
   let loaded=0;
   const onLoad=()=>{if(++loaded<4)return;_rcBegin();};
   const ai=new Image(),bi=new Image(),ari=new Image(),bgi=new Image();
@@ -3369,10 +3382,12 @@ function startRedCliff(){
 
 function _rcBegin(){
   cancelAnimationFrame(rcRaf);
+  rcRound=1;rcTotalCaught=0;
   const cv=document.getElementById('rc-canvas');
   cv.width=window.innerWidth;cv.height=window.innerHeight;
   const ctx=cv.getContext('2d');
-  rcTimer=0;rcCaught=0;rcFired=0;rcRunning=true;
+  rcTimer=0;rcCaught=0;rcFired=0;rcRunning=false;
+  rcCounting=true;rcCountdown=180;
   rcArrows=[];rcStuck=[];
   rcBoatX=cv.width*0.5;rcBoatY=cv.height*0.78;
   function loop(){
@@ -3386,21 +3401,34 @@ function _rcBegin(){
 }
 
 function rcLoop(cv,ctx){
+  if(cv.width!==window.innerWidth||cv.height!==window.innerHeight){
+    cv.width=window.innerWidth;cv.height=window.innerHeight;
+    rcBoatX=cv.width*0.5;rcBoatY=cv.height*0.78;
+  }
   const W=cv.width,H=cv.height;
+  if(rcCounting){
+    if(--rcCountdown<=0){rcCounting=false;rcRunning=true;}
+    rcDraw(cv,ctx,W,H);return;
+  }
   if(rcRunning){
     if(KD('ArrowLeft'))  rcBoatX=Math.max(60,rcBoatX-RC_BOAT_SPD);
     if(KD('ArrowRight')) rcBoatX=Math.min(W-60,rcBoatX+RC_BOAT_SPD);
   }
-  if(rcRunning&&rcFired<RC_TOTAL&&rcTimer%RC_SPAWN===0){
-    for(let j=0;j<2;j++){
-      if(rcFired>=RC_TOTAL)break;
-      const tx=Math.random()<0.6?rcBoatX+(Math.random()-0.5)*140:W*0.1+Math.random()*W*0.6;
-      rcArrows.push({
-        sx:W*0.88+Math.random()*W*0.1,sy:H*0.24+Math.random()*H*0.1,
-        tx,ty:rcBoatY-10,t:0,spd:0.006+Math.random()*0.004,
-        arc:H*(0.14+Math.random()*0.08)
-      });
-      rcFired++;
+  const roundTotal=rcRound===3?320:160;
+  if(rcRunning&&rcFired<roundTotal&&rcTimer%RC_SPAWN===0){
+    const sides=[];
+    if(rcRound===1||rcRound===3)sides.push('right');
+    if(rcRound===2||rcRound===3)sides.push('left');
+    for(const side of sides){
+      if(rcFired>=roundTotal)break;
+      for(let j=0;j<2;j++){
+        if(rcFired>=roundTotal)break;
+        const tx=Math.random()<0.6?rcBoatX+(Math.random()-0.5)*140:W*0.15+Math.random()*W*0.7;
+        const sx=side==='right'?W*0.88+Math.random()*W*0.1:W*0.02+Math.random()*W*0.08;
+        rcArrows.push({sx,sy:H*0.24+Math.random()*H*0.1,tx,ty:rcBoatY-10,t:0,
+          spd:0.006+Math.random()*0.004,arc:H*(0.14+Math.random()*0.08)});
+        rcFired++;
+      }
     }
   }
   if(rcRunning)rcTimer++;
@@ -3415,7 +3443,16 @@ function rcLoop(cv,ctx){
       rcArrows.splice(i,1);
     }
   }
-  if(rcRunning&&rcTimer>=RC_DURATION){rcRunning=false;rcShowResult();}
+  if(rcRunning&&rcTimer>=RC_DURATION){
+    rcRunning=false;
+    rcTotalCaught+=rcCaught;
+    if(rcRound<3){
+      rcRound++;rcTimer=0;rcFired=0;rcCaught=0;rcStuck=[];rcArrows=[];
+      rcRunning=true;
+    }else{
+      rcShowResult();
+    }
+  }
   rcDraw(cv,ctx,W,H);
 }
 
@@ -3427,24 +3464,41 @@ function rcDraw(cv,ctx,W,H){
     bg.addColorStop(0,'#040a18');bg.addColorStop(0.5,'#060e22');bg.addColorStop(1,'#0a1228');
     ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
   }
-  // enemy torches
-  for(let i=0;i<5;i++){
-    const tx=W*0.83+i*(W*0.033),ty=H*0.33+Math.sin(rcTimer*0.08+i)*2;
-    ctx.save();ctx.fillStyle='#ff7700';ctx.shadowColor='#ff3300';ctx.shadowBlur=9;
-    ctx.fillRect(tx-2,ty,4,9);ctx.restore();
+  // torches and archers — right side (rounds 1 & 3)
+  if(rcRound===1||rcRound===3){
+    for(let i=0;i<5;i++){
+      const tx=W*0.83+i*(W*0.033),ty=H*0.33+Math.sin(rcTimer*0.08+i)*2;
+      ctx.save();ctx.fillStyle='#ff7700';ctx.shadowColor='#ff3300';ctx.shadowBlur=9;
+      ctx.fillRect(tx-2,ty,4,9);ctx.restore();
+    }
+    if(rcArCv){
+      const AFW=Math.floor(rcArCv.width/3),AFH=rcArCv.height;
+      const asc=0.32,ADW=AFW*asc,ADH=AFH*asc;
+      [{x:W*0.845,fo:0},{x:W*0.91,fo:1}].forEach(p=>{
+        const fr=(Math.floor(rcTimer/18)+p.fo)%3;
+        ctx.save();ctx.translate(p.x,H*0.32);ctx.scale(-1,1);
+        ctx.drawImage(rcArCv,fr*AFW,0,AFW,AFH,-ADW/2,-ADH,ADW,ADH);
+        ctx.restore();
+      });
+    }
   }
-  // archers on right shore (Wei army)
-  if(rcArCv){
-    const AFW=Math.floor(rcArCv.width/3),AFH=rcArCv.height;
-    const asc=0.32,ADW=AFW*asc,ADH=AFH*asc;
-    [{x:W*0.845,fo:0},{x:W*0.91,fo:1}].forEach(p=>{
-      const fr=(Math.floor(rcTimer/18)+p.fo)%3;
-      ctx.save();
-      ctx.translate(p.x,H*0.32);
-      ctx.scale(-1,1);
-      ctx.drawImage(rcArCv,fr*AFW,0,AFW,AFH,-ADW/2,-ADH,ADW,ADH);
-      ctx.restore();
-    });
+  // torches and archers — left side (rounds 2 & 3)
+  if(rcRound===2||rcRound===3){
+    for(let i=0;i<5;i++){
+      const tx=W*0.17-i*(W*0.033),ty=H*0.33+Math.sin(rcTimer*0.08+i)*2;
+      ctx.save();ctx.fillStyle='#ff7700';ctx.shadowColor='#ff3300';ctx.shadowBlur=9;
+      ctx.fillRect(tx-2,ty,4,9);ctx.restore();
+    }
+    if(rcArCv){
+      const AFW=Math.floor(rcArCv.width/3),AFH=rcArCv.height;
+      const asc=0.32,ADW=AFW*asc,ADH=AFH*asc;
+      [{x:W*0.155,fo:0},{x:W*0.09,fo:1}].forEach(p=>{
+        const fr=(Math.floor(rcTimer/18)+p.fo)%3;
+        ctx.save();ctx.translate(p.x,H*0.32);
+        ctx.drawImage(rcArCv,fr*AFW,0,AFW,AFH,-ADW/2,-ADH,ADW,ADH);
+        ctx.restore();
+      });
+    }
   }
   // boat
   const bsc=0.24;
@@ -3478,31 +3532,44 @@ function rcDraw(cv,ctx,W,H){
     ctx.restore();
   }
   // HUD
-  const secsLeft=Math.max(0,Math.ceil((RC_DURATION-rcTimer)/60));
-  ctx.save();
-  ctx.fillStyle='rgba(0,0,0,.62)';ctx.fillRect(W/2-118,8,236,40);
-  ctx.font='bold 15px Georgia';ctx.fillStyle='#e8c44d';ctx.textAlign='center';
-  ctx.fillText(`🏹 ${rcCaught} / ${RC_TOTAL} arrows   ⏱ ${secsLeft}s`,W/2,30);
-  ctx.font='10px Georgia';ctx.fillStyle='#887744';
-  ctx.fillText('BORROW ARROWS — Battle of Red Cliffs 208 AD',W/2,48);
-  ctx.restore();
+  if(rcCounting){
+    const num=Math.max(1,Math.ceil(rcCountdown/60));
+    ctx.save();
+    ctx.font=`bold ${Math.floor(H*0.32)}px Georgia`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.globalAlpha=0.35+(rcCountdown%60)/60*0.65;
+    ctx.fillStyle='#ffd700';ctx.shadowColor='#ff6600';ctx.shadowBlur=60;
+    ctx.fillText(num,W/2,H/2);
+    ctx.restore();
+  }else{
+    const secsLeft=Math.max(0,Math.ceil((RC_DURATION-rcTimer)/60));
+    const roundTotal=rcRound===3?320:160;
+    ctx.save();
+    ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(W/2-170,8,340,44);
+    ctx.font='bold 14px Georgia';ctx.fillStyle='#e8c44d';ctx.textAlign='center';
+    ctx.fillText(`Round ${rcRound}/3   🏹 ${rcCaught}/${roundTotal}   Total: ${rcTotalCaught+rcCaught}/640   ⏱ ${secsLeft}s`,W/2,28);
+    ctx.font='10px Georgia';ctx.fillStyle='#887744';
+    ctx.fillText('BORROW ARROWS — Battle of Red Cliffs 208 AD',W/2,46);
+    ctx.restore();
+  }
 }
 
 function rcShowResult(){
-  const pct=rcCaught/RC_TOTAL;
+  const total=rcTotalCaught;
+  const pct=Math.round(total/640*100);
   let rating,col;
-  if(rcCaught>=75)awardMedal('redcliffs');
-  if(rcCaught>=120){rating='Champion of the Red Cliffs Challenge';col='#ffd700';}
-  else if(rcCaught>=75){rating='Champion of the Red Cliffs Challenge';col='#d4882a';}
-  else if(rcCaught>=40){rating='Arrows Recovered — Not Enough';col='#ffaa22';}
+  if(total>=320)awardMedal('redcliffs');
+  if(total>=500){rating='Champion of the Red Cliffs Challenge';col='#ffd700';}
+  else if(total>=320){rating='Champion of the Red Cliffs Challenge';col='#d4882a';}
+  else if(total>=200){rating='Arrows Recovered — Not Enough';col='#ffaa22';}
   else{rating='The Ruse Has Failed';col='#ff4444';}
   const ov=document.createElement('div');ov.id='rc-result';
   ov.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.82);z-index:20;font-family:Georgia,serif;text-align:center;padding:24px;box-sizing:border-box';
-  ov.innerHTML=`<div style="font-size:.85em;letter-spacing:3px;color:#886622;margin-bottom:10px">⚔ RED CLIFFS — BATTLE REPORT</div>
+  ov.innerHTML=`<div style="font-size:.85em;letter-spacing:3px;color:#886622;margin-bottom:10px">⚔ RED CLIFFS — BATTLE REPORT (3 Rounds)</div>
     <div style="font-size:1.9em;color:${col};font-weight:bold;margin-bottom:14px">${rating}</div>
-    <div style="font-size:1em;color:#e8c44d;margin-bottom:4px">🏹 Arrows Collected</div>
-    <div style="font-size:2.6em;color:#fff;font-weight:bold;margin-bottom:4px">${rcCaught} <span style="font-size:.5em;color:#aaa">/ ${RC_TOTAL}</span></div>
-    <div style="font-size:.8em;color:#887744;margin-bottom:28px">${Math.round(pct*100)}% captured</div>
+    <div style="font-size:1em;color:#e8c44d;margin-bottom:4px">🏹 Total Arrows Collected</div>
+    <div style="font-size:2.6em;color:#fff;font-weight:bold;margin-bottom:4px">${total} <span style="font-size:.5em;color:#aaa">/ 640</span></div>
+    <div style="font-size:.8em;color:#887744;margin-bottom:28px">${pct}% captured</div>
     <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
       <button onclick="document.getElementById('rc-result').remove();_rcBegin()"
         style="padding:12px 28px;background:#1a3300;border:2px solid #446600;color:#88cc22;font-family:Georgia,serif;font-size:.95em;border-radius:6px;cursor:pointer">↺ Try Again</button>
@@ -3513,8 +3580,9 @@ function rcShowResult(){
 }
 
 function exitRedCliff(){
-  cancelAnimationFrame(rcRaf);rcRunning=false;
+  cancelAnimationFrame(rcRaf);rcRunning=false;rcCounting=false;
   TK.ArrowLeft=TK.ArrowRight=false;
+  window.removeEventListener('resize',rcCheckOrientation);
   const ov=document.getElementById('rc-result');if(ov)ov.remove();
   showScreen('s-title');showStoryIntro();
 }
