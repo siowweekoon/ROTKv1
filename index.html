@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.43</div>
+    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.44</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -461,17 +461,19 @@ const SPRITES = {
 <!-- RED CLIFFS — BORROW ARROWS SCREEN -->
 <div id="s-redcliff" class="screen" style="position:relative;overflow:hidden;padding:0;background:#000">
   <canvas id="rc-canvas" style="display:block;position:absolute;top:0;left:0"></canvas>
-  <div style="position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:center;gap:22px;z-index:10">
+  <div style="position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 12px;z-index:10">
     <button id="rc-bl"
       ontouchstart="TK.ArrowLeft=true;event.preventDefault()" ontouchend="TK.ArrowLeft=false" ontouchcancel="TK.ArrowLeft=false"
       onmousedown="TK.ArrowLeft=true" onmouseup="TK.ArrowLeft=false" onmouseleave="TK.ArrowLeft=false"
-      style="width:90px;height:58px;background:rgba(10,5,0,.88);border:2px solid #664400;color:#e8c44d;font-size:1.7em;border-radius:8px;cursor:pointer;touch-action:none;user-select:none">◀</button>
-    <button onclick="exitRedCliff()"
-      style="width:60px;height:58px;background:rgba(20,0,0,.88);border:2px solid #882200;color:#cc4444;font-size:.9em;font-family:Georgia,serif;border-radius:8px;cursor:pointer;user-select:none">✕<br><span style="font-size:.6em">EXIT</span></button>
-    <button id="rc-br"
-      ontouchstart="TK.ArrowRight=true;event.preventDefault()" ontouchend="TK.ArrowRight=false" ontouchcancel="TK.ArrowRight=false"
-      onmousedown="TK.ArrowRight=true" onmouseup="TK.ArrowRight=false" onmouseleave="TK.ArrowRight=false"
-      style="width:90px;height:58px;background:rgba(10,5,0,.88);border:2px solid #664400;color:#e8c44d;font-size:1.7em;border-radius:8px;cursor:pointer;touch-action:none;user-select:none">▶</button>
+      style="width:90px;height:68px;background:rgba(10,5,0,.88);border:2px solid #664400;color:#e8c44d;font-size:1.7em;border-radius:8px;cursor:pointer;touch-action:none;user-select:none">◀</button>
+    <div style="display:flex;gap:10px">
+      <button id="rc-br"
+        ontouchstart="TK.ArrowRight=true;event.preventDefault()" ontouchend="TK.ArrowRight=false" ontouchcancel="TK.ArrowRight=false"
+        onmousedown="TK.ArrowRight=true" onmouseup="TK.ArrowRight=false" onmouseleave="TK.ArrowRight=false"
+        style="width:90px;height:68px;background:rgba(10,5,0,.88);border:2px solid #664400;color:#e8c44d;font-size:1.7em;border-radius:8px;cursor:pointer;touch-action:none;user-select:none">▶</button>
+      <button onclick="exitRedCliff()"
+        style="width:60px;height:68px;background:rgba(20,0,0,.88);border:2px solid #882200;color:#cc4444;font-size:.9em;font-family:Georgia,serif;border-radius:8px;cursor:pointer;user-select:none">✕<br><span style="font-size:.6em">EXIT</span></button>
+    </div>
   </div>
 </div>
 
