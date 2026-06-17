@@ -3333,7 +3333,7 @@ function spawnConfetti(){
 const RC_DURATION=3600, RC_TOTAL=160, RC_SPAWN=Math.floor(3600/80);
 const RC_BOAT_SPD=3.5, RC_CATCH_R=55;
 let rcRunning=false,rcRaf=0,rcTimer=0,rcCaught=0,rcFired=0;
-let rcBoatX=0,rcBoatY=0,rcArrows=[],rcStuck=[],rcACv=null,rcBCv=null,rcArCv=null;
+let rcBoatX=0,rcBoatY=0,rcArrows=[],rcStuck=[],rcACv=null,rcBCv=null,rcArCv=null,rcBgImg=null;
 
 function rcRemoveWhite(img,sx,sy,sw,sh){
   const W=(sw!=null)?sw:(img.naturalWidth||img.width);
@@ -3351,17 +3351,20 @@ function startRedCliff(){
   document.getElementById('story-intro-ov')?.remove();
   showScreen('s-redcliff');
   let loaded=0;
-  const onLoad=()=>{if(++loaded<3)return;_rcBegin();};
-  const ai=new Image(),bi=new Image(),ari=new Image();
+  const onLoad=()=>{if(++loaded<4)return;_rcBegin();};
+  const ai=new Image(),bi=new Image(),ari=new Image(),bgi=new Image();
   ai.onload=()=>{rcACv=rcRemoveWhite(ai,430,90,310,80);onLoad();};
   ai.onerror=()=>{rcACv=null;onLoad();};
   bi.onload=()=>{rcBCv=rcRemoveWhite(bi);onLoad();};
   bi.onerror=()=>{rcBCv=null;onLoad();};
   ari.onload=()=>{rcArCv=rcRemoveWhite(ari);onLoad();};
   ari.onerror=()=>{rcArCv=null;onLoad();};
+  bgi.onload=()=>{rcBgImg=bgi;onLoad();};
+  bgi.onerror=()=>{rcBgImg=null;onLoad();};
   ai.src='RedCliff/Arrows%20Sprite1.png';
   bi.src='RedCliff/Straw%20Gunboat1.png';
   ari.src='RedCliff/Archer.png';
+  bgi.src='RedCliffs.png';
 }
 
 function _rcBegin(){
@@ -3417,25 +3420,13 @@ function rcLoop(cv,ctx){
 }
 
 function rcDraw(cv,ctx,W,H){
-  const bg=ctx.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,'#040a18');bg.addColorStop(0.5,'#060e22');bg.addColorStop(1,'#0a1228');
-  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-  // stars
-  ctx.fillStyle='rgba(255,255,200,0.7)';
-  for(let i=0;i<60;i++)ctx.fillRect((i*137.5+42)%W,(i*83.3+17)%(H*0.5),1.2,1.2);
-  // moon
-  ctx.save();ctx.beginPath();ctx.arc(W*0.15,H*0.1,20,0,Math.PI*2);
-  ctx.fillStyle='#fff8cc';ctx.shadowColor='#ffff88';ctx.shadowBlur=22;ctx.fill();ctx.restore();
-  // water shimmer
-  ctx.globalAlpha=0.07;ctx.fillStyle='#7a99bb';
-  for(let y=H*0.5;y<H;y+=12)ctx.fillRect(0,y,W,3);
-  ctx.globalAlpha=1;
-  // Wu shore left
-  ctx.fillStyle='#091508';ctx.beginPath();
-  ctx.moveTo(0,H*0.42);ctx.lineTo(W*0.1,H*0.37);ctx.lineTo(W*0.16,H*0.44);ctx.lineTo(0,H*0.47);ctx.fill();
-  // Cao Cao shore right
-  ctx.fillStyle='#120b03';ctx.beginPath();
-  ctx.moveTo(W,H*0.36);ctx.lineTo(W*0.82,H*0.31);ctx.lineTo(W*0.77,H*0.4);ctx.lineTo(W,H*0.45);ctx.fill();
+  if(rcBgImg){
+    ctx.drawImage(rcBgImg,0,0,W,H);
+  }else{
+    const bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#040a18');bg.addColorStop(0.5,'#060e22');bg.addColorStop(1,'#0a1228');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  }
   // enemy torches
   for(let i=0;i<5;i++){
     const tx=W*0.83+i*(W*0.033),ty=H*0.33+Math.sin(rcTimer*0.08+i)*2;
