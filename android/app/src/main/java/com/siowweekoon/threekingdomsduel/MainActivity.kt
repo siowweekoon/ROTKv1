@@ -1,12 +1,16 @@
 package com.siowweekoon.threekingdomsduel
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
+import android.widget.Toast
+import java.util.Locale
 import android.webkit.JsResult
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -122,6 +126,10 @@ class MainActivity : AppCompatActivity() {
             @JavascriptInterface
             fun requestBattleStart() {
                 runOnUiThread {
+                    // Diagnostic: show ad readiness before attempting
+                    val s1 = if (rewardedIntAd != null) "Ad1✓" else "Ad1:null"
+                    val s2 = if (interstitialAd != null) "Ad2✓" else "Ad2:null"
+                    Toast.makeText(this@MainActivity, "$s1  $s2", Toast.LENGTH_SHORT).show()
                     // Internet gate — ads require connectivity
                     if (!isOnline()) {
                         AlertDialog.Builder(this@MainActivity)
@@ -185,16 +193,28 @@ class MainActivity : AppCompatActivity() {
     private fun loadRewardedInterstitial() {
         RewardedInterstitialAd.load(this, rewardedIntUnitId, AdRequest.Builder().build(),
             object : RewardedInterstitialAdLoadCallback() {
-                override fun onAdLoaded(ad: RewardedInterstitialAd) { rewardedIntAd = ad }
-                override fun onAdFailedToLoad(e: LoadAdError) { rewardedIntAd = null }
+                override fun onAdLoaded(ad: RewardedInterstitialAd) {
+                    rewardedIntAd = ad
+                    runOnUiThread { Toast.makeText(this@MainActivity, "Ad 1 ready", Toast.LENGTH_SHORT).show() }
+                }
+                override fun onAdFailedToLoad(e: LoadAdError) {
+                    rewardedIntAd = null
+                    runOnUiThread { Toast.makeText(this@MainActivity, "Ad 1 failed (${e.code}): ${e.message}", Toast.LENGTH_LONG).show() }
+                }
             })
     }
 
     private fun loadInterstitial() {
         InterstitialAd.load(this, interstitialUnitId, AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback() {
-                override fun onAdLoaded(ad: InterstitialAd) { interstitialAd = ad }
-                override fun onAdFailedToLoad(e: LoadAdError) { interstitialAd = null }
+                override fun onAdLoaded(ad: InterstitialAd) {
+                    interstitialAd = ad
+                    runOnUiThread { Toast.makeText(this@MainActivity, "Ad 2 ready", Toast.LENGTH_SHORT).show() }
+                }
+                override fun onAdFailedToLoad(e: LoadAdError) {
+                    interstitialAd = null
+                    runOnUiThread { Toast.makeText(this@MainActivity, "Ad 2 failed (${e.code}): ${e.message}", Toast.LENGTH_LONG).show() }
+                }
             })
     }
 
@@ -219,6 +239,12 @@ class MainActivity : AppCompatActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) applyImmersive()
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        val config = Configuration(newBase.resources.configuration)
+        config.setLocale(Locale.ENGLISH)
+        super.attachBaseContext(newBase.createConfigurationContext(config))
     }
 
     private var lastBackPress = 0L
