@@ -3423,7 +3423,8 @@ function rcLoop(cv,ctx){
       if(rcFired>=roundTotal)break;
       for(let j=0;j<2;j++){
         if(rcFired>=roundTotal)break;
-        const tx=Math.random()<0.6?rcBoatX+(Math.random()-0.5)*140:W*0.15+Math.random()*W*0.7;
+        const tx=Math.random()<0.6?rcBoatX+(Math.random()-0.5)*140
+          :side==='right'?W*0.1+Math.random()*W*0.6:W*0.3+Math.random()*W*0.6;
         const sx=side==='right'?W*0.88+Math.random()*W*0.1:W*0.02+Math.random()*W*0.08;
         rcArrows.push({sx,sy:H*0.24+Math.random()*H*0.1,tx,ty:rcBoatY-10,t:0,
           spd:0.006+Math.random()*0.004,arc:H*(0.14+Math.random()*0.08)});
@@ -3558,9 +3559,9 @@ function rcShowResult(){
   const total=rcTotalCaught;
   const pct=Math.round(total/640*100);
   let rating,col;
-  if(total>=320)awardMedal('redcliffs');
+  if(total>=300)awardMedal('redcliffs');
   if(total>=500){rating='Champion of the Red Cliffs Challenge';col='#ffd700';}
-  else if(total>=320){rating='Champion of the Red Cliffs Challenge';col='#d4882a';}
+  else if(total>=300){rating='Champion of the Red Cliffs Challenge';col='#d4882a';}
   else if(total>=200){rating='Arrows Recovered — Not Enough';col='#ffaa22';}
   else{rating='The Ruse Has Failed';col='#ff4444';}
   const ov=document.createElement('div');ov.id='rc-result';
