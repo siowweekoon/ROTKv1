@@ -1555,7 +1555,7 @@ function updatePlayer(){
   // Attack
   if((KD('KeyZ')||KD('Space'))&&PB.atkCool<=0){
     const _geAtk=PR.genEquipped[PG?.id]||{};
-    PB.atkFrame=ATOTAL;PB.atkCool=Math.floor(ACOOLDOWN*(_geAtk.armor?.id==='zhugeliang_armor'?.9:PR.equipped.scripture?.id==='dragontactics'?.8:1));PB.state='attacking';
+    PB.atkFrame=ATOTAL;PB.atkCool=Math.floor(ACOOLDOWN*(_geAtk.armor?.id==='zhugeliang_armor'?.9:PR.equipped.scripture?.id==='dragontactics'?.8:1));PB.state='attacking';PB.usingSpecial=false;
     return;
   }
 
@@ -2003,7 +2003,7 @@ function goFullscreen(){
 function startCountdown(cb){
   const ol=document.getElementById('countdown-overlay');
   const num=document.getElementById('countdown-num');
-  const steps=['3','2','1','⚔ FIGHT!'];
+  const steps=['3','2','1'];
   let i=0;
   ol.classList.add('active');
   function tick(){
@@ -3200,7 +3200,7 @@ function startNextEnemy(){
   EB=mkBattle(EG,false);
   PB.hp=PB.maxHp;
   PB.x=ARENA_L+30;
-  PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;PB.guarding=false;
+  PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;PB.guarding=false;PB.usingSpecial=false;
   PARTS=[];DNUM=[];FXTXT=[];ARROWS=[];
   pHitDealt=false;eHitDealt=false;cancelGuard();
   aiTimer=0;aiAction='approach';frameCount=0;
