@@ -3424,7 +3424,7 @@ function rcLoop(cv,ctx){
       for(let j=0;j<2;j++){
         if(rcFired>=roundTotal)break;
         const tx=Math.random()<0.6?rcBoatX+(Math.random()-0.5)*140
-          :side==='right'?W*0.1+Math.random()*W*0.6:W*0.3+Math.random()*W*0.6;
+          :side==='right'?W*0.1+Math.random()*W*0.6:W*0.45+Math.random()*W*0.5;
         const sx=side==='right'?W*0.88+Math.random()*W*0.1:W*0.02+Math.random()*W*0.08;
         rcArrows.push({sx,sy:H*0.24+Math.random()*H*0.1,tx,ty:rcBoatY-10,t:0,
           spd:0.006+Math.random()*0.004,arc:H*(0.14+Math.random()*0.08)});
