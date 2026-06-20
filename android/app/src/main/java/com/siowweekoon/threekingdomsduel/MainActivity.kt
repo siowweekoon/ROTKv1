@@ -126,10 +126,6 @@ class MainActivity : AppCompatActivity() {
             @JavascriptInterface
             fun requestBattleStart() {
                 runOnUiThread {
-                    // Diagnostic: show ad readiness before attempting
-                    val s1 = if (rewardedIntAd != null) "Ad1✓" else "Ad1:null"
-                    val s2 = if (interstitialAd != null) "Ad2✓" else "Ad2:null"
-                    Toast.makeText(this@MainActivity, "$s1  $s2", Toast.LENGTH_SHORT).show()
                     // Internet gate — ads require connectivity
                     if (!isOnline()) {
                         AlertDialog.Builder(this@MainActivity)
@@ -193,28 +189,16 @@ class MainActivity : AppCompatActivity() {
     private fun loadRewardedInterstitial() {
         RewardedInterstitialAd.load(this, rewardedIntUnitId, AdRequest.Builder().build(),
             object : RewardedInterstitialAdLoadCallback() {
-                override fun onAdLoaded(ad: RewardedInterstitialAd) {
-                    rewardedIntAd = ad
-                    runOnUiThread { Toast.makeText(this@MainActivity, "Ad 1 ready", Toast.LENGTH_SHORT).show() }
-                }
-                override fun onAdFailedToLoad(e: LoadAdError) {
-                    rewardedIntAd = null
-                    runOnUiThread { Toast.makeText(this@MainActivity, "Ad 1 failed (${e.code}): ${e.message}", Toast.LENGTH_LONG).show() }
-                }
+                override fun onAdLoaded(ad: RewardedInterstitialAd) { rewardedIntAd = ad }
+                override fun onAdFailedToLoad(e: LoadAdError) { rewardedIntAd = null }
             })
     }
 
     private fun loadInterstitial() {
         InterstitialAd.load(this, interstitialUnitId, AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback() {
-                override fun onAdLoaded(ad: InterstitialAd) {
-                    interstitialAd = ad
-                    runOnUiThread { Toast.makeText(this@MainActivity, "Ad 2 ready", Toast.LENGTH_SHORT).show() }
-                }
-                override fun onAdFailedToLoad(e: LoadAdError) {
-                    interstitialAd = null
-                    runOnUiThread { Toast.makeText(this@MainActivity, "Ad 2 failed (${e.code}): ${e.message}", Toast.LENGTH_LONG).show() }
-                }
+                override fun onAdLoaded(ad: InterstitialAd) { interstitialAd = ad }
+                override fun onAdFailedToLoad(e: LoadAdError) { interstitialAd = null }
             })
     }
 
