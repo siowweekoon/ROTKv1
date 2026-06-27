@@ -3375,30 +3375,7 @@ function endBattle(won){
     battleStreak++;
     if(battleStreak>=3){
       // Demo B3 win vs Lü Bu — show CTA
-      if(_demoMode){
-        stopLoop();
-        setTimeout(()=>{
-          const ov=document.createElement('div');
-          ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;text-align:center;padding:24px;gap:14px;overflow-y:auto';
-          ov.innerHTML=`
-            <div style="color:#ff4444;font-size:1.8em;letter-spacing:4px;text-shadow:0 0 24px #ff4444">🏆 LEGENDARY! 🏆</div>
-            <div style="color:#e8c44d;font-size:.95em;letter-spacing:1px">${PG.name} defeats the God of War!</div>
-            <div style="color:#bbb;font-size:.82em;line-height:1.8;max-width:300px">14 legendary generals. Real-time duels.<br>Build your deck. Fight the Monkey God.<br>Conquer the Three Kingdoms.</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🎴 Card Deck</span>
-              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">⚔ Real-time Duels</span>
-              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🏆 Story Mode</span>
-              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🐒 Monkey God Boss</span>
-            </div>
-            <a href="https://play.google.com/store/apps/details?id=com.siowweekoon.threekingdomsduel" target="_blank"
-               style="padding:16px 36px;background:linear-gradient(180deg,#e8c44d,#c8a030);color:#000;font-family:Georgia,serif;font-size:1.05em;font-weight:bold;border-radius:10px;text-decoration:none;letter-spacing:1px;box-shadow:0 0 30px rgba(232,196,77,.6)">
-              ▶ Download Free — Google Play
-            </a>
-            <div style="color:#555;font-size:.68em">Free to play · No account required</div>`;
-          document.body.appendChild(ov);
-        },1200);
-        return;
-      }
+      if(_demoMode){_showDemoCTA(true,pick(PG?.q?.win));return;}
       // Win Battle 3 Insane: 1 Elite + 4 rewards (used card already in deck since B1 win)
       battleStreak=0;streakPool=[];
       addCardToDecK(2);
@@ -3461,29 +3438,7 @@ function endBattle(won){
     const isBattle2=battleStreak>=1;
     battleStreak=0;streakPool=[];
     // Demo mode — all losses go to CTA
-    if(_demoMode){
-      stopLoop();
-      setTimeout(()=>{
-        const ov=document.createElement('div');
-        ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;text-align:center;padding:24px;gap:14px;overflow-y:auto';
-        ov.innerHTML=`
-          <div style="color:#cc4444;font-size:1.8em;letter-spacing:4px;text-shadow:0 0 24px #cc4444">⚔ DEFEATED ⚔</div>
-          <div style="color:#aaa;font-size:.85em;line-height:1.8;max-width:300px">"${pick(PG?.q?.los)||'A warrior learns from every fall.'}"<br><br>14 legendary generals await in the full game.<br>Build your deck and rise again.</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-            <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🎴 Card Deck</span>
-            <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">⚔ Real-time Duels</span>
-            <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🏆 Story Mode</span>
-            <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🐒 Monkey God Boss</span>
-          </div>
-          <a href="https://play.google.com/store/apps/details?id=com.siowweekoon.threekingdomsduel" target="_blank"
-             style="padding:16px 36px;background:linear-gradient(180deg,#e8c44d,#c8a030);color:#000;font-family:Georgia,serif;font-size:1.05em;font-weight:bold;border-radius:10px;text-decoration:none;letter-spacing:1px;box-shadow:0 0 30px rgba(232,196,77,.5)">
-            ▶ Download Free — Google Play
-          </a>
-          <div style="color:#555;font-size:.68em">Free to play · No account required</div>`;
-        document.body.appendChild(ov);
-      },1000);
-      return;
-    }
+    if(_demoMode){_showDemoCTA(false,pick(PG?.q?.los));return;}
     if(isB3Loss){
       // B3 loss: no penalty, no card lost — collect 3 rewards as if B3 declined
       ensureMinCards();
@@ -3940,6 +3895,34 @@ loadPR();if(PR.deck.length===0)initDeck();
 loadSprites();loadSheets();
 
 let _demoMode=new URLSearchParams(location.search).get('demo')==='1';
+function _showDemoCTA(won,quote){
+  stopLoop();
+  setTimeout(()=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch';
+    ov.innerHTML=`
+    <div style="min-height:100%;background:radial-gradient(ellipse at 50% 30%,#1a0800 0%,#060200 60%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;box-sizing:border-box;font-family:Georgia,serif;text-align:center;gap:0">
+      <div style="color:${won?'#e8c44d':'#993333'};font-size:5em;font-weight:bold;line-height:1;opacity:.12;margin-bottom:-18px;letter-spacing:-4px">${won?'勝':'敗'}</div>
+      <div style="width:180px;height:1px;background:linear-gradient(to right,transparent,${won?'#e8c44d':'#993333'},transparent);margin:0 auto 16px"></div>
+      <div style="color:${won?'#e8c44d':'#cc4444'};font-size:1.5em;letter-spacing:6px;text-transform:uppercase;text-shadow:0 0 30px ${won?'#ffcc44':'#cc2222'};margin-bottom:6px">${won?'VICTORY':'DEFEATED'}</div>
+      <div style="width:120px;height:1px;background:linear-gradient(to right,transparent,${won?'#e8c44d55':'#99333355'},transparent);margin:0 auto 18px"></div>
+      <div style="color:#aaa;font-size:.82em;font-style:italic;margin-bottom:20px;line-height:1.7;max-width:280px">"${quote||'The Three Kingdoms await a worthy champion.'}"</div>
+      <div style="color:#e8c44d;font-size:.72em;letter-spacing:3px;margin-bottom:12px;opacity:.7">⚔ &nbsp;THREE KINGDOMS DUEL&nbsp; ⚔</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:22px">
+        <div style="border:1px solid #e8c44d44;border-radius:20px;padding:5px 14px;color:#c8a030;font-size:.72em;letter-spacing:1px">🎴 14 Generals</div>
+        <div style="border:1px solid #e8c44d44;border-radius:20px;padding:5px 14px;color:#c8a030;font-size:.72em;letter-spacing:1px">⚔ Real-time Duels</div>
+        <div style="border:1px solid #e8c44d44;border-radius:20px;padding:5px 14px;color:#c8a030;font-size:.72em;letter-spacing:1px">📖 Story Mode</div>
+        <div style="border:1px solid #e8c44d44;border-radius:20px;padding:5px 14px;color:#c8a030;font-size:.72em;letter-spacing:1px">🐒 Monkey God</div>
+      </div>
+      <a href="https://play.google.com/store/apps/details?id=com.siowweekoon.threekingdomsduel" target="_blank"
+         style="display:block;padding:16px 40px;background:linear-gradient(180deg,#e8c44d 0%,#c8a030 50%,#a07820 100%);color:#0d0500;font-family:Georgia,serif;font-size:1em;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:2px;box-shadow:0 4px 24px rgba(200,160,40,.5),0 0 60px rgba(200,160,40,.15);text-transform:uppercase;margin-bottom:12px">
+        ▶ &nbsp;Download Free&nbsp; ·&nbsp; Google Play
+      </a>
+      <div style="color:#3a3a3a;font-size:.65em;letter-spacing:1px">Free to play &nbsp;·&nbsp; No account required</div>
+    </div>`;
+    document.body.appendChild(ov);
+  },1000);
+}
 if(_demoMode){
   setTimeout(()=>{
     // Dismiss splash by removing it
