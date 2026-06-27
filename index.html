@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px">v2.3.45</div>
+    <div id="ver-pill" onclick="secretTap()" style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px;cursor:default;-webkit-tap-highlight-color:transparent;pointer-events:auto">v2.3.50</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -223,6 +223,7 @@ const SPRITES = {
     <div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px">
       <button onclick="newGame()" style="background:transparent;border:1px solid #884444;color:rgba(204,80,80,.6);font-family:Georgia,serif;font-size:.68em;padding:4px 10px;cursor:pointer;border-radius:4px">🔄 New Game</button>
       <button onclick="showTutorial()" style="background:rgba(0,0,0,.55);border:1px solid #4488cc;color:#88aaff;font-family:Georgia,serif;font-size:.75em;padding:6px 12px;cursor:pointer;border-radius:4px;-webkit-tap-highlight-color:transparent">❓ How to Play</button>
+      <button id="btn-premium" onclick="tapPremium()" style="background:rgba(0,0,0,.55);border:1px solid #ffcc44;color:#ffcc44;font-family:Georgia,serif;font-size:.7em;padding:5px 10px;cursor:pointer;border-radius:4px;-webkit-tap-highlight-color:transparent">🔓 Unlock Premium $2.99</button>
       <button onclick="showInventory()" class="title-nav-btn" style="width:100%">📦<br><span>Inventory</span></button>
     </div>
 
@@ -494,10 +495,11 @@ const pick=a=>a[rand(0,a.length-1)];
 //  FACTIONS
 // ═══════════════════════════════════════════════════
 const FAC={
-  SHU:{name:'Shu', bg:'#1e5c1e', hi:'#66cc66', ac:'#2a7a2a', as:'#143a14'},
-  WEI:{name:'Wei', bg:'#1e2f5c', hi:'#6699ff', ac:'#2a4080', as:'#14203a'},
-  WU: {name:'Wu',  bg:'#5c1e1e', hi:'#ff8888', ac:'#802a2a', as:'#3a1414'},
-  IND:{name:'Ind', bg:'#4a3a10', hi:'#ffcc66', ac:'#6a5018', as:'#2a1e08'},
+  SHU: {name:'Shu',  bg:'#1e5c1e', hi:'#66cc66', ac:'#2a7a2a', as:'#143a14'},
+  WEI: {name:'Wei',  bg:'#1e2f5c', hi:'#6699ff', ac:'#2a4080', as:'#14203a'},
+  WU:  {name:'Wu',   bg:'#5c1e1e', hi:'#ff8888', ac:'#802a2a', as:'#3a1414'},
+  IND: {name:'Ind',  bg:'#4a3a10', hi:'#ffcc66', ac:'#6a5018', as:'#2a1e08'},
+  SHEN:{name:'Shen', bg:'#1a0a2a', hi:'#ffcc44', ac:'#2a1040', as:'#0a0414'},
 };
 
 const HORSE_COL={
@@ -507,7 +509,7 @@ const HORSE_COL={
   IND:{main:'#AA2800',sh:'#781800',hi:'#CC4400',dk:'#440A00',mane:'#CC6600'},
 };
 
-const WEAPON_REACH={halberd:115,glaive:108,spear:102,sword:72,bow:125,fan:58,mace:82};
+const WEAPON_REACH={halberd:115,glaive:108,spear:102,sword:72,bow:125,fan:85,mace:82};
 
 // ═══════════════════════════════════════════════════
 //  GENERALS
@@ -614,6 +616,12 @@ const GENS=[
    special:{name:'Iron Tyranny',desc:'Brute crushing blow — massive damage + stun',
      fn:(p,e,PB,EB)=>{const d=Math.floor(p.war*2.3+p.str*0.5+rand(20,45));EB.hp=Math.max(0,EB.hp-d);EB.stunTimer=70;spawnHit(EB.x,GNDX-60,d,true,'#cc3300');}},
    q:{win:["All of Han bows before my might!"],los:["Insolent worm... this changes nothing."]}},
+  {id:'monkeygod', name:'Monkey God',  title:'Great Sage Equal to Heaven', f:'SHEN',char:'神',wep:'glaive',storyOnly:true,
+   war:95,str:88,dex:88,spd:92,maxHp:560,
+   special:{name:'Heavenly Rampage',desc:'Divine staff blow — WAR damage, ignores all defence',
+     fn:(p,e,PB,EB)=>{const d=Math.floor(p.war*2.3+rand(20,50));EB.hp=Math.max(0,EB.hp-d);EB.hurtTimer=30;spawnHit(EB.x,GNDX-60,d,true,'#ffcc44');}},
+   q:{win:["Bow before the Great Sage Equal to Heaven!"],los:["Even the divine... can fall."]}},
+
   {id:'footsword', name:'Wei Swordsman', title:'Infantry',f:'WEI',char:'兵',wep:'sword',storyOnly:true,
    war:42,str:38,dex:30,spd:68,maxHp:110,
    q:{win:["For Wei!"],los:["I fall..."]}},
@@ -627,16 +635,16 @@ const GENS=[
 // ═══════════════════════════════════════════════════
 const RWDS={
   wives:[
-    {id:'diaochan',   name:'Diao Chan',    icon:'🌸',img:'Inventory/Diao Chan.png',   type:'wife',desc:'+5 SPD, +10 STR'},
+    {id:'diaochan',   name:'Diao Chan',    icon:'🌸',img:'Inventory/Diao Chan.png',   type:'wife',desc:'+5 SPD, +10 STR',premium:true},
     {id:'xiaoqiao',   name:'Xiao Qiao',   icon:'💮',img:'Inventory/Xiao Qiao.png',   type:'wife',desc:'+10 SPD, +5 DEX'},
     {id:'daqiao',     name:'Da Qiao',      icon:'🌺',img:'Inventory/Da Qiao.png',     type:'wife',desc:'+15 SPD, +10 DEX'},
-    {id:'wangzhaojun',name:'Wang Zhaojun', icon:'🪕',img:'Inventory/WangZhaoJun.png', type:'wife',desc:'+10 SPD, +5 STR'},
-    {id:'xishi',       name:'Xi Shi',        icon:'🌊',img:'Inventory/XiShi.png',        type:'wife',desc:'+10 SPD, +5 WAR'},
-    {id:'ladysun',     name:'Lady Sun',      icon:'⚔️',img:'Inventory/LadySun.png',      type:'wife',desc:'+10 WAR, +8 DEX'},
-    {id:'zhenji',      name:'Zhen Ji',        icon:'📜',img:'Inventory/ZhenJi.png',       type:'wife',desc:'+12 STR, +8 SPD'},
-    {id:'huangyueying',name:'Huang Yueying', icon:'⚙️',img:'Inventory/HuangYueYing.png', type:'wife',desc:'SP gain +20%, STR +8'},
-    {id:'caiwenji',    name:'Cai Wenji',      icon:'🎵',img:'Inventory/CaiWenJi.png',     type:'wife',desc:'+5 all stats, Ghost drain HP 10%'},
-    {id:'ladybian',    name:'Lady Bian',      icon:'👑',img:'Inventory/LadyBian.png',      type:'wife',desc:'Max HP +60, DEX +10'},
+    {id:'wangzhaojun',name:'Wang Zhaojun', icon:'🪕',img:'Inventory/WangZhaoJun.png', type:'wife',desc:'+10 SPD, +5 STR',premium:true},
+    {id:'xishi',       name:'Xi Shi',        icon:'🌊',img:'Inventory/XiShi.png',        type:'wife',desc:'+10 SPD, +5 WAR',premium:true},
+    {id:'ladysun',     name:'Lady Sun',      icon:'⚔️',img:'Inventory/LadySun.png',      type:'wife',desc:'+10 WAR, +8 DEX',premium:true},
+    {id:'zhenji',      name:'Zhen Ji',        icon:'📜',img:'Inventory/ZhenJi.png',       type:'wife',desc:'+12 STR, +8 SPD',premium:true},
+    {id:'huangyueying',name:'Huang Yueying', icon:'⚙️',img:'Inventory/HuangYueYing.png', type:'wife',desc:'SP gain +20%, STR +8',premium:true},
+    {id:'caiwenji',    name:'Cai Wenji',      icon:'🎵',img:'Inventory/CaiWenJi.png',     type:'wife',desc:'+5 all stats, Ghost drain HP 10%',premium:true},
+    {id:'ladybian',    name:'Lady Bian',      icon:'👑',img:'Inventory/LadyBian.png',      type:'wife',desc:'Max HP +60, DEX +10',premium:true},
   ],
   scriptures:[
     {id:'artofwar',     name:'Art of War',        icon:'📜',img:'Inventory/ArtofWar.png',         type:'scripture',desc:'Special damage +25%, WAR +10'},
@@ -644,25 +652,25 @@ const RWDS={
     {id:'windrider',    name:'Wind Rider Manual', icon:'🌀',img:'Inventory/WindRiderManual.png',   type:'scripture',desc:'SP gain +60% (SP not SPD)'},
     {id:'dragontactics',name:'Dragon Tactics',    icon:'🐲',img:'Inventory/DragonTactics.png',    type:'scripture',desc:'Attack cooldown -15%, SPD +10'},
     {id:'tigerCrane',   name:'Tiger Crane Manual',icon:'🐯',img:'Inventory/Tiger_crane_manual.png',type:'scripture',desc:'12% chance double strike (only normal hit)'},
-    {id:'sixMeridian',  name:'Six Meridian Sword',icon:'⚡',img:'Inventory/Six_meridian_sword.png',type:'scripture',desc:'Special Damage +50% (only direct hit)'},
-    {id:'fiveRings',    name:'Five Rings Codex',  icon:'📖',img:'Inventory/Five_rings_Codex.png', type:'scripture',desc:'WAR +15, STR +15'},
-    {id:'ironPalm',     name:'Shaolin Iron Palm', icon:'🤚',img:'Inventory/ShaoLin_Iron_Palm.png',type:'scripture',desc:'Each hit -5 enemy SPD, cap -25'},
+    {id:'sixMeridian',  name:'Six Meridian Sword',icon:'⚡',img:'Inventory/Six_meridian_sword.png',type:'scripture',desc:'Special Damage +50% (only direct hit)',premium:true},
+    {id:'fiveRings',    name:'Five Rings Codex',  icon:'📖',img:'Inventory/Five_rings_Codex.png', type:'scripture',desc:'WAR +15, STR +15',premium:true},
+    {id:'ironPalm',     name:'Shaolin Iron Palm', icon:'🤚',img:'Inventory/ShaoLin_Iron_Palm.png',type:'scripture',desc:'Each hit -5 enemy SPD, cap -25',premium:true},
     {id:'ironShirt',    name:'Iron Shirt Scripture',icon:'🛡',img:'Inventory/Iron_shirt_scripture.png',type:'scripture',desc:'Take 20% less damage'},
-    {id:'nineyin',      name:'Nine Yin Manual',   icon:'☯️',img:'Inventory/Nine_yin_manual.png',  type:'scripture',desc:'Ghost drain HP 10%, cooldown -15%',elite:true},
-    {id:'jadeSutra',    name:'Jade Maiden Heart Sutra',          icon:'💎',img:'Manuals/Jade_Maiden_Heart_Sutra_Unique.png',                    type:'scripture',desc:'DEX +15, SPD +10, HP +30',                rewardOnly:true},
-    {id:'jadeSword',    name:'Jade Maiden Sword Manual',         icon:'💎',img:'Manuals/Jade_Maiden_Sword_Manual_Unique.png',                   type:'scripture',desc:'WAR +15, DEX +10, SPD +5',                 rewardOnly:true},
-    {id:'nineYang',     name:'Nine Yang Manual',                 icon:'☀️',img:'Manuals/Nine_Yang_Manual_Unique.png',                           type:'scripture',desc:'STR +20, HP +40, WAR +10',                 rewardOnly:true},
-    {id:'nineYinClaw',  name:'Nine Yin White Bone Claw',         icon:'💀',img:'Manuals/Nine_Yin_White_Bone_Claw_Manual_Unique.png',            type:'scripture',desc:'WAR +20, STR +10, DEX +5',                 rewardOnly:true},
-    {id:'greatShift',   name:'Great Shift of Heaven and Earth',  icon:'🌪️',img:'Manuals/The_Great_Shift_of_Heaven_and_Earth_Unique.png',        type:'scripture',desc:'SPD +20, DEX +15, WAR +10',                rewardOnly:true},
-    {id:'beiming',      name:'Bei Ming Divine Skill',            icon:'🌊',img:'Manuals/Bei_Ming_Divine_Skill_Unique.png',                      type:'scripture',desc:'SP gain +40%, STR +10, HP +30',            rewardOnly:true},
-    {id:'buddhaPalm',   name:'Buddha Palm Manual',               icon:'🙏',img:'Manuals/Buddha_Palm_Manual_Unique.png',                         type:'scripture',desc:'WAR +15, STR +15, HP +20',                 rewardOnly:true},
-    {id:'eighteenPalms',name:'Eighteen Dragon Subduing Palms',   icon:'🐉',img:'Manuals/Eighteen_Subduing_Dragon_Palm_Manual_Unique.png',       type:'scripture',desc:'WAR +20, STR +15, DEX +5',                 rewardOnly:true},
+    {id:'nineyin',      name:'Nine Yin Manual',   icon:'☯️',img:'Inventory/Nine_yin_manual.png',  type:'scripture',desc:'Ghost drain HP 10%, cooldown -15%',elite:true,premium:true},
+    {id:'jadeSutra',    name:'Jade Maiden Heart Sutra',          icon:'💎',img:'Manuals/Jade_Maiden_Heart_Sutra_Unique.png',                    type:'scripture',desc:'DEX +15, SPD +10, HP +30',                rewardOnly:true,premium:true},
+    {id:'jadeSword',    name:'Jade Maiden Sword Manual',         icon:'💎',img:'Manuals/Jade_Maiden_Sword_Manual_Unique.png',                   type:'scripture',desc:'WAR +15, DEX +10, SPD +5',                 rewardOnly:true,premium:true},
+    {id:'nineYang',     name:'Nine Yang Manual',                 icon:'☀️',img:'Manuals/Nine_Yang_Manual_Unique.png',                           type:'scripture',desc:'STR +20, HP +40, WAR +10',                 rewardOnly:true,premium:true},
+    {id:'nineYinClaw',  name:'Nine Yin White Bone Claw',         icon:'💀',img:'Manuals/Nine_Yin_White_Bone_Claw_Manual_Unique.png',            type:'scripture',desc:'WAR +20, STR +10, DEX +5',                 rewardOnly:true,premium:true},
+    {id:'greatShift',   name:'Great Shift of Heaven and Earth',  icon:'🌪️',img:'Manuals/The_Great_Shift_of_Heaven_and_Earth_Unique.png',        type:'scripture',desc:'SPD +20, DEX +15, WAR +10',                rewardOnly:true,premium:true},
+    {id:'beiming',      name:'Bei Ming Divine Skill',            icon:'🌊',img:'Manuals/Bei_Ming_Divine_Skill_Unique.png',                      type:'scripture',desc:'SP gain +40%, STR +10, HP +30',            rewardOnly:true,premium:true},
+    {id:'buddhaPalm',   name:'Buddha Palm Manual',               icon:'🙏',img:'Manuals/Buddha_Palm_Manual_Unique.png',                         type:'scripture',desc:'WAR +15, STR +15, HP +20',                 rewardOnly:true,premium:true},
+    {id:'eighteenPalms',name:'Eighteen Dragon Subduing Palms',   icon:'🐉',img:'Manuals/Eighteen_Subduing_Dragon_Palm_Manual_Unique.png',       type:'scripture',desc:'WAR +20, STR +15, DEX +5',                 rewardOnly:true,premium:true},
   ],
   horses:[
     {id:'redhare',      name:'Red Hare',      icon:'🐎',img:'Inventory/RedHare.png',       type:'horse',desc:'SPD +30, WAR +15'},
     {id:'whitedragon',  name:'White Dragon',  icon:'🐴',img:'Inventory/WhiteDragon.png',   type:'horse',desc:'Max HP +40, SPD +10'},
-    {id:'stormstallion',name:'Storm Stallion',icon:'⚡',img:'Inventory/StormStallion.png', type:'horse',desc:'SPD +5%, Stun +0.3s'},
-    {id:'shadowrunner', name:'Shadow Runner', icon:'🦄',img:'Inventory/ShadowRunner.png',  type:'horse',desc:'Dodge 20%, SPD +30',elite:true},
+    {id:'stormstallion',name:'Storm Stallion',icon:'⚡',img:'Inventory/StormStallion.png', type:'horse',desc:'SPD +5%, Stun +0.3s',premium:true},
+    {id:'shadowrunner', name:'Shadow Runner', icon:'🦄',img:'Inventory/ShadowRunner.png',  type:'horse',desc:'Dodge 20%, SPD +30',elite:true,premium:true},
   ],
   weapons:[
     {id:'greendragon',    name:'Green Dragon Crescent Blade',icon:'⚔️',img:'Inventory/GreenDragonCrescentBlade.png',    type:'weapon',desc:'WAR +15, DEX +8, STR +5'},
@@ -670,11 +678,11 @@ const RWDS={
     {id:'zhaoyun_spear',  name:'Dragon Spine Spear',         icon:'🔱',img:'ZhaoYun set/ZhaoYun_Dragon_Spine_Spear_Unique.png',   type:'weapon',desc:'WAR +20, SPD +5, DEX +8',   sig:true},
     {id:'heaven_bow',     name:'Heaven Bow',                 icon:'🏹',img:'HuangZhong set/HuangZhong_Heaven_Bow_Unique.png',     type:'weapon',desc:'WAR +22, DEX +10, SPD +5',  sig:true},
     {id:'silver_tiger',   name:'Silver Tiger Spear',         icon:'🔱',img:'MaChao Set/MaChao_Silver_Tiger_Spear_Unique.png',     type:'weapon',desc:'WAR +20, SPD +5, STR +8',   sig:true},
-    {id:'feather_fan',    name:'Feather Fan Blade',          icon:'🪶',img:'ZhuGeliang Set/ZhuGeliang_Feather_Fan_Blade_Unique.png',type:'weapon',desc:'WAR +10, STR +10, DEX +8', sig:true},
+    {id:'feather_fan',    name:'Feather Fan Blade',          icon:'🪶',img:'ZhuGeliang Set/ZhuGeliang_Feather_Fan_Blade_Unique.png',type:'weapon',desc:'WAR +10, STR +20, DEX +15', sig:true},
     {id:'twin_swords',    name:'Twin Swords',                icon:'⚔️',img:'LiuBei Set/LiuBei_Twin_swords_Unique.png',           type:'weapon',desc:'WAR +10, SPD +10, DEX +8',  sig:true},
     {id:'chancellor_blade',name:'Chancellor Blade',          icon:'🗡️',img:'CaoCao set/CaoCao_Chancellor_Blade_Sword_Unique.png', type:'weapon',desc:'WAR +20, DEX +5, STR +8',  sig:true},
     {id:'terror_sword',   name:'Terror Sword',               icon:'🗡️',img:'ZhangLiao Set/ZhangLiao_Terror_Sword_Unique.png',    type:'weapon',desc:'WAR +18, SPD +5, STR +8',   sig:true},
-    {id:'ironclad_sabre', name:'Ironclad Sabre',             icon:'🗡️',img:'XiaHouDun Set/XiaHouDun_Ironclad_Sabre_Unique.png',  type:'weapon',desc:'WAR +18, STR +5, HP +30',   sig:true},
+    {id:'ironclad_sabre', name:'Ironclad Sabre',             icon:'🗡️',img:'XiaHouDun Set/XiaHouDun_Ironclad_Sabre_Unique.png',  type:'weapon',desc:'WAR +25, STR +12, HP +60, DEX +8',   sig:true},
     {id:'tiger_dao',      name:'Tiger Dao Sabre',            icon:'🗡️',img:'SunQuan Set/SunQuan_Tiger_Dao_Sabre_Unique.png',     type:'weapon',desc:'WAR +15, SPD +5, DEX +8',   sig:true},
     {id:'scholar_sword',  name:'Scholar Sword',              icon:'🗡️',img:'ZhouYu Set/ZhouYu_Scholar_Sword_Unique.png',         type:'weapon',desc:'WAR +15, DEX +5, STR +8',   sig:true},
     {id:'sky_piercer',    name:'Sky Piercer Halberd',        icon:'🔱',img:'LuBu Set/LuBu_Sky_Piercer_Halberd_Unique.png',       type:'weapon',desc:'WAR +25, STR +10, SPD +5',  sig:true},
@@ -700,9 +708,9 @@ const RWDS={
   ],
 };
 
-let PR={deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:0,wins:0,genEquipped:{},b3Played:false,medals:{},sellHistory:[]};
+let PR={deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:0,wins:0,genEquipped:{},b3Played:false,medals:{},sellHistory:[],b3GenWins:{},monkeygodUnlocked:false,premiumUnlocked:false};
 let usedCardId=null;
-function freshPR(){return{deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:1000,wins:0,genEquipped:{},b3Played:false,medals:{},sellHistory:[]};}
+function freshPR(){return{deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:1000,wins:0,genEquipped:{},b3Played:false,medals:{},sellHistory:[],b3GenWins:{},monkeygodUnlocked:false,premiumUnlocked:false};}
 const GOLD={
   earn:{midWin:20,fullWin:50,lose:10},
   buy:{cardT1:50,cardT2:150,wife:80,scripture:100,horse:120,weapon:130},
@@ -743,6 +751,12 @@ function loadPR(){
       if(!PR.b3Played)PR.b3Played=false;
       if(!PR.medals)PR.medals={};
       if(!PR.sellHistory)PR.sellHistory=[];
+      if(!PR.b3GenWins)PR.b3GenWins={};
+      if(PR.monkeygodUnlocked===undefined)PR.monkeygodUnlocked=false;
+      if(PR.premiumUnlocked===undefined)PR.premiumUnlocked=false;
+      if(PR.monkeygodUnlocked&&!PR.medals.sageunlocked)PR.medals.sageunlocked=true;
+      if(PR.premiumUnlocked)setTimeout(onPremiumUnlocked,200);
+      if(window.AndroidBridge?.isPremiumUnlocked?.())onPremiumUnlocked();
       // Strip old wife/scripture/horse from genEquipped (now global)
       Object.keys(PR.genEquipped).forEach(k=>{
         const ge=PR.genEquipped[k];
@@ -798,8 +812,12 @@ function sacrificeReward(type,id){
 // ═══════════════════════════════════════════════════
 let _AC=null;
 function getAC(){if(!_AC){try{_AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}return _AC;}
+let _wavDecoded=false;
 ['touchstart','mousedown','keydown'].forEach(ev=>
-  document.addEventListener(ev,()=>{const a=getAC();if(a&&a.state==='suspended')a.resume();},{passive:true})
+  document.addEventListener(ev,()=>{
+    const a=getAC();if(a&&a.state==='suspended')a.resume();
+    if(!_wavDecoded&&a){_wavDecoded=true;Object.keys(_wavRaw).forEach(k=>{if(!_wavBufs[k])a.decodeAudioData(_wavRaw[k].slice(0),d=>{_wavBufs[k]=d;});});}
+  },{passive:true})
 );
 function _tone(freq,type,vol,dur,freqEnd,t0){
   const c=getAC();if(!c)return;
@@ -821,30 +839,61 @@ function _noise(vol,dur,fCenter,q,t0){
   g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
   src.start(t);src.stop(t+dur+0.05);
 }
-function sfxHit(heavy){
-  if(heavy){_tone(100,'sawtooth',0.35,0.28,35);_noise(0.35,0.18,600,0.7);}
-  else{_tone(260,'sawtooth',0.22,0.16,90);_noise(0.18,0.1,1200,1);}
+// ── WAV-based SFX ────────────────────────────────────────────────────────────
+const _wavBufs={};  // decoded AudioBuffers
+const _wavRaw={};   // raw ArrayBuffers (kept for lazy decode after user interaction)
+function _loadWav(name){
+  fetch(name+'.wav').then(r=>r.arrayBuffer()).then(buf=>{
+    _wavRaw[name]=buf;
+    // Try to decode immediately if AudioContext already exists
+    const c=getAC();
+    if(c)c.decodeAudioData(buf.slice(0),decoded=>{_wavBufs[name]=decoded;});
+  }).catch(()=>{});
+}
+function playWav(name,vol=0.65){
+  const c=getAC();if(!c)return;
+  if(_wavBufs[name]){
+    const src=c.createBufferSource(),g=c.createGain();
+    src.buffer=_wavBufs[name];g.gain.value=vol;
+    src.connect(g);g.connect(c.destination);src.start();
+  } else if(_wavRaw[name]){
+    // Lazy decode on first play (AudioContext now available after user interaction)
+    c.decodeAudioData(_wavRaw[name].slice(0),decoded=>{
+      _wavBufs[name]=decoded;
+      const src=c.createBufferSource(),g=c.createGain();
+      src.buffer=decoded;g.gain.value=vol;
+      src.connect(g);g.connect(c.destination);src.start();
+    });
+  }
+}
+['sfx_atk_miss','sfx_atk_hit','sfx_special_charge','sfx_special_sword',
+ 'sfx_special_huangzhong','sfx_special_zhaoyun','sfx_special_xiahoudun','sfx_special_default'].forEach(_loadWav);
+
+function sfxHit(dmg){
+  if(dmg>=250){playWav('sfx_atk_hit',0.7);}
+  else{playWav('sfx_atk_miss',0.6);}
 }
 function sfxBlock(){_tone(380,'square',0.2,0.12,220);_noise(0.12,0.08,2000,1.5);}
 function sfxArrow(){_tone(950,'sine',0.13,0.22,180);const c=getAC();if(c)setTimeout(()=>_tone(130,'sawtooth',0.18,0.12),210);}
 const SPECIAL_SFX={
-  guanyu:       ()=>{_tone(75,'sawtooth',0.5,0.55,28);_noise(0.4,0.25,700,0.7);},
-  zhangfei:     ()=>{_tone(55,'sawtooth',0.6,0.65,22);_noise(0.3,0.45,300,0.5);},
-  zhaoyun:      ()=>{_tone(180,'sawtooth',0.42,0.4,45);_noise(0.35,0.2,1100,1);},
-  huangzhong:   ()=>{sfxArrow();setTimeout(sfxArrow,190);},
-  machao:       ()=>{_tone(130,'sawtooth',0.48,0.38,28);_noise(0.42,0.3,500,0.8);},
-  zhugeliang:   ()=>{_noise(0.5,0.5,3500,0.5);_tone(70,'sawtooth',0.3,0.8,18);setTimeout(()=>_tone(1900,'sine',0.28,0.5,350),140);},
-  liubei:       ()=>{const c=getAC();if(!c)return;[523,659,784,1047].forEach((f,i)=>{const t=c.currentTime+i*0.09;_tone(f,'sine',0.2,0.35,undefined,t);});},
-  caocao:       ()=>{_tone(100,'sawtooth',0.42,0.6,35);_noise(0.25,0.4,200,0.6);},
-  zhangliao:    ()=>{_tone(310,'sawtooth',0.3,0.14,75);setTimeout(()=>_tone(310,'sawtooth',0.3,0.14,75),170);},
-  xiahoudun:    ()=>{_tone(440,'sine',0.3,1.2,900);_noise(0.1,1.0,3500,2);},
-  xiahouden:    ()=>{_tone(440,'sine',0.3,1.2,900);_noise(0.1,1.0,3500,2);},
-  sunquan:      ()=>{_tone(210,'sine',0.3,0.6,75);_noise(0.2,0.5,400,1.5);},
-  zhouyu:       ()=>{_noise(0.5,1.2,420,0.55);_tone(150,'sawtooth',0.22,0.7,55);},
+  guanyu:       ()=>{playWav('sfx_special_default',0.7);},
+  zhangfei:     ()=>{playWav('sfx_special_default',0.7);},
+  zhaoyun:      ()=>{playWav('sfx_special_zhaoyun',0.7);},
+  huangzhong:   ()=>{playWav('sfx_special_huangzhong',0.7);},
+  machao:       ()=>{playWav('sfx_special_charge',0.7);},
+  zhugeliang:   ()=>{_noise(0.5,0.5,3500,0.5);_tone(70,'sawtooth',0.3,0.8,18);setTimeout(()=>_tone(1900,'sine',0.28,0.5,350),140);}, // keep
+  liubei:       ()=>{playWav('sfx_special_sword',0.6);},
+  caocao:       ()=>{playWav('sfx_special_charge',0.7);},
+  zhangliao:    ()=>{playWav('sfx_special_sword',0.65);},
+  xiahoudun:    ()=>{playWav('sfx_special_xiahoudun',0.75);},
+  xiahouden:    ()=>{playWav('sfx_special_xiahoudun',0.75);},
+  sunquan:      ()=>{playWav('sfx_special_sword',0.65);},
+  zhouyu:       ()=>{playWav('sfx_special_sword',0.6);},
   lvmeng:       ()=>{_tone(240,'sawtooth',0.35,0.42,58);_noise(0.3,0.22,900,1);},
-  lubu:         ()=>{_tone(48,'sawtooth',0.65,0.65,18);_noise(0.5,0.35,380,0.6);},
+  lubu:         ()=>{playWav('sfx_special_default',0.7);},
+  monkeygod:    ()=>{playWav('sfx_special_default',0.7);},
   asiainvincible:()=>{_tone(1300,'sine',0.22,0.45,550);_noise(0.32,0.3,4500,0.5);},
-  dongzhuo:    ()=>{_tone(45,'sawtooth',0.7,0.7,18);_noise(0.55,0.4,300,0.5);},
+  dongzhuo:     ()=>{playWav('sfx_special_charge',0.75);},
 };
 function sfxSpecial(id){try{(SPECIAL_SFX[id]||SPECIAL_SFX.guanyu)();}catch(e){}}
 function sfxSpFull(){const c=getAC();if(!c)return;[880,1109,1319].forEach((f,i)=>{_tone(f,'sine',0.13,0.28,undefined,c.currentTime+i*0.065);});}
@@ -1008,15 +1057,21 @@ function drawCombatant(cb, gd, isPlayer, frame) {
 //  PARTICLES + FX
 // ═══════════════════════════════════════════════════
 let PARTS=[], DNUM=[], FXTXT=[], ARROWS=[];
+function pushDnum(entry){
+  // Stagger y so simultaneous entries don't overlap
+  const nearby=DNUM.filter(d=>Math.abs(d.x-entry.x)<80&&d.life>0.8).length;
+  entry.y=(entry.y||0)+nearby*24;
+  DNUM.push(entry);
+}
 
 function spawnHit(x,y,dmg,big,col){
   col=col||'#ffcc00';
-  for(let i=0;i<(big?28:16);i++){
+  for(let i=0;i<(big?16:8);i++){
     const spd=2+Math.random()*(big?7:5);
     const a=Math.random()*Math.PI*2;
     PARTS.push({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-2,life:1,decay:.04+Math.random()*.04,sz:2.5+Math.random()*5,col});
   }
-  DNUM.push({x,y,vy:-1.8,life:1.4,text:big?`⚡${dmg}!`:`${dmg}`,col:big?'#ffee00':'#ff8844',sz:big?22:15});
+  pushDnum({x,y,vy:-1.0,life:1.4,text:big?`⚡${dmg}!`:`${dmg}`,col:big?'#ffee00':'#ff8844',sz:big?22:15});
 }
 
 function spawnArrow(fromX,toX,y,dmg){
@@ -1033,15 +1088,15 @@ function spawnMagicBolt(fromX,toX,y,dmg){
   setTimeout(()=>spawnHit(toX,y,dmg,true,'#cc88ff'),240);
 }
 
-function addFx(txt,col){FXTXT.push({txt,col,life:2.2,y:CH/2+10});}
+function addFx(txt,col,hold=0,sz=15){const offset=FXTXT.filter(f=>f.life>1||f.hold>0).length*26;FXTXT.push({txt,col,life:2.5,y:CH/3+20+offset,hold,sz});}
 
 function tickParts(){
-  PARTS=PARTS.filter(p=>p.life>0);
+  PARTS=PARTS.filter(p=>p.life>0);if(PARTS.length>40)PARTS=PARTS.slice(-40);
   PARTS.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.2;p.vx*=.94;p.life-=p.decay;});
   DNUM=DNUM.filter(d=>d.life>0);
-  DNUM.forEach(d=>{d.y+=d.vy;d.life-=.022;});
+  DNUM.forEach(d=>{d.y+=d.vy;d.life-=.016;});
   FXTXT=FXTXT.filter(f=>f.life>0);
-  FXTXT.forEach(f=>{f.life-=.03;f.y-=.3;});
+  FXTXT.forEach(f=>{if(f.hold>0){f.hold--;}else{f.life-=.03;f.y-=.3;}});
   // Arrows
   ARROWS.forEach(a=>{a.x+=a.vx;});
   ARROWS=ARROWS.filter(a=>{
@@ -1051,9 +1106,12 @@ function tickParts(){
 }
 
 function drawParts(){
-  PARTS.forEach(p=>{CX.save();CX.globalAlpha=Math.max(0,p.life);CX.fillStyle=p.col;CX.shadowColor=p.col;CX.shadowBlur=6;CX.fillRect(p.x-p.sz/2,p.y-p.sz/2,p.sz,p.sz);CX.restore();});
-  DNUM.forEach(d=>{CX.save();CX.globalAlpha=Math.max(0,Math.min(1,d.life));CX.fillStyle=d.col;CX.font=`bold ${d.sz}px Georgia`;CX.textAlign='center';CX.shadowColor=d.col;CX.shadowBlur=6;CX.fillText(d.text,d.x,d.y);CX.restore();});
-  FXTXT.forEach(f=>{CX.save();CX.globalAlpha=Math.max(0,Math.min(1,f.life));CX.fillStyle=f.col;CX.font='bold 18px Georgia';CX.textAlign='center';CX.shadowColor=f.col;CX.shadowBlur=8;CX.fillText(f.txt,CW/2,f.y);CX.restore();});
+  // Batch particles — no save/restore per particle
+  CX.textAlign='center';
+  PARTS.forEach(p=>{CX.globalAlpha=Math.max(0,p.life);CX.fillStyle=p.col;CX.fillRect(p.x-p.sz/2,p.y-p.sz/2,p.sz,p.sz);});
+  DNUM.forEach(d=>{CX.globalAlpha=Math.max(0,Math.min(1,d.life));CX.fillStyle=d.col;CX.font=`bold ${d.sz}px Georgia`;CX.fillText(d.text,d.x,d.y);});
+  CX.globalAlpha=1;
+  FXTXT.forEach(f=>{CX.save();CX.globalAlpha=Math.max(0,Math.min(1,f.life));CX.font=`bold ${f.sz||18}px Georgia`;CX.textAlign='center';CX.shadowColor='#000';CX.shadowBlur=4;CX.fillStyle=f.col;CX.fillText(f.txt,CW/2,f.y);CX.restore();});
   ARROWS.forEach(a=>{CX.save();CX.globalAlpha=.9;CX.fillStyle='#AA7820';CX.save();CX.translate(a.x,a.y);CX.fillRect(-12,-2,24,4);CX.fillStyle='#C8D0D8';CX.beginPath();CX.moveTo(12,0);CX.lineTo(20,-5);CX.lineTo(18,5);CX.closePath();CX.fill();CX.restore();CX.restore();});
 }
 
@@ -1094,6 +1152,9 @@ function togglePause(){
 const STRONG_ENEMIES=['guanyu','zhangfei','zhaoyun','lubu'];
 const TIER1=['zhugeliang','zhouyu','sunquan','caocao','liubei','huangzhong'];
 const TIER2=['zhangfei','zhaoyun','machao','xiahoudun','zhangliao','lubu','dongzhuo'];
+// Card reward pools — separate from battle enemy tiers. CARD_POOL_ELITE includes GuanYu who is not in TIER1/TIER2.
+const CARD_POOL_COMMON=TIER1;
+const CARD_POOL_ELITE=['guanyu','zhangfei','zhaoyun','machao','xiahoudun','zhangliao','lubu','dongzhuo'];
 function pickTierEnemy(tier,excludeId,excludeFac){
   let pool=GENS.filter(g=>tier.includes(g.id)&&g.id!==excludeId);
   const pref=pool.filter(g=>g.f!==excludeFac);
@@ -1114,7 +1175,7 @@ const GENERAL_IMG = {
   huangzhong:'Portraits/HuangZhong.png', zhugeliang:'Portraits/ZhugeLiang1.png', machao:'Portraits/Ma Chao.png', liubei:'Portraits/LiuBei.png',
   caocao:'Portraits/CaoCao1.png', zhangliao:'Portraits/ZhangLiao1.png', xiahoudun:'Portraits/XiaoHuoDun1.png', xiahouden:'Portraits/XiaoHuoDun1.png',
   sunquan:'Portraits/SunQuan1.png', zhouyu:'Portraits/ZhouYu1.png', lubu:'Portraits/LuBu1.png', asiainvincible:'Portraits/Asiatheinvicinble.png',
-  dongzhuo:'Portraits/DongZhuo.png',
+  dongzhuo:'Portraits/DongZhuo.png', monkeygod:'Portraits/Monkey_God.png',
 };
 
 const SHEET_B64={};
@@ -1123,7 +1184,7 @@ const SHEET_B64={};
 const SHEET_DEFS = {
   // src = default image; anims can override with altSrc for frames from a different file
   guanyu:{
-    src:'Sprites/clean/GuanYu_idle_back_atk_charge_Special.png',
+    src:'Sprites/clean/GuanYu_idle_back_atk_charge_Special.png?v=4',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1135,7 +1196,7 @@ const SHEET_DEFS = {
     }
   },
   zhaoyun:{
-    src:'Sprites/clean/ZhaoYun_idle_back_atk_charge_Special.png?v=2',
+    src:'Sprites/clean/ZhaoYun_idle_back_atk_charge_Special.png?v=4',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1143,11 +1204,11 @@ const SHEET_DEFS = {
       move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
       charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
       atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
-      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252, yOff:-15},
     }
   },
   lubu:{
-    src:'Sprites/clean/LuBu_idle_back_atk_charge_Special.png',
+    src:'Sprites/clean/LuBu_idle_back_atk_charge_Special.png?v=2',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1155,11 +1216,11 @@ const SHEET_DEFS = {
       move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
       charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
       atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
-      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252, yOff:-15},
     }
   },
   machao:{
-    src:'Sprites/clean/Machao_idle_back_atk_charge_Special.png?v=2',
+    src:'Sprites/clean/Machao_idle_back_atk_charge_Special.png?v=3',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1182,7 +1243,7 @@ const SHEET_DEFS = {
     }
   },
   sunquan:{
-    src:'Sprites/clean/SunQuan_idle_back_atk_charge_Special.png',
+    src:'Sprites/clean/SunQuan_idle_back_atk_charge_Special.png?v=3',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1194,19 +1255,19 @@ const SHEET_DEFS = {
     }
   },
   xiahoudun:{
-    src:'Sprites/clean/XiaHouDun_back_atk_charge_Special.png',
+    src:'Sprites/clean/XiaHouDun_back_atk_charge_Special.png?v=2',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
       back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
       move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
       charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
-      atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
+      atk:    {x:1836, y:27,  w:379, h:484, frames:1, dur:4,  dw:164, dh:210},
       special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:197, dh:252},
     }
   },
   xiahouden:{
-    src:'Sprites/clean/XiaHouDun_back_atk_charge_Special.png',
+    src:'Sprites/clean/XiaHouDun_back_atk_charge_Special.png?v=2',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1218,7 +1279,7 @@ const SHEET_DEFS = {
     }
   },
   zhangliao:{
-    src:'Sprites/clean/ZhangLiao_idle_back_atk_charge_Special.png',
+    src:'Sprites/clean/ZhangLiao_idle_back_atk_charge_Special.png?v=2',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1255,18 +1316,18 @@ const SHEET_DEFS = {
   },
   monkeygod:{
     src:'Sprites/clean/MonkeyGod_idle_back_atk_charge_Special.png',
-    displayH:126, yOff:-25, useDarkBg:true,
+    displayH:140, yOff:-25, useDarkBg:true,
     anims:{
-      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
+      idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15, dw:180, dh:176},
       back:   {x:379,  y:7,   w:336, h:455, frames:1, dur:6,  dw:144, dh:180},
       move:   {x:1275, y:121, w:529, h:345, frames:1, dur:6,  dw:220, dh:135},
-      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:241, dh:149},
+      charge: {x:1275, y:121, w:509, h:345, frames:1, dur:6,  dw:289, dh:179},
       atk:    {x:727,  y:124, w:465, h:338, frames:1, dur:4,  dw:191, dh:139},
-      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:158, dh:202},
+      special:{x:1836, y:27,  w:379, h:484, frames:1, dur:6,  dw:190, dh:242},
     }
   },
   liubei:{
-    src:'Sprites/clean/LiuBei_idle_back_atk_charge_Special.png?v=2',
+    src:'Sprites/clean/LiuBei_idle_back_atk_charge_Special.png?v=3',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1278,7 +1339,7 @@ const SHEET_DEFS = {
     }
   },
   zhouyu:{
-    src:'Sprites/clean/ZhouYu_idle_back_atk_charge_Special.png?v=3',
+    src:'Sprites/clean/ZhouYu_idle_back_atk_charge_Special.png?v=4',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1290,7 +1351,7 @@ const SHEET_DEFS = {
     }
   },
   zhugeliang:{
-    src:'Sprites/clean/Zhugeliang_idle_back_atk_charge_Special.png?v=2',
+    src:'Sprites/clean/Zhugeliang_idle_back_atk_charge_Special.png?v=3',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1302,7 +1363,7 @@ const SHEET_DEFS = {
     }
   },
   caocao:{
-    src:'Sprites/clean/CaoCao_idle_back_atk_charge_Special.png',
+    src:'Sprites/clean/CaoCao_idle_back_atk_charge_Special.png?v=3',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1314,7 +1375,7 @@ const SHEET_DEFS = {
     }
   },
   huangzhong:{
-    src:'Sprites/clean/HuangZhong_idle_back_atk_charge_Special.png?v=7',
+    src:'Sprites/clean/HuangZhong_idle_back_atk_charge_Special.png?v=8',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1326,7 +1387,7 @@ const SHEET_DEFS = {
     }
   },
   zhangfei:{
-    src:'Sprites/clean/ZhangFei_idle_back_atk_charge_Special.png',
+    src:'Sprites/clean/ZhangFei_idle_back_atk_charge_Special.png?v=2',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1338,7 +1399,7 @@ const SHEET_DEFS = {
     }
   },
   dongzhuo:{
-    src:'Sprites/clean/DongZhuo_idle_back_atk_charge_Special.png?v=3',
+    src:'Sprites/clean/DongZhuo_idle_back_atk_charge_Special.png?v=4',
     displayH:140, yOff:-25, useDarkBg:true,
     anims:{
       idle:   {x:2,    y:134, w:352, h:345, frames:1, dur:15},
@@ -1545,7 +1606,7 @@ function updatePlayer(){
     // Nine Yin: +35% bonus on top
     
     if(PR.equipped.horse?.id==='stormstallion'&&EB.stunTimer>0)EB.stunTimer+=18;
-    if(!EG.tier3&&(PR.equipped.wife?.id==='caiwenji'||PR.equipped.scripture?.id==='nineyin')){const drain=Math.floor(EB.hp*.1);EB.hp=Math.max(0,EB.hp-drain);PB.hp=Math.min(PB.maxHp,PB.hp+drain);DNUM.push({x:EB.x,y:GNDX-100,vy:-1.5,life:1.6,text:'👻-'+drain,col:'#aabbff',sz:18});DNUM.push({x:PB.x,y:GNDX-100,vy:-1.5,life:1.6,text:'+'+drain,col:'#44ff88',sz:18});sfxDrain();}
+    if(!EG.tier3&&(PR.equipped.wife?.id==='caiwenji'||PR.equipped.scripture?.id==='nineyin')){const drain=Math.floor(EB.hp*.1);EB.hp=Math.max(0,EB.hp-drain);PB.hp=Math.min(PB.maxHp,PB.hp+drain);pushDnum({x:EB.x,y:GNDX-100,vy:-1.0,life:1.6,text:'👻-'+drain,col:'#aabbff',sz:18});pushDnum({x:PB.x,y:GNDX-100,vy:-1.0,life:1.6,text:'+'+drain,col:'#44ff88',sz:18});sfxDrain();}
     addFx(`✨ ${PG.special?.name||'SPECIAL'}!`,'#cc88ff');
     return;
   }
@@ -1610,7 +1671,7 @@ function checkHits(){
           else{gainSP(EB,15);}
           EB.hp=Math.max(0,EB.hp-dmg);
           if(!EB.guarding){if(!EG.tier3){const kbMult=PR.equipped.weapon?.id==='serpentspear'?1.5:1;const kb=Math.floor((20+Math.floor(dmg*0.2))*kbMult);EB.hurtTimer=HURTF;EB.state='hurt';EB.x=clamp(EB.x+kb,PB.x+46,ARENA_R);}}
-          spawnHit(EB.x,GNDX-65,dmg,dmg>35,FAC[PG.f].hi);sfxHit(dmg>35);
+          spawnHit(EB.x,GNDX-65,dmg,dmg>35,FAC[PG.f].hi);sfxHit(dmg);
           gainSP(PB,30);
           // Tiger Crane: 12% double strike
           if(PR.equipped.scripture?.id==='tigerCrane'&&Math.random()<.12){EB.hp=Math.max(0,EB.hp-dmg);spawnHit(EB.x,GNDX-80,dmg,true,'#ffaa44');}
@@ -1628,8 +1689,8 @@ function checkHits(){
     const dist=Math.abs(EB.x-PB.x);
     const reach=WEAPON_REACH[EG.wep||'sword'];
     if(dist<=reach){
-      if(PB.invincTimer>0){DNUM.push({x:PB.x,y:GNDX-70,vy:-1,life:1,text:'BLOCKED',col:'#8888ff',sz:12});}
-      else if(PR.equipped.horse?.id==='shadowrunner'&&Math.random()<.20){DNUM.push({x:PB.x,y:GNDX-70,vy:-1,life:1,text:'DODGE!',col:'#88ff88',sz:13});}
+      if(PB.invincTimer>0&&EG.id!=='monkeygod'){DNUM.push({x:PB.x,y:GNDX-70,vy:-1,life:1,text:'BLOCKED',col:'#8888ff',sz:12});}
+      else if(PR.equipped.horse?.id==='shadowrunner'&&Math.random()<.20&&EG.id!=='monkeygod'){DNUM.push({x:PB.x,y:GNDX-70,vy:-1,life:1,text:'DODGE!',col:'#88ff88',sz:13});}
       else{
         const eWar=EB.hp<EB.maxHp/3?Math.floor(EG.war*.7):EG.war;
         let dmg=Math.floor(eWar*1.95+EG.str*0.3+rand(6,21)); // enemy STR boosts attack
@@ -1651,7 +1712,7 @@ function checkHits(){
         }
         PB.hp=Math.max(0,PB.hp-dmg);
         if(!EG.tier1&&!(EG.tier3&&PB.guarding)){PB.hurtTimer=HURTF;PB.state='hurt';}
-        spawnHit(PB.x,GNDX-65,dmg,dmg>30,FAC[EG.f].hi);sfxHit(true);
+        spawnHit(PB.x,GNDX-65,dmg,dmg>30,FAC[EG.f].hi);sfxHit(dmg);
         gainSP(EB,30);
       }
     }
@@ -1847,9 +1908,9 @@ function gameLoop(){
       CX.shadowColor='#cc2222';CX.shadowBlur=20;CX.fillText('DEFEATED',CW/2,CH/2);CX.restore();
     }else if(!storyFoot&&EB){
       CX.save();CX.globalAlpha=.7;CX.fillStyle='rgba(0,0,0,.5)';CX.fillRect(0,0,CW,CH);
-      CX.fillStyle=PB.hp<=0?'#cc2222':'#e8c44d';CX.font='bold 36px Georgia';CX.textAlign='center';
+      CX.fillStyle=PB.hp<=0?'#cc2222':'#e8c44d';CX.font='bold 24px Georgia';CX.textAlign='center';
       CX.shadowColor=CX.fillStyle;CX.shadowBlur=20;
-      CX.fillText(PB.hp<=0?'DEFEATED':'VICTORY',CW/2,CH/2);CX.restore();
+      CX.fillText(PB.hp<=0?'DEFEATED':'VICTORY',CW/2,CH*0.72);CX.restore();
     }
   }
   updateHUD();
@@ -1964,6 +2025,101 @@ function onAdComplete(){
 }
 function onAdCancelled(){
   showScreen('s-select');
+}
+function onPremiumUnlocked(){
+  PR.premiumUnlocked=true;savePR();
+  const btn=document.getElementById('btn-premium');
+  if(btn){btn.textContent='✓ Premium Unlocked';btn.style.color='#66cc88';btn.style.borderColor='#66cc88';btn.style.cursor='default';btn.onclick=null;}
+}
+function tapPremium(){
+  if(PR.premiumUnlocked)return;
+  const ov=document.createElement('div');
+  ov.id='premium-info-ov';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:block;font-family:Georgia,serif;padding:12px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch';
+  ov.innerHTML=`
+    <div style="background:linear-gradient(180deg,#1a1000,#0d0800);border:2px solid #ffcc44;border-radius:12px;padding:18px 18px;max-width:360px;width:100%;text-align:center;margin:12px auto">
+      <div style="color:#ffcc44;font-size:1.1em;letter-spacing:3px;margin-bottom:4px">🔓 PREMIUM UNLOCK</div>
+      <div style="color:#e8c44d;font-size:1.6em;font-weight:bold;margin-bottom:16px">$2.99 <span style="font-size:.55em;color:#886633">one-time</span></div>
+      <div style="text-align:left;display:flex;flex-direction:column;gap:9px;margin-bottom:20px">
+        <div style="color:#ddd;font-size:.82em">🚫 <b style="color:#ffcc44">No more ads</b> — play without interruption</div>
+        <div style="color:#ddd;font-size:.82em">⚔ <b style="color:#ffcc44">B3 Insane Challenge</b> — fight the Monkey God</div>
+        <div style="color:#ddd;font-size:.82em">📖 <b style="color:#ffcc44">Story Missions</b> — Battle of Changban &amp; Red Cliffs</div>
+        <div style="color:#ddd;font-size:.82em">🗡 <b style="color:#ffcc44">Signature Equipment</b> — unique weapon &amp; armor per general</div>
+        <div style="color:#ddd;font-size:.82em">👰 <b style="color:#ffcc44">8 Premium Wives</b> — rare stat bonuses</div>
+        <div style="color:#ddd;font-size:.82em">📜 <b style="color:#ffcc44">12 Rare Scriptures</b> — ghost drain, high WAR manuals &amp; more</div>
+        <div style="color:#ddd;font-size:.82em">🐎 <b style="color:#ffcc44">Elite Horses</b> — Shadow Runner &amp; Storm Stallion</div>
+      </div>
+      <div style="color:#666;font-size:.68em;margin-bottom:16px">No subscription · No expiry · Restores on reinstall</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="document.getElementById('premium-info-ov').remove();doPremiumPurchase()" style="padding:12px 28px;background:linear-gradient(180deg,#3a2800,#1a1200);border:2px solid #ffcc44;color:#ffcc44;font-family:Georgia,serif;font-size:.95em;cursor:pointer;border-radius:8px;font-weight:bold">Unlock $2.99</button>
+        <button onclick="document.getElementById('premium-info-ov').remove()" style="padding:12px 18px;background:transparent;border:1px solid #444;color:#888;font-family:Georgia,serif;font-size:.85em;cursor:pointer;border-radius:8px">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+function doPremiumPurchase(){
+  if(window.AndroidBridge&&window.AndroidBridge.purchasePremium){AndroidBridge.purchasePremium();return;}
+  alert('Premium Unlock is only available in the Android app.');
+}
+
+// ── Secret tap on version pill (5×) → promo code box ────────────────────────
+let _secretTaps=0,_secretTimer=null;
+function secretTap(){
+  _secretTaps++;
+  clearTimeout(_secretTimer);
+  _secretTimer=setTimeout(()=>{_secretTaps=0;},1500);
+  if(_secretTaps>=5){_secretTaps=0;showPromoBox();}
+}
+
+// ── Restore Code (paste base64 save code) ────────────────────────────────────
+function showPromoBox(){
+  const ov=document.createElement('div');
+  ov.id='promo-ov';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;padding:20px;box-sizing:border-box';
+  ov.innerHTML=`
+    <div style="background:#0d0800;border:2px solid #557755;border-radius:10px;padding:24px 20px;max-width:380px;width:100%;text-align:center">
+      <div style="color:#88aa88;font-size:.85em;letter-spacing:2px;margin-bottom:6px">RESTORE SAVE</div>
+      <div style="color:#555;font-size:.72em;margin-bottom:14px">Paste your restore code below</div>
+      <textarea id="restore-input" rows="4" placeholder="Paste code here..."
+        style="width:100%;padding:10px;font-family:monospace;font-size:.7em;background:#0a0a00;border:1px solid #557755;color:#aaa;border-radius:4px;box-sizing:border-box;resize:none;margin-bottom:10px;line-height:1.4"></textarea>
+      <div id="restore-msg" style="font-size:.78em;min-height:18px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="applyRestoreCode()" style="padding:10px 24px;background:#1a2a1a;border:2px solid #557755;color:#88cc88;font-family:Georgia,serif;font-size:.88em;cursor:pointer;border-radius:6px">Restore</button>
+        <button onclick="document.getElementById('promo-ov').remove()" style="padding:10px 18px;background:transparent;border:1px solid #444;color:#888;font-family:Georgia,serif;font-size:.82em;cursor:pointer;border-radius:6px">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  setTimeout(()=>document.getElementById('restore-input')?.focus(),100);
+}
+
+function applyRestoreCode(){
+  const raw=(document.getElementById('restore-input')?.value||'').trim();
+  const msg=document.getElementById('restore-msg');
+  if(!raw){msg.style.color='#cc4444';msg.textContent='Please paste a restore code.';return;}
+  try{
+    const imported=JSON.parse(atob(raw));
+    if(!imported.deck||!Array.isArray(imported.deck))throw new Error('invalid');
+    const keepPremium=PR.premiumUnlocked;
+    PR=imported;
+    PR.premiumUnlocked=keepPremium||imported.premiumUnlocked;
+    // Rebuild name/desc/img/icon for inventory items from RWDS
+    refreshRWDSDescs();
+    // Rebuild genEquipped weapon/armor details from RWDS
+    const rwdAll=[...RWDS.weapons,...(RWDS.armors||[])];
+    const rwdById={};rwdAll.forEach(r=>{rwdById[r.id]=r;});
+    Object.values(PR.genEquipped||{}).forEach(ge=>{
+      if(ge.weapon?.id)ge.weapon=rwdById[ge.weapon.id]||ge.weapon;
+      if(ge.armor?.id) ge.armor =rwdById[ge.armor.id] ||ge.armor;
+    });
+    savePR();
+    if(PR.premiumUnlocked)onPremiumUnlocked();
+    msg.style.color='#88cc88';
+    msg.textContent='✓ Save restored successfully!';
+    setTimeout(()=>{document.getElementById('promo-ov')?.remove();showTitle();},1500);
+  }catch(e){
+    msg.style.color='#cc4444';
+    msg.textContent='Invalid code. Please check and try again.';
+  }
 }
 function _doExit(){
   if(window.AndroidBridge&&window.AndroidBridge.exitApp){window.AndroidBridge.exitApp();return;}
@@ -2104,6 +2260,7 @@ function showInventory(){
     <div style="color:#ffd700;font-size:.65em;letter-spacing:3px;margin-bottom:10px;text-align:center">🏆 &nbsp;HALL OF HONOUR&nbsp; 🏆</div>
     <div style="display:flex;flex-direction:column;gap:8px">
       ${medalRow('monkeygod','Defeat the Monkey God in the Insane Challenge (Battle 3)')}
+      ${medalRow('sageunlocked','Defeat the Monkey God with all 14 generals to unlock him as playable')}
       ${medalRow('story','Complete Story Mode — Saving of the Prince')}
       ${medalRow('redcliffs','Collect 75 arrows in the Red Cliffs Challenge')}
     </div>
@@ -2121,22 +2278,78 @@ function renderSel(){
   document.querySelectorAll('.ftab').forEach(t=>t.classList.toggle('active',t.dataset.f===curFac));
   if(curFac==='SHEN'){
     const unlocked=PR.b3Played;
-    document.querySelector('.shdr p').textContent='⚔ Divine bosses — not playable';
+    const mgUnlocked=PR.monkeygodUnlocked;
+    const B3_ALL=['guanyu','zhangfei','zhaoyun','machao','huangzhong','zhugeliang','liubei',
+                  'caocao','zhangliao','xiahoudun','sunquan','zhouyu','lubu','dongzhuo'];
+    const winsCount=B3_ALL.filter(id=>(PR.b3GenWins||{})[id]).length;
+    const mgCards=PR.deck.filter(c=>c.id==='monkeygod').length;
+    const mgInDeck=mgCards>0;
+    document.querySelector('.shdr p').textContent=mgUnlocked
+      ?`⚔ Monkey God playable — ${mgCards} card(s) remaining`
+      :'⚔ Divine bosses — not playable';
+    // Single evolving card: locked → boss encountered → playable
+    let mgStyle, mgClick, mgPortrait, mgName, mgSub, mgBadge;
+    if(mgUnlocked&&mgInDeck){
+      mgStyle=`class="gc${selGen?.id==='monkeygod'?' sel':''}" style="cursor:pointer"`;
+      mgClick=`onclick="pickG('monkeygod')"`;
+      mgPortrait=`<img src="Portraits/Monkey_God.png" alt="Monkey God" style="cursor:zoom-in" onclick="event.stopPropagation();showLightbox('Portraits/Monkey_God.png')">`;
+      mgName=`<div class="gname" style="color:#ffcc44">Monkey God ✦ PLAYABLE</div>`;
+      mgSub=`<div class="gtit">Great Sage Equal to Heaven</div>`;
+      mgBadge=`<div style="color:#aa66ff;font-size:.75em;margin-top:5px">${mgCards} card(s) remaining</div>`;
+    } else if(mgUnlocked&&!mgInDeck){
+      mgStyle=`class="gc" style="opacity:0.35;filter:grayscale(80%);cursor:not-allowed"`;
+      mgClick='';
+      mgPortrait=`<img src="Portraits/Monkey_God.png" alt="Monkey God" style="cursor:zoom-in" onclick="event.stopPropagation();showLightbox('Portraits/Monkey_God.png')">`;
+      mgName=`<div class="gname" style="color:#ffcc44">Monkey God ✦ PLAYABLE</div>`;
+      mgSub=`<div class="gtit">Great Sage Equal to Heaven</div>`;
+      mgBadge=`<div style="color:#888;font-size:.75em;margin-top:5px">No cards remaining</div>`;
+    } else if(unlocked){
+      mgStyle=`class="gc" style="cursor:pointer"`;
+      mgClick=`onclick="showLightbox('Portraits/Monkey_God.png')"`;
+      mgPortrait=`<img src="Portraits/Monkey_God.png" alt="Monkey God" style="cursor:zoom-in">`;
+      mgName=`<div class="gname" style="color:#cc88ff">Monkey God</div>`;
+      mgSub=`<div class="gtit">Sun Wukong — Great Sage Equal to Heaven</div>`;
+      mgBadge=`<div style="color:#aa66ff;font-size:.75em;margin-top:5px">⚔ Boss Encountered — ${winsCount}/${B3_ALL.length} generals victorious</div>`;
+    } else {
+      mgStyle=`class="gc" style="opacity:0.38;filter:grayscale(80%);cursor:not-allowed"`;
+      mgClick='';
+      mgPortrait=`<span style="color:#aa66ff;font-size:2em">神</span>`;
+      mgName=`<div class="gname" style="color:#cc88ff">Monkey God</div>`;
+      mgSub=`<div class="gtit">??? Enter the Insane Challenge to reveal</div>`;
+      mgBadge=`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);font-size:1.8em">🔒</div>`;
+    }
     document.getElementById('ggrid').innerHTML=`
-      <div class="gc" style="${unlocked?'cursor:pointer':'opacity:0.38;filter:grayscale(80%);cursor:not-allowed'}"
-           onclick="${unlocked?`showLightbox('Portraits/Monkey_God.png')`:'void(0)'}">
+      <div ${mgStyle} ${mgClick}>
         <div class="gport" style="background:#1a0a2a;position:relative">
-          ${unlocked?`<img src="Portraits/Monkey_God.png" alt="Monkey God" style="cursor:zoom-in">`:
-            `<span style="color:#aa66ff;font-size:2em">神</span>`}
-          ${!unlocked?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);font-size:1.8em">🔒</div>`:''}
+          ${mgPortrait}
+          ${!unlocked?mgBadge:''}
         </div>
         <div class="gcontent">
-          <div class="gname" style="color:#cc88ff">Monkey God</div>
-          <div class="gtit">${unlocked?'Sun Wukong — Great Sage Equal to Heaven':'??? Enter the Insane Challenge to reveal'}</div>
-          ${unlocked?`<div style="color:#aa66ff;font-size:.75em;margin-top:5px">⚔ Boss Encountered</div>`:''}
+          ${mgName}${mgSub}
+          ${unlocked?mgBadge:''}
+        </div>
+      </div>
+      <div class="gc" style="opacity:0.38;filter:grayscale(80%);cursor:not-allowed">
+        <div class="gport" style="background:#1a0a2a;position:relative">
+          <img src="Portraits/ErLangShen.png" alt="Erlang Shen" style="cursor:default">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);font-size:1.8em">🔒</div>
+        </div>
+        <div class="gcontent">
+          <div class="gname" style="color:#cc88ff">Erlang Shen</div>
+          <div class="gtit">??? Coming in future update</div>
+        </div>
+      </div>
+      <div class="gc" style="opacity:0.38;filter:grayscale(80%);cursor:not-allowed">
+        <div class="gport" style="background:#1a0a2a;position:relative">
+          <img src="Portraits/NeZha%20Third%20Prince%20of%20LiJing.png" alt="NeZha" style="cursor:default">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);font-size:1.8em">🔒</div>
+        </div>
+        <div class="gcontent">
+          <div class="gname" style="color:#cc88ff">NeZha</div>
+          <div class="gtit">Third Prince of Li Jing — Coming soon</div>
         </div>
       </div>`;
-    document.getElementById('btn-ok').disabled=true;
+    document.getElementById('btn-ok').disabled=!(mgUnlocked&&mgInDeck&&selGen?.id==='monkeygod');
     return;
   }
   const deckIds=PR.deck.map(c=>c.id);
@@ -2182,10 +2395,15 @@ function pickG(id){
   else{img.style.display='none';}
   document.getElementById('gmodal-name').textContent=g.name;
   document.getElementById('gmodal-title').textContent=g.title;
-  document.getElementById('gmodal-stats').innerHTML=
-    sb('WAR',g.war,'#cc5555')+sb('STR',g.str,'#cc7733')+sb('DEX',g.dex,'#55cc88')+sb('SPD',g.spd,'#44aaff')+
+  const isSecret=g.id==='monkeygod';
+  document.getElementById('gmodal-stats').innerHTML=isSecret
+    ?`<div style="color:#aa66ff;font-size:.85em;letter-spacing:2px;margin:10px 0">— Stats Hidden —</div>`
+    :sb('WAR',g.war,'#cc5555')+sb('STR',g.str,'#cc7733')+sb('DEX',g.dex,'#55cc88')+sb('SPD',g.spd,'#44aaff')+
     `<div class="srow" style="margin-top:2px"><span class="sl">HP</span><span style="color:var(--gold);font-size:.88em">${g.maxHp}</span></div>`;
-  document.getElementById('gmodal-skill').innerHTML=`✨ <b>${g.special?.name||'—'}</b>: ${g.special?.desc||''}`;
+  document.getElementById('gmodal-skill').innerHTML=isSecret
+    ?`✨ <b>???</b>: The Great Sage's power is beyond mortal comprehension`
+    :`✨ <b>${g.special?.name||'—'}</b>: ${g.special?.desc||''}`;
+  document.querySelector('#gmodal button[onclick="showArmoury()"]').style.display=isSecret?'none':'';
   modal.classList.add('open');
 }
 function closeGModal(){document.getElementById('gmodal').classList.remove('open');}
@@ -2203,7 +2421,19 @@ const ARMOURY_REF={
   }
 };
 function showArmoury(){
-  if(!selGen)return;
+  if(!selGen||selGen.id==='monkeygod')return;
+  if(!PR.premiumUnlocked){
+    closeGModal();
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;text-align:center;padding:24px';
+    ov.innerHTML=`<div style="font-size:2.5em;margin-bottom:12px">🔒</div>
+      <div style="color:#ffcc44;font-size:1em;letter-spacing:2px;margin-bottom:10px">SIGNATURE ARMOURY</div>
+      <div style="color:#aaa;font-size:.82em;line-height:1.6;max-width:320px;margin-bottom:22px">Signature weapons &amp; armor are exclusive to Premium.<br>Unlock to equip and apply them in battle.</div>
+      <button onclick="this.parentElement.remove();tapPremium()" style="padding:10px 24px;background:#1a1400;border:2px solid #ffcc44;color:#ffcc44;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:6px;margin-bottom:10px">🔓 Unlock Premium $2.99</button>
+      <button onclick="this.parentElement.remove()" style="padding:8px 18px;background:transparent;border:1px solid #555;color:#888;font-family:Georgia,serif;font-size:.8em;cursor:pointer;border-radius:4px">← Back</button>`;
+    document.body.appendChild(ov);
+    return;
+  }
   const g=selGen,ge=PR.genEquipped[g.id]||{};
   document.getElementById('armoury-gen-name').textContent=g.name;
   document.getElementById('armoury-gen-title').textContent=g.title;
@@ -2454,7 +2684,8 @@ function buyReward(type){
   const price=GOLD.buy[type];
   if(PR.gold<price)return;
   PR.gold-=price;
-  const pool=type==='wife'?RWDS.wives:type==='scripture'?RWDS.scriptures:type==='weapon'?RWDS.weapons:RWDS.horses;
+  const prem=PR.premiumUnlocked;
+  const pool=(type==='wife'?RWDS.wives:type==='scripture'?RWDS.scriptures:type==='weapon'?RWDS.weapons:RWDS.horses).filter(r=>prem||!r.premium);
   const r=pick(pool);
   if(type==='wife')PR.wives.push(r);
   else if(type==='scripture')PR.scriptures.push(r);
@@ -2553,8 +2784,8 @@ function startBattle(){
   // Apply equipped rewards — weapon/armor per-general, wife/scripture/horse global
   const wifeSpd={diaochan:5,xiaoqiao:10,daqiao:15,wangzhaojun:10,xishi:10,zhenji:8,huangyueying:0,caiwenji:0,ladysun:0,ladybian:0};
   const ge=PR.genEquipped[PG.id]||{};
-  const wp=ge.weapon||null;
-  const ar=ge.armor||null;
+  const wp=PR.premiumUnlocked?(ge.weapon||null):null;
+  const ar=PR.premiumUnlocked?(ge.armor||null):null;
   const w=PR.equipped.wife,sc=PR.equipped.scripture,h=PR.equipped.horse;
   if(w){
     PG.spd=Math.min(200,PG.spd+(wifeSpd[w.id]??0));
@@ -2595,11 +2826,11 @@ function startBattle(){
     if(wp.id==='zhaoyun_spear')    {PG.war=Math.min(150,PG.war+20);PG.spd=Math.min(200,PG.spd+5);PG.dex=Math.min(150,PG.dex+8);}
     if(wp.id==='heaven_bow')       {PG.war=Math.min(150,PG.war+22);PG.dex=Math.min(150,PG.dex+10);PG.spd=Math.min(200,PG.spd+5);}
     if(wp.id==='silver_tiger')     {PG.war=Math.min(150,PG.war+20);PG.spd=Math.min(200,PG.spd+5);PG.str=Math.min(150,PG.str+8);}
-    if(wp.id==='feather_fan')      {PG.war=Math.min(150,PG.war+10);PG.str=Math.min(150,PG.str+10);PG.dex=Math.min(150,PG.dex+8);}
+    if(wp.id==='feather_fan')      {PG.war=Math.min(150,PG.war+10);PG.str=Math.min(150,PG.str+20);PG.dex=Math.min(150,PG.dex+15);}
     if(wp.id==='twin_swords')      {PG.war=Math.min(150,PG.war+10);PG.spd=Math.min(200,PG.spd+10);PG.dex=Math.min(150,PG.dex+8);}
     if(wp.id==='chancellor_blade') {PG.war=Math.min(150,PG.war+20);PG.dex=Math.min(150,PG.dex+5);PG.str=Math.min(150,PG.str+8);}
     if(wp.id==='terror_sword')     {PG.war=Math.min(150,PG.war+18);PG.spd=Math.min(200,PG.spd+5);PG.str=Math.min(150,PG.str+8);}
-    if(wp.id==='ironclad_sabre')   {PG.war=Math.min(150,PG.war+18);PG.str=Math.min(150,PG.str+5);PG.maxHp+=30;}
+    if(wp.id==='ironclad_sabre')   {PG.war=Math.min(150,PG.war+25);PG.str=Math.min(150,PG.str+12);PG.maxHp+=60;PG.dex=Math.min(150,PG.dex+8);}
     if(wp.id==='tiger_dao')        {PG.war=Math.min(150,PG.war+15);PG.spd=Math.min(200,PG.spd+5);PG.dex=Math.min(150,PG.dex+8);}
     if(wp.id==='scholar_sword')    {PG.war=Math.min(150,PG.war+15);PG.dex=Math.min(150,PG.dex+5);PG.str=Math.min(150,PG.str+8);}
     if(wp.id==='sky_piercer')      {PG.war=Math.min(150,PG.war+25);PG.str=Math.min(150,PG.str+10);PG.spd=Math.min(200,PG.spd+5);}
@@ -2656,23 +2887,37 @@ function startBattle(){
 }
 
 function addCardToDecK(tier){
-  const pool=(tier===2?TIER2:TIER1).filter(id=>id!==usedCardId);
-  const id=pick(pool)||pick(tier===2?TIER2:TIER1);
+  const srcPool=tier===2?CARD_POOL_ELITE:CARD_POOL_COMMON;
+  const pool=srcPool.filter(id=>id!==usedCardId);
+  const id=pick(pool)||pick(srcPool);
   PR.deck.push({id});
   initGenEquip(id);
   const name=GENS.find(g=>g.id===id)?.name||id;
-  addFx(`🎴 +${name} (${tier===2?'Elite':'Common'})`,tier===2?'#e8c44d':'#888888');
+  addFx(`🎴 +${name} (${tier===2?'Elite':'Common'})`,tier===2?'#e8c44d':'#888888',tier===2?120:0,16);
   savePR();
 }
 function addB2RewardCard(){
-  const tier=Math.random()<0.3?1:2;
-  const pool=(tier===2?TIER2:TIER1).filter(id=>id!==usedCardId);
-  const id=pick(pool)||pick(tier===2?TIER2:TIER1);
+  const elite=Math.random()<0.7;
+  const srcPool=elite?CARD_POOL_ELITE:CARD_POOL_COMMON;
+  const pool=srcPool.filter(id=>id!==usedCardId);
+
+  const id=pick(pool)||pick(srcPool);
   PR.deck.push({id});
   initGenEquip(id);
   const name=GENS.find(g=>g.id===id)?.name||id;
-  addFx(`🎴 +${name} (General Card)`,'#e8c44d');
+  addFx(`🎴 +${name} card awarded!`,'#e8c44d',120,16);
   savePR();
+}// Cushion: ensure every unlocked general (incl. MKG) has at least 1 card in deck
+function ensureMinCards(){
+  const playable=GENS.filter(g=>!g.storyOnly&&g.f!=='SHEN').map(g=>g.id);
+  if(PR.monkeygodUnlocked)playable.push('monkeygod');
+  const counts={};
+  PR.deck.forEach(c=>counts[c.id]=(counts[c.id]||0)+1);
+  let added=[];
+  playable.forEach(id=>{
+    if(!counts[id]){PR.deck.push({id});initGenEquip(id);added.push(GENS.find(g=>g.id===id)?.name||id);}
+  });
+  if(added.length){savePR();setTimeout(()=>addFx(`🎴 Restored: ${added.join(', ')}`,'#aaaaff'),600);}
 }
 
 let _bsoFxMsg='⚔ FIGHT! ⚔';let _bsoFxCol='#e8c44d';
@@ -2776,6 +3021,15 @@ const MEDALS={
     glow:'rgba(80,140,220,.7)',
     border:'#88bbee',
   },
+  sageunlocked:{
+    name:'UNIFIER OF REALMS',
+    chinese:'天地一統',
+    char:'統',
+    desc:'Defeated the Monkey God with every general in the land — the Great Sage bows to no single champion, yet all have prevailed.',
+    img:'Medals/Gemini_Generated_Image_3oi97c3oi97c3oi9.png',
+    glow:'rgba(200,160,20,.7)',
+    border:'#ffcc44',
+  },
   redcliffs:{
     name:'CHAMPION OF THE RED CLIFFS CHALLENGE',
     chinese:'',
@@ -2851,7 +3105,9 @@ function showStoryIntro(){
         </div>
         <div style="display:flex;gap:10px;justify-content:center">
           <button onclick="document.getElementById('story-intro-ov').remove()" style="padding:8px 16px;background:#1a1000;border:1px solid #664400;color:#887755;font-family:Georgia,serif;font-size:.82em;cursor:pointer;border-radius:4px">← Back</button>
-          <button onclick="tryStartStory()" style="padding:8px 22px;background:#2a1800;border:2px solid #e8c44d;color:#e8c44d;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:4px;font-weight:bold">⚔ Begin Mission</button>
+          ${PR.premiumUnlocked
+            ?`<button onclick="tryStartStory()" style="padding:8px 22px;background:#2a1800;border:2px solid #e8c44d;color:#e8c44d;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:4px;font-weight:bold">⚔ Begin Mission</button>`
+            :`<button onclick="tapPremium()" style="padding:8px 18px;background:#1a1400;border:2px solid #ffcc44;color:#ffcc44;font-family:Georgia,serif;font-size:.85em;cursor:pointer;border-radius:4px">🔒 Unlock Premium $2.99</button>`}
         </div>
       </div>
 
@@ -2876,7 +3132,9 @@ function showStoryIntro(){
         </div>
         <div style="display:flex;gap:10px;justify-content:center">
           <button onclick="document.getElementById('story-intro-ov').remove()" style="padding:8px 16px;background:#0a0d1c;border:1px solid #441a14;color:#887766;font-family:Georgia,serif;font-size:.82em;cursor:pointer;border-radius:4px">← Back</button>
-          <button onclick="startRedCliff()" style="padding:8px 22px;background:#2a0a08;border:2px solid #e84422;color:#e84422;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:4px;font-weight:bold">🔥 Begin Mission</button>
+          ${PR.premiumUnlocked
+            ?`<button onclick="startRedCliff()" style="padding:8px 22px;background:#2a0a08;border:2px solid #e84422;color:#e84422;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:4px;font-weight:bold">🔥 Begin Mission</button>`
+            :`<button onclick="tapPremium()" style="padding:8px 18px;background:#1a1400;border:2px solid #ffcc44;color:#ffcc44;font-family:Georgia,serif;font-size:.85em;cursor:pointer;border-radius:4px">🔒 Unlock Premium $2.99</button>`}
         </div>
       </div>
 
@@ -2970,7 +3228,7 @@ function updateStoryEnemies(){
       case'approach':eb.x=clamp(eb.x-spd,PB.x+44,ARENA_R);eb.state='moving';break;
       case'attack':
         if(eb.atkCool<=0&&dist<=reach){
-          eb.atkFrame=ATOTAL;eb.atkCool=ACOOLDOWN+22;eb.state='attacking';sfxHit(false);
+          eb.atkFrame=ATOTAL;eb.atkCool=ACOOLDOWN+22;eb.state='attacking';sfxHit(0);
         }break;
     }
   }
@@ -2993,7 +3251,7 @@ function checkStoryHits(){
         pr.battle.hurtTimer=HURTF;pr.battle.state='hurt';
         pr.battle.x=clamp(pr.battle.x+Math.floor(20+dmg*.2),PB.x+44,ARENA_R);
         spawnHit(pr.battle.x,GNDX-65,dmg,dmg>35,FAC[PG.f]?.hi||'#ffcc44');
-        sfxHit(dmg>35);gainSP(PB,30);
+        sfxHit(dmg);gainSP(PB,30);
         // Strikeback: splash to all others
         living.slice(1).forEach(e=>{
           const sdmg=Math.floor(dmg*.45);
@@ -3023,7 +3281,7 @@ function checkStoryHits(){
           dmg=Math.min(Math.floor(dmg*(ret?.4:.5)),100);
           gainSP(PB,30);PB.hp=Math.max(0,PB.hp-dmg);
           if(!ret){PB.hurtTimer=HURTF;PB.state='hurt';}
-          spawnHit(PB.x,GNDX-65,dmg,dmg>30,FAC[eg.f]?.hi||'#cc4444');sfxHit(true);
+          spawnHit(PB.x,GNDX-65,dmg,dmg>30,FAC[eg.f]?.hi||'#cc4444');sfxHit(dmg);
           gainSP(eb,30);
         }
       }
@@ -3120,21 +3378,58 @@ function endBattle(won){
       battleStreak=0;streakPool=[];
       addCardToDecK(2);
       PR.gold+=GOLD.earn.fullWin;
-      PR.wins++;b3Victory=true;savePR();
+      PR.wins++;b3Victory=true;
+      PR.b3GenWins[PG.id]=true;
+      const B3_ALL=['guanyu','zhangfei','zhaoyun','machao','huangzhong','zhugeliang','liubei',
+                    'caocao','zhangliao','xiahoudun','sunquan','zhouyu','lubu','dongzhuo'];
+      if(!PR.monkeygodUnlocked&&B3_ALL.every(id=>PR.b3GenWins[id])){
+        PR.monkeygodUnlocked=true;
+        PR.deck.push({id:'monkeygod'},{id:'monkeygod'});
+        awardMedal('sageunlocked');
+        setTimeout(()=>addFx('🐒 MONKEY GOD UNLOCKED AS PLAYABLE! Check SHEN tab!','#ffcc44'),2400);
+      }
+      savePR();
       awardMedal('monkeygod');
-      addFx(`🏆 MONKEY GOD DEFEATED — LEGENDARY VICTORY! 🏆`,'#ff4444');
+      addFx(`🏆 MONKEY GOD DEFEATED — LEGENDARY VICTORY! 🏆`,'#ff4444',120,17);
+      ensureMinCards();
       setTimeout(openReward,2200);
     } else if(battleStreak>=2){
+      // Demo mode — show CTA instead of normal B2 flow
+      if(_demoMode){
+        stopLoop();
+        setTimeout(()=>{
+          const ov=document.createElement('div');
+          ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;text-align:center;padding:24px;gap:14px;overflow-y:auto';
+          ov.innerHTML=`
+            <div style="color:#e8c44d;font-size:1.8em;letter-spacing:4px;text-shadow:0 0 24px #ffcc44">⚔ VICTORY! ⚔</div>
+            <div style="color:#ffcc44;font-size:.95em;letter-spacing:1px">${PG.name} conquers the battlefield!</div>
+            <div style="color:#bbb;font-size:.82em;line-height:1.8;max-width:300px">14 legendary generals await.<br>Build your deck. Conquer the Three Kingdoms.<br>Challenge the Monkey God.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🎴 Card Deck</span>
+              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">⚔ Real-time Duels</span>
+              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🏆 Story Mode</span>
+              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🐒 Monkey God Boss</span>
+            </div>
+            <a href="https://play.google.com/store/apps/details?id=com.siowweekoon.threekingdomsduel" target="_blank"
+               style="padding:16px 36px;background:linear-gradient(180deg,#e8c44d,#c8a030);color:#000;font-family:Georgia,serif;font-size:1.05em;font-weight:bold;border-radius:10px;text-decoration:none;letter-spacing:1px;box-shadow:0 0 30px rgba(232,196,77,.6);margin-top:6px">
+              ▶ Download Free — Google Play
+            </a>
+            <div style="color:#555;font-size:.68em">Free to play · No account required</div>`;
+          document.body.appendChild(ov);
+        },1000);
+        return;
+      }
       // Win Battle 2: give +1 random general card reward, offer optional B3
       addB2RewardCard();
       PR.gold+=GOLD.earn.midWin;savePR();
-      addFx(`⚔ BATTLE 2/2 CLEARED! ⚔`,'#e8c44d');
+      addFx(`⚔ BATTLE 2/2 CLEARED! ⚔`,'#e8c44d',120,17);
+      ensureMinCards();
       setTimeout(showB3Choice,2000);
     } else {
       // Win Battle 1: return card only, fight on to B2
       PR.deck.push({id:usedCardId});
       PR.gold+=GOLD.earn.midWin;savePR();
-      addFx(`⚔ 1/2 CARD RETAINED — FIGHT ON! ⚔`,'#e8c44d');
+      addFx(`🎴 ${GENS.find(g=>g.id===usedCardId)?.name||''} card kept — Round 2!`,'#e8c44d',100,16);
       setTimeout(startNextEnemy,1800);
     }
   } else {
@@ -3143,9 +3438,11 @@ function endBattle(won){
     battleStreak=0;streakPool=[];
     if(isB3Loss){
       // B3 loss: no penalty, no card lost — collect 3 rewards as if B3 declined
+      ensureMinCards();
       setTimeout(openReward,800);
     } else {
       const penaltyPool=applyLossPenalty(isBattle2);
+      ensureMinCards();
       setTimeout(()=>{
         document.getElementById('go-msg').textContent=`"${pick(PG.q.los)}"`;
         document.getElementById('go-lost-reward').textContent=
@@ -3257,9 +3554,10 @@ function showB3Choice(){
       <button onclick="closeB3Choice(false)" style="background:#336633;color:#fff;font-size:.9em;padding:11px 22px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
         ✅ Collect 3 Rewards
       </button>
-      <button onclick="closeB3Choice(true)" style="background:#8b1a1a;color:#fff;font-size:.9em;padding:11px 22px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
-        🔥 Fight Monkey God!
-      </button>
+      ${PR.premiumUnlocked
+        ?`<button onclick="closeB3Choice(true)" style="background:#8b1a1a;color:#fff;font-size:.9em;padding:11px 22px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">🔥 Fight Monkey God!</button>`
+        :`<button onclick="tapPremium()" style="background:#1a1400;border:2px solid #ffcc44;color:#ffcc44;font-size:.85em;padding:10px 18px;border-radius:8px;cursor:pointer;font-family:Georgia;line-height:1.4;text-align:center">🔒 INSANE MODE<br><span style="font-size:.78em;color:#aaa">Unlock Premium $2.99</span></button>`
+      }
     </div>
    </div>`;
   document.getElementById('s-battle').appendChild(ov);
@@ -3275,15 +3573,18 @@ function closeB3Choice(doB3){
 function openReward(){
   const ge=PR.genEquipped[usedCardId]||{};
   const sig=GENS.find(g=>g.id===usedCardId)?.sig||{};
-  const sigWeapon=(!ge.weapon&&sig.weapon)?RWDS.weapons.find(w=>w.id===sig.weapon):null;
-  const sigArmor= (!ge.armor &&sig.armor) ?RWDS.armors.find(a=>a.id===sig.armor) :null;
-  const availWives=RWDS.wives.filter(w=>!PR.wives.some(pw=>pw.id===w.id));
-  const s1=sigWeapon||((availWives.length&&Math.random()<.5)?pick(availWives):pick(RWDS.scriptures));
-  const s2=sigArmor||pick(RWDS.scriptures);
-  const s3=pick(RWDS.horses);
+  const sigWeapon=(PR.premiumUnlocked&&!ge.weapon&&sig.weapon)?RWDS.weapons.find(w=>w.id===sig.weapon):null;
+  const sigArmor= (PR.premiumUnlocked&&!ge.armor &&sig.armor) ?RWDS.armors.find(a=>a.id===sig.armor) :null;
+  const prem=PR.premiumUnlocked;
+  const availWives=RWDS.wives.filter(w=>!PR.wives.some(pw=>pw.id===w.id)&&(prem||!w.premium));
+  const scriptPool=RWDS.scriptures.filter(s=>prem||!s.premium);
+  const horsePool=RWDS.horses.filter(h=>prem||!h.premium);
+  const s1=sigWeapon||((availWives.length&&Math.random()<.5)?pick(availWives):pick(scriptPool));
+  const s2=sigArmor||pick(scriptPool);
+  const s3=pick(horsePool.length?horsePool:RWDS.horses);
   const isB3=b3Victory;b3Victory=false;
-  const rewardOnly=RWDS.scriptures.filter(r=>r.rewardOnly);
-  const s4=isB3?(availWives.length?pick(availWives):pick(rewardOnly.length?rewardOnly:RWDS.scriptures)):null;
+  const rewardOnly=RWDS.scriptures.filter(r=>r.rewardOnly&&(prem||!r.premium));
+  const s4=isB3?(availWives.length?pick(availWives):pick(rewardOnly.length?rewardOnly:scriptPool)):null;
   rwdPool=isB3?[s1,s2,s3,s4]:[s1,s2,s3];
   rwdIdx=null;
   document.getElementById('ropts').innerHTML=rwdPool.map((r,i)=>`
@@ -3588,8 +3889,26 @@ function exitRedCliff(){
 // ─── END RED CLIFFS ────────────────────────────────────────────────────────
 
 loadPR();if(PR.deck.length===0)initDeck();
-loadSprites();loadSheets();showTitle();
-if(PR.wins===0&&!localStorage.getItem('tkd_tutorial'))setTimeout(()=>{showTutorial();localStorage.setItem('tkd_tutorial','1');},800);
+loadSprites();loadSheets();
+
+let _demoMode=new URLSearchParams(location.search).get('demo')==='1';
+if(_demoMode){
+  setTimeout(()=>{
+    // Dismiss splash by removing it
+    const sp=document.getElementById('splash-screen');
+    if(sp){sp.style.opacity='0';setTimeout(()=>sp?.remove(),400);}
+    // Ensure Guan Yu in deck and premium on
+    if(!PR.deck.some(c=>c.id==='guanyu')){PR.deck.push({id:'guanyu'},{id:'guanyu'});}
+    PR.premiumUnlocked=true;
+    // Select Guan Yu and simulate B2 (battleStreak=1 so win = B2 win)
+    selGen=GENS.find(g=>g.id==='guanyu');
+    battleStreak=1;
+    startBattle();
+  },800);
+}else{
+  showTitle();
+  if(PR.wins===0&&!localStorage.getItem('tkd_tutorial'))setTimeout(()=>{showTutorial();localStorage.setItem('tkd_tutorial','1');},800);
+}
 document.getElementById('btn-nav-close').style.display='flex';
 document.getElementById('btn-nav-close').style.display='flex';
 </script>
