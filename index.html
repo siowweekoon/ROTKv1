@@ -3374,6 +3374,31 @@ function endBattle(won){
   if(won){
     battleStreak++;
     if(battleStreak>=3){
+      // Demo B3 win vs Lü Bu — show CTA
+      if(_demoMode){
+        stopLoop();
+        setTimeout(()=>{
+          const ov=document.createElement('div');
+          ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;text-align:center;padding:24px;gap:14px;overflow-y:auto';
+          ov.innerHTML=`
+            <div style="color:#ff4444;font-size:1.8em;letter-spacing:4px;text-shadow:0 0 24px #ff4444">🏆 LEGENDARY! 🏆</div>
+            <div style="color:#e8c44d;font-size:.95em;letter-spacing:1px">${PG.name} defeats the God of War!</div>
+            <div style="color:#bbb;font-size:.82em;line-height:1.8;max-width:300px">14 legendary generals. Real-time duels.<br>Build your deck. Fight the Monkey God.<br>Conquer the Three Kingdoms.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🎴 Card Deck</span>
+              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">⚔ Real-time Duels</span>
+              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🏆 Story Mode</span>
+              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🐒 Monkey God Boss</span>
+            </div>
+            <a href="https://play.google.com/store/apps/details?id=com.siowweekoon.threekingdomsduel" target="_blank"
+               style="padding:16px 36px;background:linear-gradient(180deg,#e8c44d,#c8a030);color:#000;font-family:Georgia,serif;font-size:1.05em;font-weight:bold;border-radius:10px;text-decoration:none;letter-spacing:1px;box-shadow:0 0 30px rgba(232,196,77,.6)">
+              ▶ Download Free — Google Play
+            </a>
+            <div style="color:#555;font-size:.68em">Free to play · No account required</div>`;
+          document.body.appendChild(ov);
+        },1200);
+        return;
+      }
       // Win Battle 3 Insane: 1 Elite + 4 rewards (used card already in deck since B1 win)
       battleStreak=0;streakPool=[];
       addCardToDecK(2);
@@ -3394,29 +3419,28 @@ function endBattle(won){
       ensureMinCards();
       setTimeout(openReward,2200);
     } else if(battleStreak>=2){
-      // Demo mode — show CTA instead of normal B2 flow
+      // Demo B2 win — launch B3 vs Lü Bu
       if(_demoMode){
-        stopLoop();
+        addFx(`⚔ BATTLE 2/2 CLEARED! FINAL CHALLENGE AWAITS! ⚔`,'#e8c44d',120,16);
         setTimeout(()=>{
-          const ov=document.createElement('div');
-          ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;text-align:center;padding:24px;gap:14px;overflow-y:auto';
-          ov.innerHTML=`
-            <div style="color:#e8c44d;font-size:1.8em;letter-spacing:4px;text-shadow:0 0 24px #ffcc44">⚔ VICTORY! ⚔</div>
-            <div style="color:#ffcc44;font-size:.95em;letter-spacing:1px">${PG.name} conquers the battlefield!</div>
-            <div style="color:#bbb;font-size:.82em;line-height:1.8;max-width:300px">14 legendary generals await.<br>Build your deck. Conquer the Three Kingdoms.<br>Challenge the Monkey God.</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🎴 Card Deck</span>
-              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">⚔ Real-time Duels</span>
-              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🏆 Story Mode</span>
-              <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🐒 Monkey God Boss</span>
-            </div>
-            <a href="https://play.google.com/store/apps/details?id=com.siowweekoon.threekingdomsduel" target="_blank"
-               style="padding:16px 36px;background:linear-gradient(180deg,#e8c44d,#c8a030);color:#000;font-family:Georgia,serif;font-size:1.05em;font-weight:bold;border-radius:10px;text-decoration:none;letter-spacing:1px;box-shadow:0 0 30px rgba(232,196,77,.6);margin-top:6px">
-              ▶ Download Free — Google Play
-            </a>
-            <div style="color:#555;font-size:.68em">Free to play · No account required</div>`;
-          document.body.appendChild(ov);
-        },1000);
+          const lubuSrc=GENS.find(g=>g.id==='lubu');
+          EG=JSON.parse(JSON.stringify(lubuSrc));
+          if(lubuSrc?.special?.fn)EG.special.fn=lubuSrc.special.fn;
+          EG.war=Math.round(EG.war*1.2); EG.maxHp=Math.round(EG.maxHp*1.2);
+          EG.war+=25; EG.str+=20; EG.maxHp+=60; EG.spd+=10;
+          EG.spdFloor=Math.max(10,EG.spd-25);
+          EG.tier3=true;
+          EB=mkBattle(EG,false); EB.sp=100;
+          PB.hp=PB.maxHp;
+          PB.atkFrame=0;PB.atkCool=0;PB.hurtTimer=0;PB.stunTimer=0;PB.guarding=false;PB.usingSpecial=false;
+          PARTS=[];DNUM=[];FXTXT=[];ARROWS=[];
+          pHitDealt=false;eHitDealt=false;cancelGuard();
+          aiTimer=0;aiAction='approach';frameCount=0;
+          document.getElementById('e-name').textContent='Lü Bu — God of War';
+          battleRunning=false;
+          stopLoop();RAF=requestAnimationFrame(gameLoop);
+          showBattleStartOverlay('⚔ FINAL BATTLE',`${PG.name}  vs  Lü Bu`,'⚔ FINAL SHOWDOWN! ⚔','#ff4444');
+        },2200);
         return;
       }
       // Win Battle 2: give +1 random general card reward, offer optional B3
