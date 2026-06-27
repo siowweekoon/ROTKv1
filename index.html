@@ -3460,6 +3460,30 @@ function endBattle(won){
     const isB3Loss=battleStreak>=2;
     const isBattle2=battleStreak>=1;
     battleStreak=0;streakPool=[];
+    // Demo mode — all losses go to CTA
+    if(_demoMode){
+      stopLoop();
+      setTimeout(()=>{
+        const ov=document.createElement('div');
+        ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;text-align:center;padding:24px;gap:14px;overflow-y:auto';
+        ov.innerHTML=`
+          <div style="color:#cc4444;font-size:1.8em;letter-spacing:4px;text-shadow:0 0 24px #cc4444">⚔ DEFEATED ⚔</div>
+          <div style="color:#aaa;font-size:.85em;line-height:1.8;max-width:300px">"${pick(PG?.q?.los)||'A warrior learns from every fall.'}"<br><br>14 legendary generals await in the full game.<br>Build your deck and rise again.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+            <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🎴 Card Deck</span>
+            <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">⚔ Real-time Duels</span>
+            <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🏆 Story Mode</span>
+            <span style="background:rgba(232,196,77,.12);border:1px solid #e8c44d55;border-radius:6px;padding:5px 11px;color:#e8c44d;font-size:.73em">🐒 Monkey God Boss</span>
+          </div>
+          <a href="https://play.google.com/store/apps/details?id=com.siowweekoon.threekingdomsduel" target="_blank"
+             style="padding:16px 36px;background:linear-gradient(180deg,#e8c44d,#c8a030);color:#000;font-family:Georgia,serif;font-size:1.05em;font-weight:bold;border-radius:10px;text-decoration:none;letter-spacing:1px;box-shadow:0 0 30px rgba(232,196,77,.5)">
+            ▶ Download Free — Google Play
+          </a>
+          <div style="color:#555;font-size:.68em">Free to play · No account required</div>`;
+        document.body.appendChild(ov);
+      },1000);
+      return;
+    }
     if(isB3Loss){
       // B3 loss: no penalty, no card lost — collect 3 rewards as if B3 declined
       ensureMinCards();
