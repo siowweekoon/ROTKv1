@@ -3901,7 +3901,7 @@ function _showDemoCTA(won,quote){
     const ov=document.createElement('div');
     ov.style.cssText='position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch';
     ov.innerHTML=`
-    <div style="min-height:100%;background:radial-gradient(ellipse at 50% 30%,#1a0800 0%,#060200 60%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;box-sizing:border-box;font-family:Georgia,serif;text-align:center;gap:0">
+    <div style="min-height:100%;background:url('play_store/feature_graphic.png') center/cover no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;box-sizing:border-box;font-family:Georgia,serif;text-align:center;gap:0;position:relative"><div style="position:absolute;inset:0;background:rgba(0,0,0,.78)"></div><div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;width:100%">
       <div style="color:${won?'#e8c44d':'#993333'};font-size:5em;font-weight:bold;line-height:1;opacity:.12;margin-bottom:-18px;letter-spacing:-4px">${won?'勝':'敗'}</div>
       <div style="width:180px;height:1px;background:linear-gradient(to right,transparent,${won?'#e8c44d':'#993333'},transparent);margin:0 auto 16px"></div>
       <div style="color:${won?'#e8c44d':'#cc4444'};font-size:1.5em;letter-spacing:6px;text-transform:uppercase;text-shadow:0 0 30px ${won?'#ffcc44':'#cc2222'};margin-bottom:6px">${won?'VICTORY':'DEFEATED'}</div>
@@ -3918,8 +3918,8 @@ function _showDemoCTA(won,quote){
          style="display:block;padding:16px 40px;background:linear-gradient(180deg,#e8c44d 0%,#c8a030 50%,#a07820 100%);color:#0d0500;font-family:Georgia,serif;font-size:1em;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:2px;box-shadow:0 4px 24px rgba(200,160,40,.5),0 0 60px rgba(200,160,40,.15);text-transform:uppercase;margin-bottom:12px">
         ▶ &nbsp;Download Free&nbsp; ·&nbsp; Google Play
       </a>
-      <div style="color:#3a3a3a;font-size:.65em;letter-spacing:1px">Free to play &nbsp;·&nbsp; No account required</div>
-    </div>`;
+      <div style="color:#aaa;font-size:.65em;letter-spacing:1px">Free to play &nbsp;·&nbsp; No account required</div>
+    </div></div>`;
     document.body.appendChild(ov);
   },1000);
 }
