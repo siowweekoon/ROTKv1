@@ -3901,7 +3901,7 @@ function _showDemoCTA(won,quote){
     const ov=document.createElement('div');
     ov.style.cssText='position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch';
     ov.innerHTML=`
-    <div style="min-height:100%;background:url('play_store/feature_graphic.png') center/cover no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;box-sizing:border-box;font-family:Georgia,serif;text-align:center;gap:0;position:relative"><div style="position:absolute;inset:0;background:rgba(0,0,0,.78)"></div><div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;width:100%">
+    <div style="min-height:100%;background:url('https://siowweekoon.github.io/ROTKv1/play_store/feature_graphic.png') center/cover no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;box-sizing:border-box;font-family:Georgia,serif;text-align:center;gap:0;position:relative"><div style="position:absolute;inset:0;background:rgba(0,0,0,.78)"></div><div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;width:100%">
       <div style="color:${won?'#e8c44d':'#993333'};font-size:5em;font-weight:bold;line-height:1;opacity:.12;margin-bottom:-18px;letter-spacing:-4px">${won?'勝':'敗'}</div>
       <div style="width:180px;height:1px;background:linear-gradient(to right,transparent,${won?'#e8c44d':'#993333'},transparent);margin:0 auto 16px"></div>
       <div style="color:${won?'#e8c44d':'#cc4444'};font-size:1.5em;letter-spacing:6px;text-transform:uppercase;text-shadow:0 0 30px ${won?'#ffcc44':'#cc2222'};margin-bottom:6px">${won?'VICTORY':'DEFEATED'}</div>
