@@ -3894,7 +3894,7 @@ function exitRedCliff(){
 loadPR();if(PR.deck.length===0)initDeck();
 loadSprites();loadSheets();
 
-let _demoMode=new URLSearchParams(location.search).get('demo')==='1';
+let _demoMode=!window.AndroidBridge;
 function _showDemoCTA(won,quote){
   stopLoop();
   setTimeout(()=>{
