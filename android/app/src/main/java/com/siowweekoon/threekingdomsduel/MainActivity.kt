@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(webView)
 
         // Initialise AdMob only if needed
-        if (BuildConfig.ADS_ENABLED && !premiumUnlocked) {
+        if (BuildConfig.ADS_ENABLED) {
             MobileAds.initialize(this) {
                 loadRewardedInterstitial()
                 loadInterstitial()
@@ -144,8 +144,8 @@ class MainActivity : AppCompatActivity() {
             @JavascriptInterface
             fun requestBattleStart() {
                 runOnUiThread {
-                    // Skip ads: debug build or premium purchased
-                    if (!BuildConfig.ADS_ENABLED || premiumUnlocked) {
+                    // Skip ads: debug build only
+                    if (!BuildConfig.ADS_ENABLED) {
                         webView.evaluateJavascript("onAdComplete()", null)
                         return@runOnUiThread
                     }
