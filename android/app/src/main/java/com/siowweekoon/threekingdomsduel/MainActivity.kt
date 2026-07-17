@@ -9,8 +9,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
-import android.widget.Toast
-import java.util.Locale
 import android.webkit.JsResult
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -21,6 +19,7 @@ import android.webkit.WebViewClient
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.webkit.WebViewAssetLoader
+import com.android.billingclient.api.*
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -31,23 +30,34 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.rewarded.RewardItem
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
 
-    // ── AdMob ad units — replace both IDs with real ones before production build ──
+    // ── AdMob ad units ────────────────────────────────────────────────────────
     private val rewardedIntUnitId = "ca-app-pub-6373194906630225/8339095958"
     private val interstitialUnitId = "ca-app-pub-6373194906630225/8487228205"
 
     private var rewardedIntAd: RewardedInterstitialAd? = null
     private var interstitialAd: InterstitialAd? = null
 
+    // ── IAP — Premium Unlock $2.99 ────────────────────────────────────────────
+    private val PREMIUM_PRODUCT = "premium_unlock"
+    private lateinit var billingClient: BillingClient
+    private lateinit var prefs: android.content.SharedPreferences
+    private var premiumUnlocked = false
+
+    // ── Ad timing: show at most once every 10 minutes ─────────────────────────
+    private val AD_INTERVAL_MS = 10 * 60 * 1000L
+    private var lastAdShowTime = 0L
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Full-screen immersive — hides status bar and nav bar
+        // Full-screen immersive
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         window.decorView.systemUiVisibility = (
             View.SYSTEM_UI_FLAG_FULLSCREEN or
@@ -58,16 +68,24 @@ class MainActivity : AppCompatActivity() {
             View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         )
 
+        // Load persisted state
+        prefs = getSharedPreferences("tkd_prefs", Context.MODE_PRIVATE)
+        premiumUnlocked = prefs.getBoolean("premium_unlocked", false)
+        lastAdShowTime = prefs.getLong("last_ad_time", 0L)
+
         webView = WebView(this)
         setContentView(webView)
 
-        // Initialise AdMob — load ads only after initialisation completes
-        MobileAds.initialize(this) {
-            loadRewardedInterstitial()
-            loadInterstitial()
+        // Initialise AdMob only if needed
+        if (BuildConfig.ADS_ENABLED && !premiumUnlocked) {
+            MobileAds.initialize(this) {
+                loadRewardedInterstitial()
+                loadInterstitial()
+            }
         }
 
-        // Serve local assets from a safe HTTPS-like origin so canvas/storage work
+        setupBilling()
+
         val assetLoader = WebViewAssetLoader.Builder()
             .setDomain("appassets.androidplatform.net")
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
@@ -91,25 +109,25 @@ class MainActivity : AppCompatActivity() {
         }
 
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldInterceptRequest(
-                view: WebView,
-                request: WebResourceRequest
-            ): WebResourceResponse? {
+            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
                 return assetLoader.shouldInterceptRequest(request.url)
             }
-
-            // Re-apply immersive mode if the system pulls it back
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 applyImmersive()
+                if (premiumUnlocked || !BuildConfig.ADS_ENABLED) {
+                    runOnUiThread {
+                        webView.evaluateJavascript("if(typeof onPremiumUnlocked==='function')onPremiumUnlocked()", null)
+                    }
+                }
             }
         }
 
         webView.settings.apply {
             javaScriptEnabled = true
-            domStorageEnabled = true              // localStorage for PR save data
+            domStorageEnabled = true
             allowFileAccess = true
-            mediaPlaybackRequiresUserGesture = false   // Web Audio plays immediately
+            mediaPlaybackRequiresUserGesture = false
             cacheMode = WebSettings.LOAD_DEFAULT
             setSupportZoom(false)
             displayZoomControls = false
@@ -126,28 +144,32 @@ class MainActivity : AppCompatActivity() {
             @JavascriptInterface
             fun requestBattleStart() {
                 runOnUiThread {
-                    // Internet gate — ads require connectivity
+                    // Skip ads: debug build or premium purchased
+                    if (!BuildConfig.ADS_ENABLED || premiumUnlocked) {
+                        webView.evaluateJavascript("onAdComplete()", null)
+                        return@runOnUiThread
+                    }
+                    // Internet gate
                     if (!isOnline()) {
                         AlertDialog.Builder(this@MainActivity)
                             .setTitle("No Internet Connection")
-                            .setMessage("An internet connection is required to play. Please connect and try again.")
+                            .setMessage("An internet connection is required for ads. Please connect and try again.")
                             .setPositiveButton("OK", null)
                             .show()
                         webView.evaluateJavascript("onAdCancelled()", null)
                         return@runOnUiThread
                     }
-                    // Ad 1: Rewarded Interstitial (long, non-skippable)
+                    // Ad 1: Rewarded Interstitial
                     val rAd = rewardedIntAd
                     if (rAd != null) {
                         rAd.fullScreenContentCallback = object : FullScreenContentCallback() {
                             override fun onAdDismissedFullScreenContent() {
-                                rewardedIntAd = null
-                                loadRewardedInterstitial()
+                                recordAdShown()
+                                rewardedIntAd = null; loadRewardedInterstitial()
                                 showInterstitialThenBattle()
                             }
                             override fun onAdFailedToShowFullScreenContent(e: AdError) {
-                                rewardedIntAd = null
-                                loadRewardedInterstitial()
+                                rewardedIntAd = null; loadRewardedInterstitial()
                                 showInterstitialThenBattle()
                             }
                         }
@@ -158,24 +180,112 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+            @JavascriptInterface
+            fun isPremiumUnlocked(): Boolean = premiumUnlocked
+
+            @JavascriptInterface
+            fun purchasePremium() {
+                runOnUiThread { launchPremiumPurchase() }
+            }
+
+            @JavascriptInterface
+            fun restorePurchases() {
+                runOnUiThread { queryExistingPurchases() }
+            }
+
         }, "AndroidBridge")
 
         webView.loadUrl("https://appassets.androidplatform.net/assets/index.html")
     }
 
-    // ── Ad 2: standard interstitial, then signal JS to start battle ───────────
+    private fun recordAdShown() {
+        lastAdShowTime = System.currentTimeMillis()
+        prefs.edit().putLong("last_ad_time", lastAdShowTime).apply()
+    }
+
+    // ── Billing setup ─────────────────────────────────────────────────────────
+    private fun setupBilling() {
+        billingClient = BillingClient.newBuilder(this)
+            .setListener { billingResult, purchases ->
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+                    purchases.forEach { handlePurchase(it) }
+                }
+            }
+            .enablePendingPurchases()
+            .build()
+
+        billingClient.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(result: BillingResult) {
+                if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                    queryExistingPurchases()
+                }
+            }
+            override fun onBillingServiceDisconnected() {}
+        })
+    }
+
+    private fun queryExistingPurchases() {
+        billingClient.queryPurchasesAsync(
+            QueryPurchasesParams.newBuilder()
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build()
+        ) { _, purchases -> purchases.forEach { handlePurchase(it) } }
+    }
+
+    private fun handlePurchase(purchase: Purchase) {
+        if (purchase.products.contains(PREMIUM_PRODUCT) &&
+            purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+            premiumUnlocked = true
+            prefs.edit().putBoolean("premium_unlocked", true).apply()
+            if (!purchase.isAcknowledged) {
+                billingClient.acknowledgePurchase(
+                    AcknowledgePurchaseParams.newBuilder()
+                        .setPurchaseToken(purchase.purchaseToken).build()
+                ) {}
+            }
+            runOnUiThread {
+                webView.evaluateJavascript("if(typeof onPremiumUnlocked==='function')onPremiumUnlocked()", null)
+            }
+        }
+    }
+
+    private fun launchPremiumPurchase() {
+        val productList = listOf(
+            QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(PREMIUM_PRODUCT)
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build()
+        )
+        billingClient.queryProductDetailsAsync(
+            QueryProductDetailsParams.newBuilder().setProductList(productList).build()
+        ) { result, details ->
+            if (result.responseCode == BillingClient.BillingResponseCode.OK && details.isNotEmpty()) {
+                runOnUiThread {
+                    billingClient.launchBillingFlow(
+                        this,
+                        BillingFlowParams.newBuilder()
+                            .setProductDetailsParamsList(listOf(
+                                BillingFlowParams.ProductDetailsParams.newBuilder()
+                                    .setProductDetails(details[0]).build()
+                            )).build()
+                    )
+                }
+            }
+        }
+    }
+
+    // ── Ad 2: interstitial then battle ────────────────────────────────────────
     private fun showInterstitialThenBattle() {
         val ad = interstitialAd
         if (ad != null) {
             ad.fullScreenContentCallback = object : FullScreenContentCallback() {
                 override fun onAdDismissedFullScreenContent() {
-                    interstitialAd = null
-                    loadInterstitial()
+                    recordAdShown()
+                    interstitialAd = null; loadInterstitial()
                     webView.evaluateJavascript("onAdComplete()", null)
                 }
                 override fun onAdFailedToShowFullScreenContent(e: AdError) {
-                    interstitialAd = null
-                    loadInterstitial()
+                    interstitialAd = null; loadInterstitial()
                     webView.evaluateJavascript("onAdComplete()", null)
                 }
             }
@@ -185,7 +295,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ── Ad loaders ────────────────────────────────────────────────────────────
     private fun loadRewardedInterstitial() {
         RewardedInterstitialAd.load(this, rewardedIntUnitId, AdRequest.Builder().build(),
             object : RewardedInterstitialAdLoadCallback() {
@@ -202,7 +311,7 @@ class MainActivity : AppCompatActivity() {
             })
     }
 
-    // ── Connectivity check ────────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────────
     private fun isOnline(): Boolean {
         val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         val cap = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false

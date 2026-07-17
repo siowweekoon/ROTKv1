@@ -11,13 +11,18 @@ android {
         applicationId = "com.siowweekoon.threekingdomsduel"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "2.3.45"
+        versionCode = 11
+        versionName = "2.3.51"
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
+            buildConfigField("boolean", "ADS_ENABLED", "false")
         }
         release {
             isMinifyEnabled = false
@@ -25,6 +30,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("boolean", "ADS_ENABLED", "true")
         }
     }
 

@@ -214,7 +214,7 @@ const SPRITES = {
     <div style="display:inline-block;background:rgba(0,0,0,.65);padding:8px 26px;border-radius:3px">
       <span style="font-size:clamp(.85em,4vw,2.2em);color:var(--gold);letter-spacing:clamp(1px,.6vw,3px);text-transform:uppercase;font-family:Georgia,serif;text-shadow:0 0 24px #ffcc4488,0 0 48px #ffaa0044">Three Kingdoms Duel</span>
     </div>
-    <div id="ver-pill" onclick="secretTap()" style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px;cursor:default;-webkit-tap-highlight-color:transparent;pointer-events:auto">v2.3.50</div>
+    <div id="ver-pill" onclick="secretTap()" style="font-size:.6em;color:var(--gold2);letter-spacing:2px;margin-top:6px;display:inline-block;background:rgba(0,0,0,.72);padding:3px 10px;border-radius:3px;cursor:default;-webkit-tap-highlight-color:transparent;pointer-events:auto">v2.3.51</div>
   </div>
 
   <!-- Bottom 3-button row -->
@@ -223,8 +223,7 @@ const SPRITES = {
     <div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px">
       <button onclick="newGame()" style="background:transparent;border:1px solid #884444;color:rgba(204,80,80,.6);font-family:Georgia,serif;font-size:.68em;padding:4px 10px;cursor:pointer;border-radius:4px">🔄 New Game</button>
       <button onclick="showTutorial()" style="background:rgba(0,0,0,.55);border:1px solid #4488cc;color:#88aaff;font-family:Georgia,serif;font-size:.75em;padding:6px 12px;cursor:pointer;border-radius:4px;-webkit-tap-highlight-color:transparent">❓ How to Play</button>
-      <button id="btn-premium" onclick="tapPremium()" style="background:rgba(0,0,0,.55);border:1px solid #ffcc44;color:#ffcc44;font-family:Georgia,serif;font-size:.7em;padding:5px 10px;cursor:pointer;border-radius:4px;-webkit-tap-highlight-color:transparent">🔓 Unlock Premium $2.99</button>
-      <button onclick="showInventory()" class="title-nav-btn" style="width:100%">📦<br><span>Inventory</span></button>
+      <button onclick="openWithAds(3,showInventory)" class="title-nav-btn" style="width:100%">📦<br><span>Inventory</span></button>
     </div>
 
     <!-- Market centre -->
@@ -261,7 +260,7 @@ const SPRITES = {
 <!-- GENERAL PREVIEW MODAL -->
 <div id="gmodal" class="gmodal-bg" onclick="closeGModal()">
   <div class="gmodal-box" onclick="event.stopPropagation()" style="position:relative">
-    <button onclick="showArmoury()" style="position:absolute;top:8px;right:8px;z-index:10;background:#1a1200;border:1px solid var(--gold2);color:var(--gold);font-size:.72em;padding:5px 10px;border-radius:4px;cursor:pointer;letter-spacing:.5px">🏛 Armoury</button>
+    <button onclick="openWithAds(3,showArmoury)" style="position:absolute;top:8px;right:8px;z-index:10;background:#1a1200;border:1px solid var(--gold2);color:var(--gold);font-size:.72em;padding:5px 10px;border-radius:4px;cursor:pointer;letter-spacing:.5px">🏛 Armoury</button>
     <img id="gmodal-img" src="" alt="" class="gmodal-img" style="cursor:zoom-in" onclick="showLightbox(this.src)" title="Click to zoom">
     <div class="gmodal-info">
       <div id="gmodal-name" class="gmodal-name"></div>
@@ -708,9 +707,9 @@ const RWDS={
   ],
 };
 
-let PR={deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:0,wins:0,genEquipped:{},b3Played:false,medals:{},sellHistory:[],b3GenWins:{},monkeygodUnlocked:false,premiumUnlocked:false};
+let PR={deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:0,wins:0,genEquipped:{},b3Played:false,medals:{},sellHistory:[],b3GenWins:{},monkeygodUnlocked:false};
 let usedCardId=null;
-function freshPR(){return{deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:1000,wins:0,genEquipped:{},b3Played:false,medals:{},sellHistory:[],b3GenWins:{},monkeygodUnlocked:false,premiumUnlocked:false};}
+function freshPR(){return{deck:[],equipped:{wife:null,scripture:null,horse:null,weapon:null},wives:[],scriptures:[],horses:[],weapons:[],gold:1000,wins:0,genEquipped:{},b3Played:false,medals:{},sellHistory:[],b3GenWins:{},monkeygodUnlocked:false};}
 const GOLD={
   earn:{midWin:20,fullWin:50,lose:10},
   buy:{cardT1:50,cardT2:150,wife:80,scripture:100,horse:120,weapon:130},
@@ -753,10 +752,7 @@ function loadPR(){
       if(!PR.sellHistory)PR.sellHistory=[];
       if(!PR.b3GenWins)PR.b3GenWins={};
       if(PR.monkeygodUnlocked===undefined)PR.monkeygodUnlocked=false;
-      if(PR.premiumUnlocked===undefined)PR.premiumUnlocked=false;
       if(PR.monkeygodUnlocked&&!PR.medals.sageunlocked)PR.medals.sageunlocked=true;
-      if(PR.premiumUnlocked)setTimeout(onPremiumUnlocked,200);
-      if(window.AndroidBridge?.isPremiumUnlocked?.())onPremiumUnlocked();
       // Strip old wife/scripture/horse from genEquipped (now global)
       Object.keys(PR.genEquipped).forEach(k=>{
         const ge=PR.genEquipped[k];
@@ -2020,47 +2016,26 @@ function closeAllModals(){
   const b3=document.getElementById('b3choice-ov');if(b3)b3.remove();
   const mp=document.getElementById('medal-popup-ov');if(mp)mp.remove();
 }
+let _pendingBattle=null;
+function _adThenDo(fn){
+  _pendingBattle=fn;
+  if(window.AndroidBridge?.requestBattleStart){AndroidBridge.requestBattleStart();}
+  else{fn();}
+}
+function openWithAds(n,fn){
+  if(!window.AndroidBridge){fn();return;}
+  let count=0;
+  function next(){if(++count>=n)fn();else _adThenDo(next);}
+  _adThenDo(next);
+}
 function onAdComplete(){
-  showBattleStartOverlay('⚔ BATTLE 1/2',`${PG.name}  vs  ${EG.name}`,'⚔ FIGHT! ⚔','#e8c44d');
+  const fn=_pendingBattle;_pendingBattle=null;
+  if(fn)fn();
 }
 function onAdCancelled(){
   showScreen('s-select');
 }
-function onPremiumUnlocked(){
-  PR.premiumUnlocked=true;savePR();
-  const btn=document.getElementById('btn-premium');
-  if(btn){btn.textContent='✓ Premium Unlocked';btn.style.color='#66cc88';btn.style.borderColor='#66cc88';btn.style.cursor='default';btn.onclick=null;}
-}
-function tapPremium(){
-  if(PR.premiumUnlocked)return;
-  const ov=document.createElement('div');
-  ov.id='premium-info-ov';
-  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:block;font-family:Georgia,serif;padding:12px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch';
-  ov.innerHTML=`
-    <div style="background:linear-gradient(180deg,#1a1000,#0d0800);border:2px solid #ffcc44;border-radius:12px;padding:18px 18px;max-width:360px;width:100%;text-align:center;margin:12px auto">
-      <div style="color:#ffcc44;font-size:1.1em;letter-spacing:3px;margin-bottom:4px">🔓 PREMIUM UNLOCK</div>
-      <div style="color:#e8c44d;font-size:1.6em;font-weight:bold;margin-bottom:16px">$2.99 <span style="font-size:.55em;color:#886633">one-time</span></div>
-      <div style="text-align:left;display:flex;flex-direction:column;gap:9px;margin-bottom:20px">
-        <div style="color:#ddd;font-size:.82em">🚫 <b style="color:#ffcc44">No more ads</b> — play without interruption</div>
-        <div style="color:#ddd;font-size:.82em">⚔ <b style="color:#ffcc44">B3 Insane Challenge</b> — fight the Monkey God</div>
-        <div style="color:#ddd;font-size:.82em">📖 <b style="color:#ffcc44">Story Missions</b> — Battle of Changban &amp; Red Cliffs</div>
-        <div style="color:#ddd;font-size:.82em">🗡 <b style="color:#ffcc44">Signature Equipment</b> — unique weapon &amp; armor per general</div>
-        <div style="color:#ddd;font-size:.82em">👰 <b style="color:#ffcc44">8 Premium Wives</b> — rare stat bonuses</div>
-        <div style="color:#ddd;font-size:.82em">📜 <b style="color:#ffcc44">12 Rare Scriptures</b> — ghost drain, high WAR manuals &amp; more</div>
-        <div style="color:#ddd;font-size:.82em">🐎 <b style="color:#ffcc44">Elite Horses</b> — Shadow Runner &amp; Storm Stallion</div>
-      </div>
-      <div style="color:#666;font-size:.68em;margin-bottom:16px">No subscription · No expiry · Restores on reinstall</div>
-      <div style="display:flex;gap:10px;justify-content:center">
-        <button onclick="document.getElementById('premium-info-ov').remove();doPremiumPurchase()" style="padding:12px 28px;background:linear-gradient(180deg,#3a2800,#1a1200);border:2px solid #ffcc44;color:#ffcc44;font-family:Georgia,serif;font-size:.95em;cursor:pointer;border-radius:8px;font-weight:bold">Unlock $2.99</button>
-        <button onclick="document.getElementById('premium-info-ov').remove()" style="padding:12px 18px;background:transparent;border:1px solid #444;color:#888;font-family:Georgia,serif;font-size:.85em;cursor:pointer;border-radius:8px">Cancel</button>
-      </div>
-    </div>`;
-  document.body.appendChild(ov);
-}
-function doPremiumPurchase(){
-  if(window.AndroidBridge&&window.AndroidBridge.purchasePremium){AndroidBridge.purchasePremium();return;}
-  alert('Premium Unlock is only available in the Android app.');
-}
+function claimWithAd(i){_adThenDo(()=>claimSpecific(i));}
 
 // ── Secret tap on version pill (5×) → promo code box ────────────────────────
 let _secretTaps=0,_secretTimer=null;
@@ -2099,9 +2074,7 @@ function applyRestoreCode(){
   try{
     const imported=JSON.parse(atob(raw));
     if(!imported.deck||!Array.isArray(imported.deck))throw new Error('invalid');
-    const keepPremium=PR.premiumUnlocked;
     PR=imported;
-    PR.premiumUnlocked=keepPremium||imported.premiumUnlocked;
     // Rebuild name/desc/img/icon for inventory items from RWDS
     refreshRWDSDescs();
     // Rebuild genEquipped weapon/armor details from RWDS
@@ -2112,7 +2085,6 @@ function applyRestoreCode(){
       if(ge.armor?.id) ge.armor =rwdById[ge.armor.id] ||ge.armor;
     });
     savePR();
-    if(PR.premiumUnlocked)onPremiumUnlocked();
     msg.style.color='#88cc88';
     msg.textContent='✓ Save restored successfully!';
     setTimeout(()=>{document.getElementById('promo-ov')?.remove();showTitle();},1500);
@@ -2422,18 +2394,6 @@ const ARMOURY_REF={
 };
 function showArmoury(){
   if(!selGen||selGen.id==='monkeygod')return;
-  if(!PR.premiumUnlocked){
-    closeGModal();
-    const ov=document.createElement('div');
-    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;text-align:center;padding:24px';
-    ov.innerHTML=`<div style="font-size:2.5em;margin-bottom:12px">🔒</div>
-      <div style="color:#ffcc44;font-size:1em;letter-spacing:2px;margin-bottom:10px">SIGNATURE ARMOURY</div>
-      <div style="color:#aaa;font-size:.82em;line-height:1.6;max-width:320px;margin-bottom:22px">Signature weapons &amp; armor are exclusive to Premium.<br>Unlock to equip and apply them in battle.</div>
-      <button onclick="this.parentElement.remove();tapPremium()" style="padding:10px 24px;background:#1a1400;border:2px solid #ffcc44;color:#ffcc44;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:6px;margin-bottom:10px">🔓 Unlock Premium $2.99</button>
-      <button onclick="this.parentElement.remove()" style="padding:8px 18px;background:transparent;border:1px solid #555;color:#888;font-family:Georgia,serif;font-size:.8em;cursor:pointer;border-radius:4px">← Back</button>`;
-    document.body.appendChild(ov);
-    return;
-  }
   const g=selGen,ge=PR.genEquipped[g.id]||{};
   document.getElementById('armoury-gen-name').textContent=g.name;
   document.getElementById('armoury-gen-title').textContent=g.title;
@@ -2684,8 +2644,7 @@ function buyReward(type){
   const price=GOLD.buy[type];
   if(PR.gold<price)return;
   PR.gold-=price;
-  const prem=PR.premiumUnlocked;
-  const pool=(type==='wife'?RWDS.wives:type==='scripture'?RWDS.scriptures:type==='weapon'?RWDS.weapons:RWDS.horses).filter(r=>prem||!r.premium);
+  const pool=(type==='wife'?RWDS.wives:type==='scripture'?RWDS.scriptures:type==='weapon'?RWDS.weapons:RWDS.horses);
   const r=pick(pool);
   if(type==='wife')PR.wives.push(r);
   else if(type==='scripture')PR.scriptures.push(r);
@@ -2784,8 +2743,8 @@ function startBattle(){
   // Apply equipped rewards — weapon/armor per-general, wife/scripture/horse global
   const wifeSpd={diaochan:5,xiaoqiao:10,daqiao:15,wangzhaojun:10,xishi:10,zhenji:8,huangyueying:0,caiwenji:0,ladysun:0,ladybian:0};
   const ge=PR.genEquipped[PG.id]||{};
-  const wp=PR.premiumUnlocked?(ge.weapon||null):null;
-  const ar=PR.premiumUnlocked?(ge.armor||null):null;
+  const wp=ge.weapon||null;
+  const ar=ge.armor||null;
   const w=PR.equipped.wife,sc=PR.equipped.scripture,h=PR.equipped.horse;
   if(w){
     PG.spd=Math.min(200,PG.spd+(wifeSpd[w.id]??0));
@@ -2879,11 +2838,7 @@ function startBattle(){
   CV=document.getElementById('bc');CX=CV.getContext('2d');
   CV.width=CW;CV.height=CH;
   stopLoop();RAF=requestAnimationFrame(gameLoop);
-  if(window.AndroidBridge&&window.AndroidBridge.requestBattleStart){
-    AndroidBridge.requestBattleStart();
-  }else{
-    showBattleStartOverlay('⚔ BATTLE 1/2',`${PG.name}  vs  ${EG.name}`,'⚔ FIGHT! ⚔','#e8c44d');
-  }
+  _adThenDo(()=>showBattleStartOverlay('⚔ BATTLE 1/2',`${PG.name}  vs  ${EG.name}`,'⚔ FIGHT! ⚔','#e8c44d'));
 }
 
 function addCardToDecK(tier){
@@ -2907,17 +2862,6 @@ function addB2RewardCard(){
   const name=GENS.find(g=>g.id===id)?.name||id;
   addFx(`🎴 +${name} card awarded!`,'#e8c44d',120,16);
   savePR();
-}// Cushion: ensure every unlocked general (incl. MKG) has at least 1 card in deck
-function ensureMinCards(){
-  const playable=GENS.filter(g=>!g.storyOnly&&g.f!=='SHEN').map(g=>g.id);
-  if(PR.monkeygodUnlocked)playable.push('monkeygod');
-  const counts={};
-  PR.deck.forEach(c=>counts[c.id]=(counts[c.id]||0)+1);
-  let added=[];
-  playable.forEach(id=>{
-    if(!counts[id]){PR.deck.push({id});initGenEquip(id);added.push(GENS.find(g=>g.id===id)?.name||id);}
-  });
-  if(added.length){savePR();setTimeout(()=>addFx(`🎴 Restored: ${added.join(', ')}`,'#aaaaff'),600);}
 }
 
 let _bsoFxMsg='⚔ FIGHT! ⚔';let _bsoFxCol='#e8c44d';
@@ -3105,9 +3049,7 @@ function showStoryIntro(){
         </div>
         <div style="display:flex;gap:10px;justify-content:center">
           <button onclick="document.getElementById('story-intro-ov').remove()" style="padding:8px 16px;background:#1a1000;border:1px solid #664400;color:#887755;font-family:Georgia,serif;font-size:.82em;cursor:pointer;border-radius:4px">← Back</button>
-          ${PR.premiumUnlocked
-            ?`<button onclick="tryStartStory()" style="padding:8px 22px;background:#2a1800;border:2px solid #e8c44d;color:#e8c44d;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:4px;font-weight:bold">⚔ Begin Mission</button>`
-            :`<button onclick="tapPremium()" style="padding:8px 18px;background:#1a1400;border:2px solid #ffcc44;color:#ffcc44;font-family:Georgia,serif;font-size:.85em;cursor:pointer;border-radius:4px">🔒 Unlock Premium $2.99</button>`}
+          <button onclick="tryStartStory()" style="padding:8px 22px;background:#2a1800;border:2px solid #e8c44d;color:#e8c44d;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:4px;font-weight:bold">⚔ Begin Mission</button>
         </div>
       </div>
 
@@ -3132,9 +3074,7 @@ function showStoryIntro(){
         </div>
         <div style="display:flex;gap:10px;justify-content:center">
           <button onclick="document.getElementById('story-intro-ov').remove()" style="padding:8px 16px;background:#0a0d1c;border:1px solid #441a14;color:#887766;font-family:Georgia,serif;font-size:.82em;cursor:pointer;border-radius:4px">← Back</button>
-          ${PR.premiumUnlocked
-            ?`<button onclick="startRedCliff()" style="padding:8px 22px;background:#2a0a08;border:2px solid #e84422;color:#e84422;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:4px;font-weight:bold">🔥 Begin Mission</button>`
-            :`<button onclick="tapPremium()" style="padding:8px 18px;background:#1a1400;border:2px solid #ffcc44;color:#ffcc44;font-family:Georgia,serif;font-size:.85em;cursor:pointer;border-radius:4px">🔒 Unlock Premium $2.99</button>`}
+          <button onclick="_adThenDo(startRedCliff)" style="padding:8px 22px;background:#2a0a08;border:2px solid #e84422;color:#e84422;font-family:Georgia,serif;font-size:.9em;cursor:pointer;border-radius:4px;font-weight:bold">🔥 Begin Mission</button>
         </div>
       </div>
 
@@ -3194,11 +3134,11 @@ function storyStartWave(){
   document.querySelector('.tc-move-wrap').style.display='flex';
   document.querySelector('.tc-actions-wrap').style.display='flex';
   if(SM.waveIdx===0){
-    // First wave of each phase: tap START when ready (phone rotation time)
+    // First wave of each phase: show ad then tap START when ready (phone rotation time)
     storyAwaitStart=true;
-    showBattleStartOverlay(`⚔ STORY — PHASE ${SM.phase}`,
+    _adThenDo(()=>showBattleStartOverlay(`⚔ STORY — PHASE ${SM.phase}`,
       `${PG.name}  vs  the Wei Army (${waves.length} waves)`,
-      `⚔ Wave 1/${waves.length} — ${wLen} soldiers!`,'#cc8833');
+      `⚔ Wave 1/${waves.length} — ${wLen} soldiers!`,'#cc8833'));
   }else{
     // Mid-phase waves flow automatically
     addFx(`⚔ Wave ${SM.waveIdx+1}/${waves.length} — ${wLen} soldiers!`,'#cc8833');
@@ -3324,7 +3264,7 @@ function storyBossEntry(bossId){
   document.querySelector('.tc-move-wrap').style.display='flex';
   document.querySelector('.tc-actions-wrap').style.display='flex';
   stopLoop();RAF=requestAnimationFrame(gameLoop);
-  showBattleStartOverlay(`⚔ STORY BOSS`,`${PG.name}  vs  ${bossName}`,`⚔ BOSS — ${bossName} appears!`,'#e8c44d');
+  _adThenDo(()=>showBattleStartOverlay(`⚔ STORY BOSS`,`${PG.name}  vs  ${bossName}`,`⚔ BOSS — ${bossName} appears!`,'#e8c44d'));
 }
 
 function storyBattleWon(){
@@ -3393,7 +3333,6 @@ function endBattle(won){
       savePR();
       awardMedal('monkeygod');
       addFx(`🏆 MONKEY GOD DEFEATED — LEGENDARY VICTORY! 🏆`,'#ff4444',120,17);
-      ensureMinCards();
       setTimeout(openReward,2200);
     } else if(battleStreak>=2){
       // Demo B2 win — launch B3 vs Lü Bu
@@ -3424,7 +3363,6 @@ function endBattle(won){
       addB2RewardCard();
       PR.gold+=GOLD.earn.midWin;savePR();
       addFx(`⚔ BATTLE 2/2 CLEARED! ⚔`,'#e8c44d',120,17);
-      ensureMinCards();
       setTimeout(showB3Choice,2000);
     } else {
       // Win Battle 1: return card only, fight on to B2
@@ -3441,11 +3379,9 @@ function endBattle(won){
     if(_demoMode){_showDemoCTA(false,pick(PG?.q?.los));return;}
     if(isB3Loss){
       // B3 loss: no penalty, no card lost — collect 3 rewards as if B3 declined
-      ensureMinCards();
       setTimeout(openReward,800);
     } else {
       const penaltyPool=applyLossPenalty(isBattle2);
-      ensureMinCards();
       setTimeout(()=>{
         document.getElementById('go-msg').textContent=`"${pick(PG.q.los)}"`;
         document.getElementById('go-lost-reward').textContent=
@@ -3507,7 +3443,7 @@ function startNextEnemy(){
   document.querySelector('.tc-actions-wrap').style.display='flex';
   battleRunning=false;
   stopLoop();RAF=requestAnimationFrame(gameLoop);
-  showBattleStartOverlay('⚔ BATTLE 2/2',`${PG.name}  vs  ${EG.name}`,`⚔ BATTLE 2/2 — ${EG.name}! ⚔`,'#e8c44d');
+  _adThenDo(()=>showBattleStartOverlay('⚔ BATTLE 2/2',`${PG.name}  vs  ${EG.name}`,`⚔ BATTLE 2/2 — ${EG.name}! ⚔`,'#e8c44d'));
 }
 
 function startB3(){
@@ -3537,7 +3473,7 @@ function startB3(){
   document.querySelector('.tc-actions-wrap').style.display='flex';
   battleRunning=false;
   stopLoop();RAF=requestAnimationFrame(gameLoop);
-  showBattleStartOverlay('🔥 BATTLE 3/3 — INSANE',`${PG.name}  vs  🐒 Monkey God`,'🔥 BATTLE 3/3 — MONKEY GOD! 🔥','#ff2222');
+  _adThenDo(()=>showBattleStartOverlay('🔥 BATTLE 3/3 — INSANE',`${PG.name}  vs  🐒 Monkey God`,'🔥 BATTLE 3/3 — MONKEY GOD! 🔥','#ff2222'));
 }
 
 function showB3Choice(){
@@ -3557,10 +3493,7 @@ function showB3Choice(){
       <button onclick="closeB3Choice(false)" style="background:#336633;color:#fff;font-size:.9em;padding:11px 22px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">
         ✅ Collect 3 Rewards
       </button>
-      ${PR.premiumUnlocked
-        ?`<button onclick="closeB3Choice(true)" style="background:#8b1a1a;color:#fff;font-size:.9em;padding:11px 22px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">🔥 Fight Monkey God!</button>`
-        :`<button onclick="tapPremium()" style="background:#1a1400;border:2px solid #ffcc44;color:#ffcc44;font-size:.85em;padding:10px 18px;border-radius:8px;cursor:pointer;font-family:Georgia;line-height:1.4;text-align:center">🔒 INSANE MODE<br><span style="font-size:.78em;color:#aaa">Unlock Premium $2.99</span></button>`
-      }
+      <button onclick="closeB3Choice(true)" style="background:#8b1a1a;color:#fff;font-size:.9em;padding:11px 22px;border:none;border-radius:8px;cursor:pointer;font-family:Georgia">🔥 Fight Monkey God!</button>
     </div>
    </div>`;
   document.getElementById('s-battle').appendChild(ov);
@@ -3576,17 +3509,16 @@ function closeB3Choice(doB3){
 function openReward(){
   const ge=PR.genEquipped[usedCardId]||{};
   const sig=GENS.find(g=>g.id===usedCardId)?.sig||{};
-  const sigWeapon=(PR.premiumUnlocked&&!ge.weapon&&sig.weapon)?RWDS.weapons.find(w=>w.id===sig.weapon):null;
-  const sigArmor= (PR.premiumUnlocked&&!ge.armor &&sig.armor) ?RWDS.armors.find(a=>a.id===sig.armor) :null;
-  const prem=PR.premiumUnlocked;
-  const availWives=RWDS.wives.filter(w=>!PR.wives.some(pw=>pw.id===w.id)&&(prem||!w.premium));
-  const scriptPool=RWDS.scriptures.filter(s=>prem||!s.premium);
-  const horsePool=RWDS.horses.filter(h=>prem||!h.premium);
+  const sigWeapon=(!ge.weapon&&sig.weapon)?RWDS.weapons.find(w=>w.id===sig.weapon):null;
+  const sigArmor= (!ge.armor &&sig.armor) ?RWDS.armors.find(a=>a.id===sig.armor) :null;
+  const availWives=RWDS.wives.filter(w=>!PR.wives.some(pw=>pw.id===w.id));
+  const scriptPool=RWDS.scriptures;
+  const horsePool=RWDS.horses;
   const s1=sigWeapon||((availWives.length&&Math.random()<.5)?pick(availWives):pick(scriptPool));
   const s2=sigArmor||pick(scriptPool);
   const s3=pick(horsePool.length?horsePool:RWDS.horses);
   const isB3=b3Victory;b3Victory=false;
-  const rewardOnly=RWDS.scriptures.filter(r=>r.rewardOnly&&(prem||!r.premium));
+  const rewardOnly=RWDS.scriptures.filter(r=>r.rewardOnly);
   const s4=isB3?(availWives.length?pick(availWives):pick(rewardOnly.length?rewardOnly:scriptPool)):null;
   rwdPool=isB3?[s1,s2,s3,s4]:[s1,s2,s3];
   rwdIdx=null;
@@ -3595,7 +3527,7 @@ function openReward(){
       ${r.img?`<div class="ri-img" onclick="showLightbox('${r.img}')" style="cursor:zoom-in"><img src="${r.img}" alt="${r.name}"></div>`:`<div class="ri">${r.icon}</div>`}
       <div class="rt">${r.type}</div>
       <div class="rn">${r.name}</div><div class="re">${r.desc}</div>
-      <button onclick="claimSpecific(${i})" class="btn" style="margin:8px auto 10px;display:block;font-size:.85em;padding:7px 20px;background:var(--gold2);color:#000;border:none">✓ Claim</button>
+      <button onclick="claimWithAd(${i})" class="btn" style="margin:8px auto 10px;display:block;font-size:.85em;padding:7px 20px;background:var(--gold2);color:#000;border:none">📺 Watch Ad & Claim</button>
     </div>`).join('');
   stopLoop();showScreen('s-reward');
 }
@@ -3928,9 +3860,7 @@ if(_demoMode){
     // Dismiss splash by removing it
     const sp=document.getElementById('splash-screen');
     if(sp){sp.style.opacity='0';setTimeout(()=>sp?.remove(),400);}
-    // Ensure Guan Yu in deck and premium on
     if(!PR.deck.some(c=>c.id==='guanyu')){PR.deck.push({id:'guanyu'},{id:'guanyu'});}
-    PR.premiumUnlocked=true;
     // Select Guan Yu and simulate B2 (battleStreak=1 so win = B2 win)
     selGen=GENS.find(g=>g.id==='guanyu');
     battleStreak=1;
