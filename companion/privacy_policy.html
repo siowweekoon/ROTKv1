@@ -82,14 +82,20 @@ rewarded ads), and Google's Android Publisher API (solely to verify a purchase
 token, as described in Section 3). No other third-party analytics, tracking, or
 advertising networks are integrated.</p>
 
-<h2>7. Data Retention and Deletion</h2>
-<p>Nearly all app data is stored locally on your device. You can delete all app
-data at any time by:</p>
+<h2 id="deletion">7. Data Retention and Deletion</h2>
+<p><strong>Companion</strong> (developer: siowweekoon) stores nearly all app data
+locally on your device, as described in Section 2. You can delete all of your
+Companion app data at any time by:</p>
 <ul>
   <li>Using "Delete All My Data" in the app's Privacy &amp; Data settings, or</li>
   <li>Going to Android Settings → Apps → Companion → Storage → Clear Data, or</li>
   <li>Uninstalling the app</li>
 </ul>
+<p>All of these methods delete your data <strong>immediately</strong> — there is
+no server-side copy and no additional retention period, since everything
+described in Section 2 is stored only on your device. The one exception is
+during an in-app purchase: a purchase token is briefly sent to our verification
+service (Section 3), which does not store it at all.</p>
 <p>If you need further assistance with data deletion, contact us at
 <a href="mailto:weekoon22@gmail.com">weekoon22@gmail.com</a>.</p>
 
