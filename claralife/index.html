@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClaraLife — Build healthier habits, one day at a time</title>
+<meta name="description" content="ClaraLife is a 120-day lifestyle coaching journey. Daily lessons, reflection, and one small action — fully offline, one-time purchase, no subscription.">
+<style>
+  :root {
+    --lime: #7ED321;
+    --lime-dark: #5CB016;
+    --on-lime: #0A1810;
+    --bg: #0A1810;
+    --bg-grad-top: #12281A;
+    --bg-grad-bottom: #060D07;
+    --surface: #11241A;
+    --surface-alt: #17301F;
+    --border: rgba(126,211,33,0.24);
+    --track-blue: #1E88E5;
+    --track-green: #43A047;
+    --text: #FFFFFF;
+    --text-2: rgba(255,255,255,0.72);
+    --text-3: rgba(255,255,255,0.5);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: linear-gradient(180deg, var(--bg-grad-top), var(--bg-grad-bottom));
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+  a { color: inherit; }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand img { width: 32px; height: 32px; border-radius: 8px; display: block; }
+  .brand span { font-weight: 800; font-size: 18px; letter-spacing: -0.02em; }
+  .brand .life { color: var(--lime); }
+  header nav a {
+    text-decoration: none;
+    color: var(--text-2);
+    font-size: 14px;
+    font-weight: 600;
+    margin-left: 24px;
+  }
+  header nav a:hover { color: var(--text); }
+
+  .hero { padding: 56px 0 40px; text-align: center; }
+  .eyebrow {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(126,211,33,0.12);
+    border: 1px solid var(--border);
+    color: var(--lime);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+  h1 {
+    font-size: clamp(30px, 5.5vw, 48px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 18px;
+    line-height: 1.12;
+  }
+  h1 .accent { color: var(--lime); }
+  .lede {
+    max-width: 560px;
+    margin: 0 auto 32px;
+    color: var(--text-2);
+    font-size: 17px;
+  }
+  .cta-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .btn-play {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--lime);
+    color: var(--on-lime);
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 15px;
+    padding: 14px 24px;
+    border-radius: 14px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 8px 24px rgba(126,211,33,0.25);
+  }
+  .btn-play:hover { transform: translateY(-2px); }
+  .btn-play svg { width: 20px; height: 20px; flex: none; }
+  .price-note { color: var(--text-3); font-size: 13px; }
+
+  .phone-strip {
+    margin-top: 44px;
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .phone-card {
+    width: 168px;
+    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 14px;
+    text-align: left;
+  }
+  .phone-card .dot-row { display: flex; gap: 5px; margin-bottom: 10px; }
+  .phone-card .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+  }
+  .phone-card .dot.on { background: var(--lime); }
+  .phone-card .k { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .phone-card .v { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+  .phone-card .bar { height: 6px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .phone-card .bar > i { display: block; height: 100%; background: var(--lime); border-radius: 4px; }
+
+  section { padding: 64px 0; }
+  section.alt {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .section-head { text-align: center; max-width: 560px; margin: 0 auto 40px; }
+  .section-head h2 {
+    font-size: clamp(24px, 3.6vw, 32px);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+  }
+  .section-head p { color: var(--text-2); margin: 0; font-size: 15px; }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 18px;
+  }
+  section.alt .step { background: var(--bg); }
+  .step .num {
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    background: rgba(126,211,33,0.14);
+    color: var(--lime);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .step h3 { font-size: 15px; margin: 0 0 6px; font-weight: 700; }
+  .step p { font-size: 13px; color: var(--text-2); margin: 0; }
+
+  .tracks { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .track-card {
+    border-radius: 18px;
+    padding: 26px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .track-card .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+  }
+  .track-card.energy .badge { background: rgba(30,136,229,0.16); color: #64B5F6; }
+  .track-card.body .badge { background: rgba(67,160,71,0.18); color: #81C784; }
+  .track-card h3 { margin: 0 0 8px; font-size: 19px; font-weight: 800; }
+  .track-card p { margin: 0; color: var(--text-2); font-size: 14px; }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .feature {
+    text-align: center;
+    padding: 8px 14px;
+  }
+  .feature .icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: rgba(126,211,33,0.12);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 22px;
+  }
+  .feature h3 { font-size: 15px; margin: 0 0 8px; font-weight: 700; }
+  .feature p { font-size: 13px; color: var(--text-2); margin: 0; }
+
+  .price-card {
+    max-width: 420px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, var(--lime), var(--lime-dark));
+    border-radius: 22px;
+    padding: 34px 28px;
+    text-align: center;
+    color: var(--on-lime);
+  }
+  .price-card .amount { font-size: 42px; font-weight: 800; letter-spacing: -0.02em; }
+  .price-card .sub { font-size: 13px; font-weight: 700; opacity: 0.75; margin-top: 4px; }
+  .price-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 22px 0 26px;
+    text-align: left;
+    display: inline-block;
+  }
+  .price-card li {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding-left: 22px;
+    position: relative;
+  }
+  .price-card li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    font-weight: 800;
+  }
+  .price-card .btn-play {
+    background: var(--on-lime);
+    color: #fff;
+    box-shadow: none;
+    width: 100%;
+    justify-content: center;
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+  }
+  footer .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  footer .brand span { font-size: 14px; }
+  footer .links { display: flex; gap: 20px; flex-wrap: wrap; }
+  footer .links a { font-size: 13px; color: var(--text-3); text-decoration: none; }
+  footer .links a:hover { color: var(--text-2); }
+  .disclaimer {
+    max-width: 640px;
+    margin: 18px auto 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  @media (max-width: 720px) {
+    .steps { grid-template-columns: 1fr 1fr; }
+    .tracks { grid-template-columns: 1fr; }
+    .features { grid-template-columns: 1fr; }
+    footer .wrap { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <img src="icon.png" alt="ClaraLife">
+      <span>Clara<span class="life">Life</span></span>
+    </div>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#tracks">Tracks</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+  </header>
+</div>
+
+<div class="wrap hero">
+  <span class="eyebrow">120-day coaching journey</span>
+  <h1>Build healthier habits,<br><span class="accent">one day at a time.</span></h1>
+  <p class="lede">
+    ClaraLife gives you one short lesson, one reflection, and one simple action
+    every day — for 120 days. No crash diets, no calorie obsession, just small,
+    practical steps that add up.
+  </p>
+  <div class="cta-row">
+    <a class="btn-play" href="https://play.google.com/store/apps/details?id=com.claralife.app" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3 3.5v17c0 .4.2.7.5.9l9.5-9.4-9.5-9.4c-.3.2-.5.5-.5.9z" fill="currentColor"/><path d="M15.9 12l2.9-2.9-9.9-5.7 7 8.6z" fill="currentColor" opacity="0.85"/><path d="M15.9 12l-7 8.6 9.9-5.7-2.9-2.9z" fill="currentColor" opacity="0.85"/><path d="M18.8 9.1L15.9 12l2.9 2.9c1.6-.9 2.7-1.5 2.8-1.6.5-.3.5-1.3 0-1.6-.1-.1-1.2-.7-2.8-1.6z" fill="currentColor" opacity="0.7"/></svg>
+      Get it on Google Play
+    </a>
+  </div>
+  <p class="price-note">One-time purchase · USD $1.99 · no subscription, ever</p>
+
+  <div class="phone-strip" aria-hidden="true">
+    <div class="phone-card">
+      <div class="dot-row"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="k">Today</div>
+      <div class="v">Day 1 · Today's Lesson</div>
+      <div class="bar"><i style="width:8%"></i></div>
+    </div>
+    <div class="phone-card">
+      <div class="dot-row"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span></div>
+      <div class="k">Reflection</div>
+      <div class="v">Your Turn</div>
+      <div class="bar"><i style="width:35%"></i></div>
+    </div>
+    <div class="phone-card">
+      <div class="dot-row"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div>
+      <div class="k">Action</div>
+      <div class="v">Today's Action</div>
+      <div class="bar"><i style="width:70%"></i></div>
+    </div>
+  </div>
+</div>
+
+<section class="alt" id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>One structure, every day</h2>
+      <p>The same simple flow, repeated for 120 days — that's the whole system.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Today's Lesson</h3>
+        <p>A short, focused coaching message for where you are in the journey.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Your Reflection</h3>
+        <p>One question that connects the lesson to your own life.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Today's Action</h3>
+        <p>One small, achievable thing you can actually do right now.</p>
+      </div>
+      <div class="step">
+        <div class="num">4</div>
+        <h3>Coaching Q&amp;A</h3>
+        <p>Real questions answered, searchable across 858 topics.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tracks">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Choose the path that fits you</h2>
+      <p>Two tracks, same daily structure — pick where you want to start.</p>
+    </div>
+    <div class="tracks">
+      <div class="track-card energy">
+        <span class="badge">Energy Habits</span>
+        <h3>Steadier energy, all day</h3>
+        <p>For sluggish afternoons and energy crashes — daily coaching on movement, food timing, and building lasting energy from the ground up.</p>
+      </div>
+      <div class="track-card body">
+        <span class="badge">Body Confidence</span>
+        <h3>Stronger, more comfortable in your body</h3>
+        <p>Daily movement, understanding how your body uses fuel, and building confidence that goes beyond the scale.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Built to respect your privacy</h2>
+      <p>No accounts, no tracking, nothing to sign up for.</p>
+    </div>
+    <div class="features">
+      <div class="feature">
+        <div class="icon">🔒</div>
+        <h3>Fully offline</h3>
+        <p>Your coaching, your history, your progress — all stored on your device only. Nothing is ever transmitted.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🌏</div>
+        <h3>3 languages</h3>
+        <p>English, Bahasa Melayu, and Bahasa Indonesia — built for the region, not translated as an afterthought.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">💳</div>
+        <h3>Pay once, keep it</h3>
+        <p>A single one-time purchase unlocks the full 120-day journey. No subscription, no renewal, ever.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Simple, honest pricing</h2>
+      <p>What you see is what you pay — once.</p>
+    </div>
+    <div class="price-card">
+      <div class="amount">$1.99</div>
+      <div class="sub">One-time purchase · USD</div>
+      <ul>
+        <li>Full 120-day journey, both tracks</li>
+        <li>858 searchable coaching Q&amp;As</li>
+        <li>Browse any past lesson anytime</li>
+        <li>No ads, no subscription, ever</li>
+      </ul>
+      <a class="btn-play" href="https://play.google.com/store/apps/details?id=com.claralife.app" target="_blank" rel="noopener">
+        Get it on Google Play
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="brand">
+      <img src="icon.png" alt="ClaraLife" style="width:24px;height:24px;">
+      <span>ClaraLife</span>
+    </div>
+    <div class="links">
+      <a href="privacy_policy.html">Privacy Policy</a>
+      <a href="https://play.google.com/store/apps/details?id=com.claralife.app" target="_blank" rel="noopener">Google Play</a>
+      <a href="mailto:weekoon22@gmail.com">Support</a>
+    </div>
+  </div>
+  <p class="disclaimer">
+    ClaraLife provides general lifestyle coaching and wellness information for
+    educational purposes only. It is not a medical device and does not provide
+    medical advice, diagnosis, or treatment. Always consult a qualified
+    healthcare professional before making changes to your diet, lifestyle, or
+    health management.
+  </p>
+</footer>
+
+</body>
+</html>
