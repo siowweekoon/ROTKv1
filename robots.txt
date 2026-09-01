@@ -1,6 +1,6 @@
 User-agent: *
 Disallow: /
 Allow: /claralife/
-Disallow: /claralife/_canary/
+Disallow: /claralife/canary/
 
 Sitemap: https://siowweekoon.github.io/ROTKv1/claralife/sitemap.xml
