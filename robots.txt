@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /
+Allow: /claralife/
+
+Sitemap: https://siowweekoon.github.io/ROTKv1/claralife/sitemap.xml
