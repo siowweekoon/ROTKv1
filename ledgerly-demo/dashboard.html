@@ -157,7 +157,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v6.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v7.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -174,9 +174,6 @@ const weeks13 = {
 };
 const opening0 = 42000;
 
-const kpisStatic = [
-  ["Scenario Spread (Worst to Best, Wk 8)","S$28,400 to S$46,100","watch","Wide -- monitor churn"],
-];
 const trend8 = [42000,43350,44700,43100,41850,31200,33900,36200];
 // last week's real closing balance -- a historical reference point the forward-looking
 // trend8 array doesn't otherwise contain, needed to make this KPI genuinely computable
@@ -291,7 +288,7 @@ function computeNetCashKPI(){
 
 function renderKPIs(){
   const grid = document.getElementById('kpi-cards');
-  const all = [computeCurrentBalanceKPI(), computeLowPointKPI(), computeRunwayKPI(), computeGigPayrollDueKPI(), computeOverdueReceivablesKPI(), computeNetCashKPI(), ...kpisStatic];
+  const all = [computeCurrentBalanceKPI(), computeLowPointKPI(), computeRunwayKPI(), computeGigPayrollDueKPI(), computeOverdueReceivablesKPI(), computeNetCashKPI(), computeScenarioSpreadKPI()];
   grid.innerHTML = all.map(([label,value,cls,status]) => `
     <div class="card">
       <div class="label">${label}</div>
@@ -355,16 +352,36 @@ function renderDriverTable(scenario){
   tbl.innerHTML = html;
 }
 
+// Derived from real data, not invented multipliers:
+// avgPayoutPerDriver / avgRevenuePerDriver come from the actual payout roster
+// and Wk1 forecast revenue lines (roster has 12 drivers). totalOpenAR comes
+// from the actual Receivables tab. This is what makes the scenario projection
+// a genuine extension of the 13-week forecast instead of a separate model.
+const avgPayoutPerDriver = rosterRows.reduce((s,r)=>s+r[7],0) / rosterRows.length;
+const avgRevenuePerDriver = (weeks13.retail[0] + weeks13.fb[0]) / rosterRows.length;
+const totalOpenAR = arRows.filter(r => r[9] === "Open").reduce((s,r)=>s+r[8], 0);
+
 function computeScenario(scenario){
   const d = {};
   Object.entries(drivers).forEach(([k,v]) => d[k]=v[scenario]);
+  const latepayDrag = totalOpenAR * (d.latepay / 30) / 8; // spread over the 8-week window
   let bal = opening0, vals=[bal];
   for(let w=0; w<7; w++){
-    const net = 1350 + d.newclient - (d.churn*180) - (d.latepay*15) - (d.fuel*8);
+    const revenue = weeks13.retail[w] + weeks13.fb[w] + d.newclient - (d.churn * avgRevenuePerDriver);
+    const gigCost = weeks13.gig[w] - (d.churn * avgPayoutPerDriver);
+    const fuelCost = weeks13.fuel[w] * (1 + d.fuel/100);
+    const fixedCosts = weeks13.fixed[w] + weeks13.payroll[w];
+    const net = revenue - gigCost - fuelCost - fixedCosts - latepayDrag;
     bal += net;
     vals.push(Math.round(bal));
   }
   return vals;
+}
+
+function computeScenarioSpreadKPI(){
+  const worst = computeScenario('worst'), best = computeScenario('best');
+  const w8 = worst[worst.length-1], b8 = best[best.length-1];
+  return ["Scenario Spread (Worst to Best, Wk 8)", `${fmt(w8)} to ${fmt(b8)}`, "watch", "Wide -- monitor churn"];
 }
 
 function renderScenario(){
