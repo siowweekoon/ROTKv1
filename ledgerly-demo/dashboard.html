@@ -44,6 +44,21 @@ select{font-size:14px;font-weight:700;padding:7px 12px;border-radius:8px;border:
 .note{font-size:12px;color:var(--muted);margin-top:14px;padding:10px 12px;background:var(--card);border-radius:8px;border-left:3px solid var(--green);}
 footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 .pill{font-size:11px;background:var(--card);color:var(--green);padding:2px 8px;border-radius:20px;font-weight:700;margin-left:8px;}
+.back-link{font-size:12px;color:var(--green);text-decoration:none;font-weight:700;display:inline-flex;align-items:center;gap:4px;}
+.driver-desc{font-size:11px;color:var(--muted);font-weight:400;display:block;margin-top:2px;}
+@media (max-width: 640px){
+  header{padding:12px 14px;}
+  header h1{font-size:16px;}
+  header .sub{display:none;}
+  nav{padding:8px 10px;}
+  nav button{padding:7px 11px;font-size:13px;}
+  main{padding:14px;}
+  .card{padding:12px 14px;}
+  .card .value{font-size:18px;}
+  table{font-size:11px;}
+  th,td{padding:6px 7px;}
+  .controls{padding:10px 12px;}
+}
 </style>
 </head>
 <body>
@@ -56,7 +71,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
       <div class="sub">Cash-flow forecasting for gig-worker-dependent SMEs — sample data, Ang Mo Kio Logistics Pte Ltd (pilot)</div>
     </div>
   </div>
-  <div class="sub">Built from the research in <code>Su Ann Downloads</code></div>
+  <a href="index.html" class="back-link">← Ledgerly overview</a>
 </header>
 
 <nav id="tabs">
@@ -154,22 +169,24 @@ const weeks13 = {
 };
 const opening0 = 42000;
 
-const kpis = [
+const kpisStatic = [
   ["Current Cash Balance","S$42,000","ok","On track"],
   ["Projected 6-Week Low Point","S$31,200 (Wk 5)","watch","Watch"],
   ["Weeks of Runway at Current Burn","9.8 weeks","ok","On track"],
   ["Gig Payroll Due Next 7 Days","S$7,900","ok","Confirmed"],
-  ["Overdue Receivables","S$4,850 (1 invoice, 12 days)","attn","Attention"],
   ["This Week vs. Last Week Net Cash","+S$1,350 (+18%)","ok","Improving"],
   ["Scenario Spread (Worst to Best, Wk 8)","S$28,400 to S$46,100","watch","Wide -- monitor churn"],
 ];
 const trend8 = [42000,43350,44700,43100,41850,31200,33900,36200];
 
+// "as of" date this whole demo is dated to -- used to compute days-overdue live, not hardcoded
+const AS_OF_DATE = new Date("2026-09-07");
+
 const drivers = {
-  churn:     {label:"Weekly driver churn (lost gig drivers/wk)", worst:3, base:1, best:0},
-  newclient: {label:"New client win -- weekly revenue add (SGD)", worst:0, base:1500, best:3200},
-  latepay:   {label:"Late-paying client delay beyond terms (days)", worst:12, base:5, best:0},
-  fuel:      {label:"Fuel cost volatility (% vs baseline)", worst:18, base:5, best:-3},
+  churn:     {label:"Weekly driver churn (lost gig drivers/wk)", desc:"How many gig drivers stop taking shifts for this customer each week.", worst:3, base:1, best:0},
+  newclient: {label:"New client win -- weekly revenue add (SGD)", desc:"Extra weekly revenue if a new delivery/logistics contract is signed.", worst:0, base:1500, best:3200},
+  latepay:   {label:"Late-paying client delay beyond terms (days)", desc:"How many days late clients pay past their stated invoice terms, on average.", worst:12, base:5, best:0},
+  fuel:      {label:"Fuel cost volatility (% vs baseline)", desc:"How much fuel/vehicle costs move vs. the base-case assumption.", worst:18, base:5, best:-3},
 };
 
 const arRows = [
@@ -214,9 +231,27 @@ const agingRows = [
 const fmt = n => 'S$' + Number(n).toLocaleString('en-SG', {maximumFractionDigits:0});
 const fmt2 = n => 'S$' + Number(n).toLocaleString('en-SG', {minimumFractionDigits:2, maximumFractionDigits:2});
 
+function daysOverdue(dueDateStr, status){
+  if(status !== "Open") return 0;
+  const due = new Date(dueDateStr);
+  const diff = Math.round((AS_OF_DATE - due) / (1000*60*60*24));
+  return diff > 0 ? diff : 0;
+}
+
+function computeOverdueReceivablesKPI(){
+  const overdue = arRows.filter(r => daysOverdue(r[4], r[9]) > 0);
+  if(overdue.length === 0){
+    return ["Overdue Receivables","S$0 (none)","ok","On track"];
+  }
+  const total = overdue.reduce((s,r)=>s+r[8],0);
+  const maxDays = Math.max(...overdue.map(r=>daysOverdue(r[4], r[9])));
+  return ["Overdue Receivables", `${fmt(total)} (${overdue.length} invoice${overdue.length>1?'s':''}, up to ${maxDays}d)`, "attn", "Attention -- see Receivables tab"];
+}
+
 function renderKPIs(){
   const grid = document.getElementById('kpi-cards');
-  grid.innerHTML = kpis.map(([label,value,cls,status]) => `
+  const all = [...kpisStatic.slice(0,4), computeOverdueReceivablesKPI(), ...kpisStatic.slice(4)];
+  grid.innerHTML = all.map(([label,value,cls,status]) => `
     <div class="card">
       <div class="label">${label}</div>
       <div class="value">${value}</div>
@@ -272,7 +307,7 @@ function renderDriverTable(scenario){
   let html = `<tr><th>Driver</th><th>Worst</th><th>Base</th><th>Best</th><th>Live Value</th></tr>`;
   Object.values(drivers).forEach(d => {
     const live = d[scenario];
-    html += `<tr><td>${d.label}</td><td>${d.worst}</td><td>${d.base}</td><td>${d.best}</td><td style="font-weight:800;color:var(--green)">${live}</td></tr>`;
+    html += `<tr><td>${d.label}<span class="driver-desc">${d.desc}</span></td><td>${d.worst}</td><td>${d.base}</td><td>${d.best}</td><td style="font-weight:800;color:var(--green)">${live}</td></tr>`;
   });
   tbl.innerHTML = html;
 }
@@ -299,9 +334,11 @@ function renderScenario(){
 
 function renderAR(){
   const tbl = document.getElementById('ar-table');
-  let html = `<tr><th>Invoice</th><th>Client</th><th>Inv. Date</th><th>Terms</th><th>Due Date</th><th>Expected Pay</th><th>Amt (ex-GST)</th><th>GST</th><th>Total</th><th>Status</th></tr>`;
+  let html = `<tr><th>Invoice</th><th>Client</th><th>Inv. Date</th><th>Terms</th><th>Due Date</th><th>Expected Pay</th><th>Amt (ex-GST)</th><th>GST</th><th>Total</th><th>Status</th><th>Days Overdue</th></tr>`;
   arRows.forEach(r => {
-    html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${fmt2(r[6])}</td><td>${fmt2(r[7])}</td><td>${fmt2(r[8])}</td><td>${r[9]}</td></tr>`;
+    const od = daysOverdue(r[4], r[9]);
+    const odCell = od > 0 ? `<td style="font-weight:800;color:var(--red)">${od}d</td>` : `<td style="color:var(--muted)">—</td>`;
+    html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${fmt2(r[6])}</td><td>${fmt2(r[7])}</td><td>${fmt2(r[8])}</td><td>${r[9]}</td>${odCell}</tr>`;
   });
   tbl.innerHTML = html;
 }
