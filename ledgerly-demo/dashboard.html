@@ -10,12 +10,17 @@
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230F7A5C'/%3E%3Ctext x='16' y='23' font-family='Arial,sans-serif' font-size='19' font-weight='800' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E">
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 :root{
   --green:#0F7A5C; --dark:#0B2A24; --card:#F4FAF8; --border:#DCE8E4;
   --gold:#92400E; --teal:#0369A1; --red:#B91C1C; --muted:#5B6B66; --white:#FFFFFF;
 }
 *{box-sizing:border-box;}
-body{margin:0;font-family:-apple-system,'Segoe UI',Inter,sans-serif;background:#EEF4F1;color:var(--dark);}
+/* Inter and IBM Plex Sans are the named top fintech typography choices (round 1
+   research) -- both for tabular-figure quality and the "reliable, authoritative"
+   tone fintech products need. Loaded properly and made primary here instead of
+   sitting last in the stack where system fonts would almost always win instead. */
+body{margin:0;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:#EEF4F1;color:var(--dark);}
 header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
 header .brand{display:flex;align-items:center;gap:10px;}
 header .brand .logo{width:34px;height:34px;border-radius:8px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;}
@@ -37,7 +42,8 @@ h2{font-size:20px;margin:0 0 4px;}
 .status.ok{background:rgba(15,122,92,.12);color:var(--green);}
 .status.watch{background:rgba(212,175,55,.15);color:var(--gold);}
 .status.attn{background:rgba(185,28,28,.12);color:var(--red);}
-table{width:100%;border-collapse:collapse;background:var(--white);border-radius:10px;overflow:hidden;border:1px solid var(--border);font-size:13px;}
+table{width:100%;border-collapse:collapse;background:var(--white);border-radius:10px;overflow:hidden;border:1px solid var(--border);font-size:13px;font-variant-numeric:tabular-nums;}
+.card .value{font-variant-numeric:tabular-nums;}
 th{background:var(--green);color:#fff;text-align:left;padding:9px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;position:sticky;top:0;}
 td{padding:8px 10px;border-bottom:1px solid var(--border);}
 tr.section td{background:var(--card);font-weight:700;color:var(--green);}
@@ -82,7 +88,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
   </div>
   <div style="display:flex;align-items:center;gap:14px;">
     <span id="override-indicator" style="font-size:12px;color:var(--gold);font-weight:700;"></span>
-    <button onclick="resetAllOverrides()" style="font-size:12px;font-weight:700;color:var(--muted);background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;">Reset to baseline</button>
+    <button onclick="resetAllOverrides()" style="font-size:12px;font-weight:700;color:var(--muted);background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;min-height:44px;min-width:44px;cursor:pointer;">Reset to baseline</button>
     <a href="index.html" class="back-link">← Ledgerly overview</a>
   </div>
 </header>
@@ -191,14 +197,14 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
     <label for="new-vendor-name"><strong>Add vendor:</strong></label>
     <input type="text" id="new-vendor-name" placeholder="Vendor name" style="padding:7px 10px;border-radius:8px;border:1px solid var(--border);font-size:13px;">
     <input type="number" id="new-vendor-amount" placeholder="Weekly amount (SGD)" aria-label="Weekly amount in Singapore dollars" style="padding:7px 10px;border-radius:8px;border:1px solid var(--border);font-size:13px;width:170px;">
-    <button onclick="addVendor()" aria-label="Add this vendor to AP Aging" style="padding:7px 16px;border-radius:8px;border:none;background:var(--green);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">Add</button>
+    <button onclick="addVendor()" aria-label="Add this vendor to AP Aging" style="padding:7px 16px;border-radius:8px;border:none;background:var(--green);color:#fff;font-weight:700;font-size:13px;min-height:44px;min-width:44px;cursor:pointer;">Add</button>
   </div>
   <div class="note">A newly added vendor is a real payable, not a hypothetical scenario — it lands in the "Current" bucket here immediately and also reduces the projections in 13-Week Forecast and Scenario Planner, unlike the Worst/Base/Best toggle which only affects the scenario chart.</div>
 </section>
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v22.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v23.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -543,7 +549,9 @@ function renderRoster(){
   let html = `<tr><th>Name</th><th>Include this week</th><th>Driver</th><th>Platform</th><th>Trips</th><th>Gross</th><th>Incentive</th><th>Deduction</th><th>Net Payout</th><th>Expected Pay</th><th>Engagement</th></tr>`;
   rosterRows.forEach(r => {
     const excluded = excludedDriverIds.has(r[0]);
-    const checkbox = `<input type="checkbox" ${excluded?'':'checked'} onchange="toggleDriver('${r[0]}')" aria-label="Include ${r[1]} in this week's payout">`;
+    // 44x44px tappable zone (real touch-target minimum, verified missing in round 4)
+    // wraps a normal-sized checkbox rather than blowing up the checkbox itself visually
+    const checkbox = `<label style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;cursor:pointer;"><input type="checkbox" style="width:20px;height:20px;cursor:pointer;" ${excluded?'':'checked'} onchange="toggleDriver('${r[0]}')" aria-label="Include ${r[1]} in this week's payout"></label>`;
     const rowStyle = excluded ? ' style="opacity:.45;text-decoration:line-through;"' : '';
     html += `<tr${rowStyle}><td>${r[1]}</td><td>${checkbox}</td><td>${r[0]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${fmt2(r[4])}</td><td>${fmt2(r[5])}</td><td>${fmt2(r[6])}</td><td style="font-weight:700">${fmt2(r[7])}</td><td>${r[9]}</td><td>${r[10]}</td></tr>`;
   });
@@ -580,7 +588,7 @@ function renderAging(){
   });
   extraVendors.forEach((v, idx) => {
     totals[0] += v.weeklyAmount; // new vendors land in Current -- they're new, not overdue
-    html += `<tr><td>${v.name}</td><td>Added Vendor (live)</td><td>${fmt(v.weeklyAmount)}</td><td>${fmt(0)}</td><td>${fmt(0)}</td><td>${fmt(0)}</td><td style="font-weight:700">${fmt(v.weeklyAmount)}</td><td><button onclick="removeVendor(${idx})" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;">Remove</button></td></tr>`;
+    html += `<tr><td>${v.name}</td><td>Added Vendor (live)</td><td>${fmt(v.weeklyAmount)}</td><td>${fmt(0)}</td><td>${fmt(0)}</td><td>${fmt(0)}</td><td style="font-weight:700">${fmt(v.weeklyAmount)}</td><td><button onclick="removeVendor(${idx})" aria-label="Remove ${v.name}" style="font-size:11px;padding:8px 12px;min-height:36px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;">Remove</button></td></tr>`;
   });
   html += `<tr class="total"><td colspan="2">TOTAL</td>${totals.map(t=>`<td>${fmt(t)}</td>`).join('')}<td>${fmt(totals.reduce((a,b)=>a+b,0))}</td><td></td></tr>`;
   tbl.innerHTML = html;
