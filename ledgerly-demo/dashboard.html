@@ -198,7 +198,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v20.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v21.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -349,8 +349,12 @@ function computeLowPointKPI(){
 }
 
 function computeGigPayrollDueKPI(){
-  const totalNet = rosterRows.reduce((s,r)=>s+r[7],0);
-  return ["Gig Payroll Due Next 7 Days", fmt(totalNet), "ok", "Confirmed -- from payout roster"];
+  // Must respect excludedDriverIds -- found via integration testing that this KPI
+  // was still summing ALL drivers even after some were excluded on the Roster tab,
+  // silently disagreeing with the Roster tab's own (correctly filtered) total.
+  const totalNet = rosterRows.filter(r => !excludedDriverIds.has(r[0])).reduce((s,r)=>s+r[7],0);
+  const excludedNote = excludedDriverIds.size ? ` (${excludedDriverIds.size} excluded)` : '';
+  return ["Gig Payroll Due Next 7 Days", fmt(totalNet), "ok", `Confirmed -- from payout roster${excludedNote}`];
 }
 
 function computeRunwayKPI(){
