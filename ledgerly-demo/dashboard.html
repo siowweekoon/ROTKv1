@@ -112,7 +112,11 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <!-- 13-WEEK FORECAST -->
 <section class="panel" id="panel-forecast" role="tabpanel" aria-labelledby="tab-forecast">
   <h2>13-Week Cash Flow Forecast</h2>
-  <div class="panel-sub">Direct method, weekly granularity, tracked by expected pay date — not contractual due date.</div>
+  <div class="panel-sub">Starting 2026-09-07 — direct method, weekly granularity, tracked by expected pay date, not contractual due date.</div>
+  <div class="chart-box" style="margin-bottom:16px;">
+    <strong>13-Week Closing Cash Trend</strong>
+    <svg id="forecast-chart" width="100%" height="220" viewBox="0 0 760 220"></svg>
+  </div>
   <div class="table-wrap">
     <table id="forecast-table"></table>
   </div>
@@ -122,7 +126,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <!-- SCENARIO -->
 <section class="panel" id="panel-scenario" role="tabpanel" aria-labelledby="tab-scenario">
   <h2>Scenario Planner</h2>
-  <div class="panel-sub">Driver-based modeling — change the scenario, the whole 8-week projection recalculates live.</div>
+  <div class="panel-sub">As of 2026-09-07 — driver-based modeling, projecting 8 weeks forward from today. Change the scenario, the whole projection recalculates live.</div>
   <div class="controls">
     <label for="scenario-select"><strong>Scenario:</strong></label>
     <select id="scenario-select">
@@ -175,7 +179,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v12.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v13.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -512,6 +516,7 @@ document.querySelectorAll('#tabs button').forEach(b => b.tabIndex = b.classList.
 renderKPIs();
 lineChart('trend-chart', trend8, '#0F7A5C');
 renderForecastTable();
+lineChart('forecast-chart', computeRealForecastTrend(13), '#0369A1');
 renderScenario();
 renderAR();
 renderRoster();
