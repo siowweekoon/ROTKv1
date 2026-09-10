@@ -79,19 +79,19 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
   <a href="index.html" class="back-link">← Ledgerly overview</a>
 </header>
 
-<nav id="tabs">
-  <button data-tab="overview" class="active">Overview</button>
-  <button data-tab="forecast">13-Week Forecast</button>
-  <button data-tab="scenario">Scenario Planner</button>
-  <button data-tab="receivables">Receivables</button>
-  <button data-tab="payroll">Gig Payroll Roster</button>
-  <button data-tab="aging">AP Aging</button>
+<nav id="tabs" role="tablist" aria-label="Ledgerly demo sections">
+  <button data-tab="overview" id="tab-overview" role="tab" aria-selected="true" aria-controls="panel-overview" class="active">Overview</button>
+  <button data-tab="forecast" id="tab-forecast" role="tab" aria-selected="false" aria-controls="panel-forecast">13-Week Forecast</button>
+  <button data-tab="scenario" id="tab-scenario" role="tab" aria-selected="false" aria-controls="panel-scenario">Scenario Planner</button>
+  <button data-tab="receivables" id="tab-receivables" role="tab" aria-selected="false" aria-controls="panel-receivables">Receivables</button>
+  <button data-tab="payroll" id="tab-payroll" role="tab" aria-selected="false" aria-controls="panel-payroll">Gig Payroll Roster</button>
+  <button data-tab="aging" id="tab-aging" role="tab" aria-selected="false" aria-controls="panel-aging">AP Aging</button>
 </nav>
 
 <main>
 
 <!-- OVERVIEW -->
-<section class="panel active" id="panel-overview">
+<section class="panel active" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
   <h2>Dashboard</h2>
   <div class="panel-sub">As of 2026-09-07 — the same 7 KPIs designed for the mobile companion app home screen.</div>
   <div class="card-grid" id="kpi-cards"></div>
@@ -103,7 +103,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 </section>
 
 <!-- 13-WEEK FORECAST -->
-<section class="panel" id="panel-forecast">
+<section class="panel" id="panel-forecast" role="tabpanel" aria-labelledby="tab-forecast">
   <h2>13-Week Cash Flow Forecast</h2>
   <div class="panel-sub">Direct method, weekly granularity, tracked by expected pay date — not contractual due date.</div>
   <div class="table-wrap">
@@ -113,7 +113,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 </section>
 
 <!-- SCENARIO -->
-<section class="panel" id="panel-scenario">
+<section class="panel" id="panel-scenario" role="tabpanel" aria-labelledby="tab-scenario">
   <h2>Scenario Planner</h2>
   <div class="panel-sub">Driver-based modeling — change the scenario, the whole 8-week projection recalculates live.</div>
   <div class="controls">
@@ -135,21 +135,21 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 </section>
 
 <!-- RECEIVABLES -->
-<section class="panel" id="panel-receivables">
+<section class="panel" id="panel-receivables" role="tabpanel" aria-labelledby="tab-receivables">
   <h2>Accounts Receivable</h2>
   <div class="panel-sub">GST shown as its own column per IRAS's 11 mandatory tax-invoice fields. "Expected Pay Date" is history-adjusted, not the contractual due date.</div>
   <div class="table-wrap"><table id="ar-table"></table></div>
 </section>
 
 <!-- PAYROLL -->
-<section class="panel" id="panel-payroll">
+<section class="panel" id="panel-payroll" role="tabpanel" aria-labelledby="tab-payroll">
   <h2>Weekly Gig-Driver Payout Roster</h2>
   <div class="panel-sub">What the customer uploads/connects for one payout week — Grab / foodpanda / Lalamove.</div>
   <div class="table-wrap"><table id="roster-table"></table></div>
 </section>
 
 <!-- AGING -->
-<section class="panel" id="panel-aging">
+<section class="panel" id="panel-aging" role="tabpanel" aria-labelledby="tab-aging">
   <h2>Accounts Payable Aging</h2>
   <div class="panel-sub">Standard 0-30 / 31-60 / 61-90 / 90+ buckets. Gig payroll stays in "Current" by design — the whole point of the product is catching it before it ages.</div>
   <div class="table-wrap"><table id="aging-table"></table></div>
@@ -179,10 +179,13 @@ const kpisStatic = [
   ["Projected 6-Week Low Point","S$31,200 (Wk 5)","watch","Watch"],
   ["Weeks of Runway at Current Burn","9.8 weeks","ok","On track"],
   ["Gig Payroll Due Next 7 Days","S$7,900","ok","Confirmed"],
-  ["This Week vs. Last Week Net Cash","+S$1,350 (+18%)","ok","Improving"],
   ["Scenario Spread (Worst to Best, Wk 8)","S$28,400 to S$46,100","watch","Wide -- monitor churn"],
 ];
 const trend8 = [42000,43350,44700,43100,41850,31200,33900,36200];
+// last week's real closing balance -- a historical reference point the forward-looking
+// trend8 array doesn't otherwise contain, needed to make this KPI genuinely computable
+// rather than asserting a dollar figure and percentage that don't derive from anything.
+const lastWeekActualBalance = 40650;
 
 // "as of" date this whole demo is dated to -- used to compute days-overdue live, not hardcoded
 const AS_OF_DATE = new Date("2026-09-07");
@@ -253,9 +256,16 @@ function computeOverdueReceivablesKPI(){
   return ["Overdue Receivables", `${fmt(total)} (${overdue.length} invoice${overdue.length>1?'s':''}, up to ${maxDays}d)`, "attn", "Attention -- see Receivables tab"];
 }
 
+function computeNetCashKPI(){
+  const diff = trend8[0] - lastWeekActualBalance;
+  const pct = (diff / lastWeekActualBalance * 100).toFixed(1);
+  const sign = diff >= 0 ? '+' : '';
+  return ["This Week vs. Last Week Net Cash", `${sign}${fmt(diff)} (${sign}${pct}%)`, diff>=0?"ok":"attn", diff>=0?"Improving":"Declining"];
+}
+
 function renderKPIs(){
   const grid = document.getElementById('kpi-cards');
-  const all = [...kpisStatic.slice(0,4), computeOverdueReceivablesKPI(), ...kpisStatic.slice(4)];
+  const all = [...kpisStatic.slice(0,4), computeOverdueReceivablesKPI(), computeNetCashKPI(), ...kpisStatic.slice(4)];
   grid.innerHTML = all.map(([label,value,cls,status]) => `
     <div class="card">
       <div class="label">${label}</div>
@@ -375,8 +385,9 @@ function renderAging(){
 // ---------- tab switching ----------
 document.getElementById('tabs').addEventListener('click', e => {
   if(e.target.tagName !== 'BUTTON') return;
-  document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#tabs button').forEach(b=>{b.classList.remove('active'); b.setAttribute('aria-selected','false');});
   e.target.classList.add('active');
+  e.target.setAttribute('aria-selected','true');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+e.target.dataset.tab).classList.add('active');
 });
