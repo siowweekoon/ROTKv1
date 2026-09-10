@@ -157,7 +157,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials.</footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v1.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -236,8 +236,8 @@ const agingRows = [
 ];
 
 // ---------- render helpers ----------
-const fmt = n => 'S$' + Number(n).toLocaleString('en-SG', {maximumFractionDigits:0});
-const fmt2 = n => 'S$' + Number(n).toLocaleString('en-SG', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmt = n => (n<0?'-S$':'S$') + Math.abs(Number(n)).toLocaleString('en-SG', {maximumFractionDigits:0});
+const fmt2 = n => (n<0?'-S$':'S$') + Math.abs(Number(n)).toLocaleString('en-SG', {minimumFractionDigits:2, maximumFractionDigits:2});
 
 function daysOverdue(dueDateStr, status){
   if(status !== "Open") return 0;
