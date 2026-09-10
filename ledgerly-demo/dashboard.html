@@ -198,7 +198,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v21.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v22.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -412,19 +412,35 @@ function renderForecastTable(){
   const tbl = document.getElementById('forecast-table');
   const wkHeaders = Array.from({length:13}, (_,i)=>`<th>Wk${i+1}</th>`).join('');
   let html = `<tr><th>Line Item</th>${wkHeaders}</tr>`;
+
+  // Found during the round-10 closing audit: this table was rendering raw weeks13
+  // values directly, completely ignoring driver exclusions and added vendors --
+  // meaning this tab's own chart (fixed to use computeRealForecastTrend) would
+  // move when a driver was excluded, while this table stayed frozen on the same
+  // screen. Adjusted lines below to match what computeRealForecastTrend() actually uses.
+  const gigReduction = excludedWeeklyGigCost();
+  const revenueReduction = excludedWeeklyRevenueLoss();
+  const vendorAdd = extraVendorWeeklyTotal();
+  // Applied every week, matching computeRealForecastTrend()'s formula exactly --
+  // an earlier draft of this fix wrongly applied revenueReduction to only Wk1,
+  // caught before commit by re-checking against the actual chart formula.
+  const adjRetail = weeks13.retail.map(v => v - revenueReduction);
+  const adjGig = weeks13.gig.map(v => v - gigReduction);
+  const adjFixed = weeks13.fixed.map(v => v + vendorAdd);
+
   html += `<tr class="section"><td colspan="14">CASH INFLOWS</td></tr>`;
-  const inflowRows = [["Customer receipts -- retail", weeks13.retail], ["Customer receipts -- F&B", weeks13.fb], ["New client win (scenario)", weeks13.newclient]];
+  const inflowRows = [["Customer receipts -- retail", adjRetail], ["Customer receipts -- F&B", weeks13.fb], ["New client win (scenario)", weeks13.newclient]];
   inflowRows.forEach(([label, arr]) => {
     html += `<tr><td>${label}</td>${arr.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
   });
-  const totalInflow = weeks13.retail.map((_,i)=> weeks13.retail[i]+weeks13.fb[i]+weeks13.newclient[i]);
+  const totalInflow = adjRetail.map((_,i)=> adjRetail[i]+weeks13.fb[i]+weeks13.newclient[i]);
   html += `<tr class="total"><td>Total Cash Inflows</td>${totalInflow.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
   html += `<tr class="section"><td colspan="14">CASH OUTFLOWS</td></tr>`;
-  const outflowRows = [["Gig/contractor driver payouts", weeks13.gig], ["Fuel & vehicle maintenance", weeks13.fuel], ["Fixed vendor commitments", weeks13.fixed], ["Payroll -- core staff", weeks13.payroll], ["GST remittance (Wk13)", weeks13.gst], ["Driver churn impact", weeks13.churn]];
+  const outflowRows = [["Gig/contractor driver payouts", adjGig], ["Fuel & vehicle maintenance", weeks13.fuel], ["Fixed vendor commitments", adjFixed], ["Payroll -- core staff", weeks13.payroll], ["GST remittance (Wk13)", weeks13.gst], ["Driver churn impact", weeks13.churn]];
   outflowRows.forEach(([label, arr]) => {
     html += `<tr><td>${label}</td>${arr.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
   });
-  const totalOutflow = weeks13.gig.map((_,i)=> weeks13.gig[i]+weeks13.fuel[i]+weeks13.fixed[i]+weeks13.payroll[i]+weeks13.gst[i]+weeks13.churn[i]);
+  const totalOutflow = adjGig.map((_,i)=> adjGig[i]+weeks13.fuel[i]+adjFixed[i]+weeks13.payroll[i]+weeks13.gst[i]+weeks13.churn[i]);
   html += `<tr class="total"><td>Total Cash Outflows</td>${totalOutflow.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
   const net = totalInflow.map((v,i)=>v-totalOutflow[i]);
   html += `<tr class="total"><td>Net Cash Flow</td>${net.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
