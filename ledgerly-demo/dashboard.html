@@ -198,7 +198,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v19.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v20.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -517,12 +517,15 @@ function toggleDriver(driverId){
 
 function renderRoster(){
   const tbl = document.getElementById('roster-table');
-  let html = `<tr><th>Include this week</th><th>Driver</th><th>Name</th><th>Platform</th><th>Trips</th><th>Gross</th><th>Incentive</th><th>Deduction</th><th>Net Payout</th><th>Expected Pay</th><th>Engagement</th></tr>`;
+  // Name stays the first (sticky-on-scroll) column so driver identity stays visible
+  // while scrolling to the numeric columns -- the checkbox moved to 2nd, not 1st,
+  // since a sticky checkbox with no visible name defeats the point of either.
+  let html = `<tr><th>Name</th><th>Include this week</th><th>Driver</th><th>Platform</th><th>Trips</th><th>Gross</th><th>Incentive</th><th>Deduction</th><th>Net Payout</th><th>Expected Pay</th><th>Engagement</th></tr>`;
   rosterRows.forEach(r => {
     const excluded = excludedDriverIds.has(r[0]);
     const checkbox = `<input type="checkbox" ${excluded?'':'checked'} onchange="toggleDriver('${r[0]}')" aria-label="Include ${r[1]} in this week's payout">`;
     const rowStyle = excluded ? ' style="opacity:.45;text-decoration:line-through;"' : '';
-    html += `<tr${rowStyle}><td>${checkbox}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${fmt2(r[4])}</td><td>${fmt2(r[5])}</td><td>${fmt2(r[6])}</td><td style="font-weight:700">${fmt2(r[7])}</td><td>${r[9]}</td><td>${r[10]}</td></tr>`;
+    html += `<tr${rowStyle}><td>${r[1]}</td><td>${checkbox}</td><td>${r[0]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${fmt2(r[4])}</td><td>${fmt2(r[5])}</td><td>${fmt2(r[6])}</td><td style="font-weight:700">${fmt2(r[7])}</td><td>${r[9]}</td><td>${r[10]}</td></tr>`;
   });
   const totalNet = rosterRows.filter(r=>!excludedDriverIds.has(r[0])).reduce((s,r)=>s+r[7],0);
   html += `<tr class="total"><td colspan="8">TOTAL NET PAYOUT${excludedDriverIds.size?` (${excludedDriverIds.size} excluded)`:''}</td><td>${fmt2(totalNet)}</td><td colspan="2"></td></tr>`;
