@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledgerly — Product Demo</title>
+<style>
+:root{
+  --green:#0F7A5C; --dark:#0B2A24; --card:#F4FAF8; --border:#DCE8E4;
+  --gold:#92400E; --teal:#0369A1; --red:#B91C1C; --muted:#5B6B66; --white:#FFFFFF;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,'Segoe UI',Inter,sans-serif;background:#EEF4F1;color:var(--dark);}
+header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+header .brand{display:flex;align-items:center;gap:10px;}
+header .brand .logo{width:34px;height:34px;border-radius:8px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;}
+header h1{font-size:19px;margin:0;}
+header .sub{font-size:12px;color:var(--muted);}
+nav{display:flex;gap:4px;padding:10px 24px;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;}
+nav button{border:none;background:transparent;padding:9px 16px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;}
+nav button.active{background:var(--green);color:#fff;}
+main{max-width:1100px;margin:0 auto;padding:24px;}
+.panel{display:none;}
+.panel.active{display:block;}
+h2{font-size:20px;margin:0 0 4px;}
+.panel-sub{color:var(--muted);font-size:13px;margin-bottom:18px;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:22px;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.card .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
+.card .value{font-size:22px;font-weight:800;margin:6px 0 4px;}
+.status{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.status.ok{background:rgba(15,122,92,.12);color:var(--green);}
+.status.watch{background:rgba(212,175,55,.15);color:var(--gold);}
+.status.attn{background:rgba(185,28,28,.12);color:var(--red);}
+table{width:100%;border-collapse:collapse;background:var(--white);border-radius:10px;overflow:hidden;border:1px solid var(--border);font-size:13px;}
+th{background:var(--green);color:#fff;text-align:left;padding:9px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;position:sticky;top:0;}
+td{padding:8px 10px;border-bottom:1px solid var(--border);}
+tr.section td{background:var(--card);font-weight:700;color:var(--green);}
+tr.total td{font-weight:800;background:#F1F5F9;}
+.table-wrap{overflow-x:auto;border-radius:10px;}
+.controls{display:flex;align-items:center;gap:14px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px;flex-wrap:wrap;}
+select{font-size:14px;font-weight:700;padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--green);}
+.chart-box{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px;}
+.note{font-size:12px;color:var(--muted);margin-top:14px;padding:10px 12px;background:var(--card);border-radius:8px;border-left:3px solid var(--green);}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
+.pill{font-size:11px;background:var(--card);color:var(--green);padding:2px 8px;border-radius:20px;font-weight:700;margin-left:8px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">L</div>
+    <div>
+      <h1>Ledgerly <span class="pill">DEMO</span></h1>
+      <div class="sub">Cash-flow forecasting for gig-worker-dependent SMEs — sample data, Ang Mo Kio Logistics Pte Ltd (pilot)</div>
+    </div>
+  </div>
+  <div class="sub">Built from the research in <code>Su Ann Downloads</code></div>
+</header>
+
+<nav id="tabs">
+  <button data-tab="overview" class="active">Overview</button>
+  <button data-tab="forecast">13-Week Forecast</button>
+  <button data-tab="scenario">Scenario Planner</button>
+  <button data-tab="receivables">Receivables</button>
+  <button data-tab="payroll">Gig Payroll Roster</button>
+  <button data-tab="aging">AP Aging</button>
+</nav>
+
+<main>
+
+<!-- OVERVIEW -->
+<section class="panel active" id="panel-overview">
+  <h2>Dashboard</h2>
+  <div class="panel-sub">As of 2026-09-07 — the same 7 KPIs designed for the mobile companion app home screen.</div>
+  <div class="card-grid" id="kpi-cards"></div>
+  <div class="chart-box">
+    <strong>8-Week Closing Cash Trend</strong>
+    <svg id="trend-chart" width="100%" height="220" viewBox="0 0 760 220"></svg>
+  </div>
+  <div class="note">Every number on this screen traces to a specific tab in this demo — the forecast, the payroll roster, receivables, or the scenario planner. Nothing here is invented independently.</div>
+</section>
+
+<!-- 13-WEEK FORECAST -->
+<section class="panel" id="panel-forecast">
+  <h2>13-Week Cash Flow Forecast</h2>
+  <div class="panel-sub">Direct method, weekly granularity, tracked by expected pay date — not contractual due date.</div>
+  <div class="table-wrap">
+    <table id="forecast-table"></table>
+  </div>
+  <div class="note">Gig/contractor driver payouts are their own line, separate from fixed vendor commitments — because that's the payables line that actually moves week to week for this customer segment.</div>
+</section>
+
+<!-- SCENARIO -->
+<section class="panel" id="panel-scenario">
+  <h2>Scenario Planner</h2>
+  <div class="panel-sub">Driver-based modeling — change the scenario, the whole 8-week projection recalculates live.</div>
+  <div class="controls">
+    <label for="scenario-select"><strong>Scenario:</strong></label>
+    <select id="scenario-select">
+      <option value="worst">Worst</option>
+      <option value="base" selected>Base</option>
+      <option value="best">Best</option>
+    </select>
+  </div>
+  <div class="table-wrap" style="margin-bottom:16px;">
+    <table id="driver-table"></table>
+  </div>
+  <div class="chart-box">
+    <strong>8-Week Closing Cash — Live Projection</strong>
+    <svg id="scenario-chart" width="100%" height="220" viewBox="0 0 760 220"></svg>
+  </div>
+  <div class="note">Same mechanism as the Excel version in Su Ann Downloads: a single scenario selector drives every downstream number. Nothing here is a static mockup.</div>
+</section>
+
+<!-- RECEIVABLES -->
+<section class="panel" id="panel-receivables">
+  <h2>Accounts Receivable</h2>
+  <div class="panel-sub">GST shown as its own column per IRAS's 11 mandatory tax-invoice fields. "Expected Pay Date" is history-adjusted, not the contractual due date.</div>
+  <div class="table-wrap"><table id="ar-table"></table></div>
+</section>
+
+<!-- PAYROLL -->
+<section class="panel" id="panel-payroll">
+  <h2>Weekly Gig-Driver Payout Roster</h2>
+  <div class="panel-sub">What the customer uploads/connects for one payout week — Grab / foodpanda / Lalamove.</div>
+  <div class="table-wrap"><table id="roster-table"></table></div>
+</section>
+
+<!-- AGING -->
+<section class="panel" id="panel-aging">
+  <h2>Accounts Payable Aging</h2>
+  <div class="panel-sub">Standard 0-30 / 31-60 / 61-90 / 90+ buckets. Gig payroll stays in "Current" by design — the whole point of the product is catching it before it ages.</div>
+  <div class="table-wrap"><table id="aging-table"></table></div>
+</section>
+
+</main>
+
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials.</footer>
+
+<script>
+// ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
+const weeks13 = {
+  retail:   [8200,8400,7900,8600,8100,8900,9100,8300,8700,9200,8800,9000,9300],
+  fb:       [5100,5300,5000,5400,5200,5600,5700,5300,5500,5800,5600,5900,6000],
+  newclient:[0,0,0,0,3000,3000,3000,3000,3000,3000,3000,3000,3000],
+  gig:      [6800,7000,6600,7200,6900,7900,8100,7300,7600,8200,7900,8000,8300],
+  fuel:     [1200,1150,1300,1250,1180,1320,1290,1240,1260,1310,1280,1300,1330],
+  fixed:    [1800,1800,1800,1800,1800,1800,1800,1800,1800,1800,1800,1800,1800],
+  payroll:  [3200,0,3200,0,3200,0,3200,0,3200,0,3200,0,3200],
+  gst:      [0,0,0,0,0,0,0,0,0,0,0,0,2100],
+  churn:    [0,0,0,0,0,-400,-400,-400,0,0,0,0,0],
+};
+const opening0 = 42000;
+
+const kpis = [
+  ["Current Cash Balance","S$42,000","ok","On track"],
+  ["Projected 6-Week Low Point","S$31,200 (Wk 5)","watch","Watch"],
+  ["Weeks of Runway at Current Burn","9.8 weeks","ok","On track"],
+  ["Gig Payroll Due Next 7 Days","S$7,900","ok","Confirmed"],
+  ["Overdue Receivables","S$4,850 (1 invoice, 12 days)","attn","Attention"],
+  ["This Week vs. Last Week Net Cash","+S$1,350 (+18%)","ok","Improving"],
+  ["Scenario Spread (Worst to Best, Wk 8)","S$28,400 to S$46,100","watch","Wide -- monitor churn"],
+];
+const trend8 = [42000,43350,44700,43100,41850,31200,33900,36200];
+
+const drivers = {
+  churn:     {label:"Weekly driver churn (lost gig drivers/wk)", worst:3, base:1, best:0},
+  newclient: {label:"New client win -- weekly revenue add (SGD)", worst:0, base:1500, best:3200},
+  latepay:   {label:"Late-paying client delay beyond terms (days)", worst:12, base:5, best:0},
+  fuel:      {label:"Fuel cost volatility (% vs baseline)", worst:18, base:5, best:-3},
+};
+
+const arRows = [
+["INV-2026090","Bishan Home Services Pte Ltd","2026-08-20","Net 30","2026-09-03","2026-09-03",8262.96,743.67,9006.63,"Open",0],
+["INV-2026091","Clementi Convenience Chain","2026-08-21","Net 30","2026-09-20","2026-09-20",1939.15,174.52,2113.67,"Open",0],
+["INV-2026092","Kallang F&B Holdings Pte Ltd","2026-08-12","Net 30","2026-08-26","2026-09-04",1708.35,153.75,1862.10,"Paid (historical)",0],
+["INV-2026093","Clementi Convenience Chain","2026-08-17","Net 14","2026-09-16","2026-09-25",1626.47,146.38,1772.85,"Paid (historical)",0],
+["INV-2026094","Tampines Retail Group","2026-08-11","Net 7","2026-08-25","2026-08-27",5849.90,526.49,6376.39,"Open",0],
+["INV-2026095","Kallang F&B Holdings Pte Ltd","2026-08-27","Net 7","2026-09-10","2026-09-24",6694.66,602.52,7297.18,"Paid (historical)",0],
+["INV-2026096","Clementi Convenience Chain","2026-08-13","Net 30","2026-09-12","2026-09-26",2971.24,267.41,3238.65,"Open",0],
+["INV-2026097","Bishan Home Services Pte Ltd","2026-09-03","Net 14","2026-09-10","2026-09-19",4309.61,387.86,4697.47,"Paid (historical)",0],
+["INV-2026098","Woodlands Wholesale Pte Ltd","2026-09-04","Net 30","2026-09-18","2026-09-18",6140.04,552.60,6692.64,"Open",0],
+["INV-2026099","Tampines Retail Group","2026-08-20","Net 30","2026-09-19","2026-09-19",2215.37,199.38,2414.75,"Paid (historical)",0],
+];
+
+const rosterRows = [
+["DRV-1000","Rahim B.","Lalamove",42,275.84,12.38,25.76,262.46,"2026-09-06","2026-09-09","Regular (5+ days/wk)"],
+["DRV-1001","Wei Jie T.","Grab",39,315.68,1.43,27.03,290.08,"2026-09-06","2026-09-09","Ad-hoc"],
+["DRV-1002","Kumar S.","foodpanda",31,248.48,32.22,30.33,250.37,"2026-09-06","2026-09-09","Regular (5+ days/wk)"],
+["DRV-1003","Hafiz A.","Grab",85,687.74,36.42,55.29,668.87,"2026-09-06","2026-09-09","Ad-hoc"],
+["DRV-1004","Zhi Hao L.","foodpanda",82,608.33,7.00,83.60,531.73,"2026-09-06","2026-09-09","Regular (5+ days/wk)"],
+["DRV-1005","Suresh V.","foodpanda",39,293.51,16.15,29.54,280.12,"2026-09-06","2026-09-09","Regular (5+ days/wk)"],
+["DRV-1006","Nurul H.","Lalamove",86,683.51,43.79,70.20,657.10,"2026-09-06","2026-09-09","Part-time (2-4 days/wk)"],
+["DRV-1007","Jun Wei C.","Grab",74,596.35,31.71,49.35,578.71,"2026-09-06","2026-09-09","Part-time (2-4 days/wk)"],
+["DRV-1008","Arun K.","foodpanda",38,334.76,38.99,34.42,339.33,"2026-09-06","2026-09-09","Ad-hoc"],
+["DRV-1009","Farid M.","Lalamove",74,513.50,15.99,61.73,467.76,"2026-09-06","2026-09-09","Ad-hoc"],
+["DRV-1010","Boon Keng O.","Grab",37,301.35,7.70,37.29,271.76,"2026-09-06","2026-09-09","Part-time (2-4 days/wk)"],
+["DRV-1011","Dev P.","Grab",76,549.39,41.64,66.64,524.39,"2026-09-06","2026-09-09","Ad-hoc"],
+];
+
+const agingRows = [
+["Grab/foodpanda driver payouts (pooled)","Gig Payroll",7900,0,0,0],
+["Shell Fleet Card","Vehicle & Fuel",1180,0,0,0],
+["WeWork AMK (office lease)","Fixed Vendor",1800,0,0,0],
+["NTUC Income (fleet insurance)","Fixed Vendor",0,1800,0,0],
+["Software subscriptions (bundled)","Fixed Vendor",0,320,0,0],
+["IRAS (GST, next remittance)","Tax",0,0,2100,0],
+["Legacy vendor -- printing services","Fixed Vendor",0,0,0,450],
+];
+
+// ---------- render helpers ----------
+const fmt = n => 'S$' + Number(n).toLocaleString('en-SG', {maximumFractionDigits:0});
+const fmt2 = n => 'S$' + Number(n).toLocaleString('en-SG', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+function renderKPIs(){
+  const grid = document.getElementById('kpi-cards');
+  grid.innerHTML = kpis.map(([label,value,cls,status]) => `
+    <div class="card">
+      <div class="label">${label}</div>
+      <div class="value">${value}</div>
+      <span class="status ${cls}">${status}</span>
+    </div>`).join('');
+}
+
+function lineChart(svgId, values, color){
+  const svg = document.getElementById(svgId);
+  const w = 760, h = 220, pad = 36;
+  const max = Math.max(...values) * 1.08, min = Math.min(...values) * 0.92;
+  const stepX = (w - pad*2) / (values.length - 1);
+  const y = v => h - pad - ((v - min) / (max - min)) * (h - pad*2);
+  let path = values.map((v,i) => `${i===0?'M':'L'} ${pad + i*stepX} ${y(v)}`).join(' ');
+  let dots = values.map((v,i) => `<circle cx="${pad+i*stepX}" cy="${y(v)}" r="4" fill="${color}"/>`).join('');
+  let labels = values.map((v,i) => `<text x="${pad+i*stepX}" y="${h-8}" font-size="11" fill="#5B6B66" text-anchor="middle">Wk${i+1}</text>`).join('');
+  let gridlines = '';
+  for(let i=0;i<=3;i++){
+    const gy = pad + i*(h-pad*2)/3;
+    gridlines += `<line x1="${pad}" y1="${gy}" x2="${w-pad}" y2="${gy}" stroke="#DCE8E4" stroke-width="1"/>`;
+  }
+  svg.innerHTML = `${gridlines}<path d="${path}" fill="none" stroke="${color}" stroke-width="2.5"/>${dots}${labels}`;
+}
+
+function renderForecastTable(){
+  const tbl = document.getElementById('forecast-table');
+  const wkHeaders = Array.from({length:13}, (_,i)=>`<th>Wk${i+1}</th>`).join('');
+  let html = `<tr><th>Line Item</th>${wkHeaders}</tr>`;
+  html += `<tr class="section"><td colspan="14">CASH INFLOWS</td></tr>`;
+  const inflowRows = [["Customer receipts -- retail", weeks13.retail], ["Customer receipts -- F&B", weeks13.fb], ["New client win (scenario)", weeks13.newclient]];
+  inflowRows.forEach(([label, arr]) => {
+    html += `<tr><td>${label}</td>${arr.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
+  });
+  const totalInflow = weeks13.retail.map((_,i)=> weeks13.retail[i]+weeks13.fb[i]+weeks13.newclient[i]);
+  html += `<tr class="total"><td>Total Cash Inflows</td>${totalInflow.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
+  html += `<tr class="section"><td colspan="14">CASH OUTFLOWS</td></tr>`;
+  const outflowRows = [["Gig/contractor driver payouts", weeks13.gig], ["Fuel & vehicle maintenance", weeks13.fuel], ["Fixed vendor commitments", weeks13.fixed], ["Payroll -- core staff", weeks13.payroll], ["GST remittance (Wk13)", weeks13.gst], ["Driver churn impact", weeks13.churn]];
+  outflowRows.forEach(([label, arr]) => {
+    html += `<tr><td>${label}</td>${arr.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
+  });
+  const totalOutflow = weeks13.gig.map((_,i)=> weeks13.gig[i]+weeks13.fuel[i]+weeks13.fixed[i]+weeks13.payroll[i]+weeks13.gst[i]+weeks13.churn[i]);
+  html += `<tr class="total"><td>Total Cash Outflows</td>${totalOutflow.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
+  const net = totalInflow.map((v,i)=>v-totalOutflow[i]);
+  html += `<tr class="total"><td>Net Cash Flow</td>${net.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
+  let closing = [], bal = opening0;
+  net.forEach(v => { bal += v; closing.push(bal); });
+  html += `<tr class="total"><td>Closing Cash Balance</td>${closing.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
+  tbl.innerHTML = html;
+}
+
+function renderDriverTable(scenario){
+  const tbl = document.getElementById('driver-table');
+  let html = `<tr><th>Driver</th><th>Worst</th><th>Base</th><th>Best</th><th>Live Value</th></tr>`;
+  Object.values(drivers).forEach(d => {
+    const live = d[scenario];
+    html += `<tr><td>${d.label}</td><td>${d.worst}</td><td>${d.base}</td><td>${d.best}</td><td style="font-weight:800;color:var(--green)">${live}</td></tr>`;
+  });
+  tbl.innerHTML = html;
+}
+
+function computeScenario(scenario){
+  const d = {};
+  Object.entries(drivers).forEach(([k,v]) => d[k]=v[scenario]);
+  let bal = opening0, vals=[bal];
+  for(let w=0; w<7; w++){
+    const net = 1350 + d.newclient - (d.churn*180) - (d.latepay*15) - (d.fuel*8);
+    bal += net;
+    vals.push(Math.round(bal));
+  }
+  return vals;
+}
+
+function renderScenario(){
+  const scenario = document.getElementById('scenario-select').value;
+  renderDriverTable(scenario);
+  const vals = computeScenario(scenario);
+  const color = scenario==='worst' ? '#B91C1C' : scenario==='best' ? '#0F7A5C' : '#0369A1';
+  lineChart('scenario-chart', vals, color);
+}
+
+function renderAR(){
+  const tbl = document.getElementById('ar-table');
+  let html = `<tr><th>Invoice</th><th>Client</th><th>Inv. Date</th><th>Terms</th><th>Due Date</th><th>Expected Pay</th><th>Amt (ex-GST)</th><th>GST</th><th>Total</th><th>Status</th></tr>`;
+  arRows.forEach(r => {
+    html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${fmt2(r[6])}</td><td>${fmt2(r[7])}</td><td>${fmt2(r[8])}</td><td>${r[9]}</td></tr>`;
+  });
+  tbl.innerHTML = html;
+}
+
+function renderRoster(){
+  const tbl = document.getElementById('roster-table');
+  let html = `<tr><th>Driver</th><th>Name</th><th>Platform</th><th>Trips</th><th>Gross</th><th>Incentive</th><th>Deduction</th><th>Net Payout</th><th>Expected Pay</th><th>Engagement</th></tr>`;
+  rosterRows.forEach(r => {
+    html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${fmt2(r[4])}</td><td>${fmt2(r[5])}</td><td>${fmt2(r[6])}</td><td style="font-weight:700">${fmt2(r[7])}</td><td>${r[9]}</td><td>${r[10]}</td></tr>`;
+  });
+  const totalNet = rosterRows.reduce((s,r)=>s+r[7],0);
+  html += `<tr class="total"><td colspan="7">TOTAL NET PAYOUT</td><td>${fmt2(totalNet)}</td><td colspan="2"></td></tr>`;
+  tbl.innerHTML = html;
+}
+
+function renderAging(){
+  const tbl = document.getElementById('aging-table');
+  let html = `<tr><th>Vendor / Payee</th><th>Category</th><th>Current (0-30d)</th><th>31-60d</th><th>61-90d</th><th>90d+</th><th>Total Owed</th></tr>`;
+  let totals=[0,0,0,0];
+  agingRows.forEach(r => {
+    const total = r[2]+r[3]+r[4]+r[5];
+    totals = totals.map((t,i)=>t+r[2+i]);
+    html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${fmt(r[2])}</td><td>${fmt(r[3])}</td><td>${fmt(r[4])}</td><td>${fmt(r[5])}</td><td style="font-weight:700">${fmt(total)}</td></tr>`;
+  });
+  html += `<tr class="total"><td colspan="2">TOTAL</td>${totals.map(t=>`<td>${fmt(t)}</td>`).join('')}<td>${fmt(totals.reduce((a,b)=>a+b,0))}</td></tr>`;
+  tbl.innerHTML = html;
+}
+
+// ---------- tab switching ----------
+document.getElementById('tabs').addEventListener('click', e => {
+  if(e.target.tagName !== 'BUTTON') return;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+e.target.dataset.tab).classList.add('active');
+});
+
+document.getElementById('scenario-select').addEventListener('change', renderScenario);
+
+// ---------- init ----------
+renderKPIs();
+lineChart('trend-chart', trend8, '#0F7A5C');
+renderForecastTable();
+renderScenario();
+renderAR();
+renderRoster();
+renderAging();
+</script>
+</body>
+</html>

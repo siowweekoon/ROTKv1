@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledgerly</title>
+<style>
+:root{
+  --green:#0F7A5C; --dark:#0B2A24; --card:#F4FAF8; --border:#DCE8E4;
+  --gold:#92400E; --teal:#0369A1; --red:#B91C1C; --muted:#5B6B66; --white:#FFFFFF;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,'Segoe UI',Inter,sans-serif;background:#EEF4F1;color:var(--dark);line-height:1.6;}
+header{padding:16px 28px;display:flex;align-items:center;gap:10px;}
+header .logo{width:34px;height:34px;border-radius:8px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;}
+header .name{font-weight:800;font-size:18px;}
+.hero{max-width:860px;margin:20px auto 10px;padding:40px 28px 10px;text-align:center;}
+.hero .tag{display:inline-block;background:rgba(15,122,92,.1);color:var(--green);border:1px solid rgba(15,122,92,.3);padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:18px;}
+.hero h1{font-size:38px;font-weight:800;letter-spacing:-1px;margin:0 0 14px;}
+.hero h1 span{color:var(--green);}
+.hero p{font-size:17px;color:var(--muted);max-width:620px;margin:0 auto 28px;}
+.cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;}
+.btn{display:inline-block;padding:13px 26px;border-radius:9px;font-weight:700;font-size:15px;text-decoration:none;transition:transform .15s;}
+.btn:hover{transform:translateY(-1px);}
+.btn-primary{background:var(--green);color:#fff;}
+.btn-secondary{background:#fff;color:var(--green);border:1.5px solid var(--green);}
+main{max-width:920px;margin:0 auto;padding:20px 28px 60px;}
+.section{margin-bottom:40px;}
+.section h2{font-size:22px;margin-bottom:6px;}
+.section .lede{color:var(--muted);font-size:14px;margin-bottom:18px;}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px;}
+.card h3{margin:0 0 8px;font-size:15px;color:var(--green);}
+.card p{margin:0;font-size:13px;color:#374151;}
+.stat-row{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:14px;padding:22px;margin:26px 0;}
+.stat{text-align:center;}
+.stat .n{font-size:28px;font-weight:800;color:var(--green);}
+.stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.compare .card.bad{border-left:3px solid var(--red);}
+.compare .card.good{border-left:3px solid var(--green);}
+.foot-cta{background:var(--dark);color:#fff;border-radius:16px;padding:36px 28px;text-align:center;}
+.foot-cta h2{color:#fff;margin-bottom:10px;}
+.foot-cta p{color:#B8C7C2;margin-bottom:22px;font-size:14px;}
+.foot-cta .btn-primary{background:var(--green);}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:20px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">L</div>
+  <div class="name">Ledgerly</div>
+</header>
+
+<div class="hero">
+  <div class="tag">Product Preview</div>
+  <h1>See a payroll gap <span>six weeks out</span>,<br>not six days out.</h1>
+  <p>Weekly, driver-based cash-flow forecasting built for SMEs with gig-heavy payroll — logistics, F&amp;B delivery, home services. Founded by Su Ann, built for the customers she worked with as an analyst before she ever wrote a line of product spec.</p>
+  <div class="cta-row">
+    <a href="dashboard.html" class="btn btn-primary">Open the Live Demo →</a>
+    <a href="#how-it-works" class="btn btn-secondary">How it works</a>
+  </div>
+</div>
+
+<main>
+
+  <div class="stat-row">
+    <div class="stat"><div class="n">356,600</div><div class="l">SG SMEs (TAM)</div></div>
+    <div class="stat"><div class="n">18-24K</div><div class="l">Gig-heavy SME SAM (our estimate)</div></div>
+    <div class="stat"><div class="n">82%</div><div class="l">of SME failures are cash-flow, not the business</div></div>
+    <div class="stat"><div class="n">1</div><div class="l">pilot customer live (Ang Mo Kio Logistics)</div></div>
+  </div>
+
+  <div class="section">
+    <h2>The problem</h2>
+    <p class="lede">The owner doesn't see a payroll or tax-bill gap coming weeks out.</p>
+    <p style="color:#374151;font-size:14px;">Generic forecasting tools track contractual due dates. For a gig-worker-dependent SME, that's the wrong clock — payroll is variable by design, and the thing that actually determines a cash crunch is when money is <em>expected</em> to move, not when a contract says it should.</p>
+  </div>
+
+  <div class="section">
+    <h2>The solution</h2>
+    <p class="lede">Weekly, driver-based cash-flow forecasting, built around gig/contractor payroll specifically.</p>
+    <div class="grid3">
+      <div class="card"><h3>Expected pay date, not due date</h3><p>Every payable and receivable is tracked by when it will actually move, not when a contract says it should.</p></div>
+      <div class="card"><h3>Gig payroll as its own line</h3><p>Not lumped into "vendor commitments" — driver/rider payouts get their own forecast line, because that's what actually moves week to week.</p></div>
+      <div class="card"><h3>Driver-based scenarios</h3><p>New client wins, driver churn, late-paying clients — toggle a scenario and the whole 8-week projection recalculates live.</p></div>
+    </div>
+  </div>
+
+  <div class="section" id="how-it-works">
+    <h2>How it works</h2>
+    <p class="lede">Built on SGFinDex — Singapore's national read-only financial-data infrastructure. No payment initiation, no fund custody.</p>
+    <div class="compare">
+      <div class="card bad">
+        <h3>Without Ledgerly</h3>
+        <p>Real-time transaction view (what Aspire and most business accounts already give you) — accurate about where cash is <em>now</em>, silent about where it's going.</p>
+      </div>
+      <div class="card good">
+        <h3>With Ledgerly</h3>
+        <p>The same account, plus a live 13-week forecast that shows where cash is going and why — complementary to your existing business account, not a replacement for it.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Where we are — honestly</h2>
+    <div class="grid2">
+      <div class="card"><h3>Traction</h3><p>One pilot customer, onboarded August 2026. Too early for retention data — we're not overstating it.</p></div>
+      <div class="card"><h3>Regulatory position</h3><p>Read-only forecasting on SGFinDex-connected data. No fund custody. Formal compliance review in progress.</p></div>
+    </div>
+  </div>
+
+  <div class="foot-cta">
+    <h2>See it working, not just described</h2>
+    <p>The live demo below uses the same sample data — a real 13-week forecast, a working scenario planner, receivables, payroll roster, and AP aging, all cross-linked to each other.</p>
+    <a href="dashboard.html" class="btn btn-primary">Open the Live Demo →</a>
+  </div>
+
+</main>
+
+<footer>Ledgerly — fictional product built inside the Simulated Female Subject A research project. Sample data only, not a real company.</footer>
+
+</body>
+</html>
