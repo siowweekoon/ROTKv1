@@ -171,7 +171,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v9.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v10.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -188,10 +188,25 @@ const weeks13 = {
 };
 const opening0 = 42000;
 
-const trend8 = [42000,43350,44700,43100,41850,31200,33900,36200];
-// last week's real closing balance -- a historical reference point the forward-looking
-// trend8 array doesn't otherwise contain, needed to make this KPI genuinely computable
-// rather than asserting a dollar figure and percentage that don't derive from anything.
+// Real, computed closing-balance trend (not invented). trend8[i] = closing balance
+// at the END of week i+1 (matching the chart's own "Wk1..Wk8" labels honestly),
+// derived from the same weekly line items and formula as the 13-Week Forecast tab.
+// Found during the round-4 audit: this array used to be a hand-invented dip-and-
+// recover story with no relationship to the real forecast data at all.
+function computeRealForecastTrend(weekCount){
+  let bal = opening0, vals = [];
+  for(let w=0; w<weekCount; w++){
+    const inflow = weeks13.retail[w] + weeks13.fb[w] + weeks13.newclient[w];
+    const outflow = weeks13.gig[w] + weeks13.fuel[w] + weeks13.fixed[w] + weeks13.payroll[w] + weeks13.gst[w] + weeks13.churn[w];
+    bal += (inflow - outflow);
+    vals.push(Math.round(bal));
+  }
+  return vals;
+}
+const trend8 = computeRealForecastTrend(8);
+// last week's real closing balance -- a historical reference point outside the
+// forward-looking trend8 array, needed to make the net-cash KPI genuinely
+// computable rather than asserting a dollar figure that doesn't derive from anything.
 const lastWeekActualBalance = 40650;
 
 // "as of" date this whole demo is dated to -- used to compute days-overdue live, not hardcoded
@@ -264,9 +279,11 @@ function computeOverdueReceivablesKPI(){
 }
 
 function computeCurrentBalanceKPI(){
-  // verified consistent with trend8[0] during the round-5 audit -- computed
-  // directly from it now so the two can never drift apart again
-  return ["Current Cash Balance", fmt(trend8[0]), "ok", "On track"];
+  // opening0 IS today's real balance. NOTE: trend8[0] is a different, later number --
+  // the closing balance after Wk1 completes, not today. Corrected during the round-4
+  // audit after finding trend8 was previously a fabricated array that happened to
+  // start at opening0 by coincidence of the invented numbers.
+  return ["Current Cash Balance", fmt(opening0), "ok", "On track"];
 }
 
 function computeLowPointKPI(){
@@ -294,7 +311,9 @@ function computeRunwayKPI(){
 }
 
 function computeNetCashKPI(){
-  const diff = trend8[0] - lastWeekActualBalance;
+  // compares TODAY's real balance (opening0) to last week's -- trend8[0] is a future
+  // projection (closing balance after Wk1), not today, so must not be used here
+  const diff = opening0 - lastWeekActualBalance;
   const pct = (diff / lastWeekActualBalance * 100).toFixed(1);
   const sign = diff >= 0 ? '+' : '';
   return ["This Week vs. Last Week Net Cash", `${sign}${fmt(diff)} (${sign}${pct}%)`, diff>=0?"ok":"attn", diff>=0?"Improving":"Declining"];
@@ -379,8 +398,11 @@ function computeScenario(scenario){
   const d = {};
   Object.entries(drivers).forEach(([k,v]) => d[k]=v[scenario]);
   const latepayDrag = totalOpenAR * (d.latepay / 30) / 8; // spread over the 8-week window
-  let bal = opening0, vals=[bal];
-  for(let w=0; w<7; w++){
+  // vals[i] = closing balance at the END of week i+1, matching the chart's own
+  // "Wk1..Wk8" labels honestly -- previously seeded vals[0] with today's balance
+  // and mislabeled it "Wk1", the same off-by-one class of bug found in trend8.
+  let bal = opening0, vals=[];
+  for(let w=0; w<8; w++){
     const revenue = weeks13.retail[w] + weeks13.fb[w] + d.newclient - (d.churn * avgRevenuePerDriver);
     const gigCost = weeks13.gig[w] - (d.churn * avgPayoutPerDriver);
     const fuelCost = weeks13.fuel[w] * (1 + d.fuel/100);
