@@ -107,11 +107,11 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
   <div class="note" style="margin-top:10px;">
     <strong>How the tabs connect:</strong>
     <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;">
-      <li><strong>Gig Payroll Roster</strong> and <strong>Receivables</strong> are the real inputs — actual amounts and dates.</li>
+      <li><strong>Gig Payroll Roster</strong> and <strong>Receivables</strong> are the real inputs — actual amounts and dates. Uncheck a driver on the Roster tab (out sick, etc.) and their real payout and revenue share come out of every projection below, live.</li>
       <li><strong>13-Week Forecast</strong> aggregates those into weekly revenue/cost lines.</li>
       <li><strong>Scenario Planner</strong> takes those same lines and perturbs them by driver assumptions (churn, new clients, fuel, late payment) to project 8 weeks forward.</li>
-      <li>This <strong>Overview</strong> page rolls up numbers from all three.</li>
-      <li><strong>AP Aging</strong> is a separate, point-in-time snapshot of what's currently owed — it doesn't change with the scenario selector, since it reflects today's actual payables, not a projection.</li>
+      <li>This <strong>Overview</strong> page rolls up numbers from all of the above.</li>
+      <li><strong>AP Aging</strong> is a point-in-time snapshot of what's currently owed. Adding a vendor there is a real payable, not a hypothetical — it lands in the snapshot immediately and also feeds every projection, unlike the Worst/Base/Best scenario selector which only toggles between assumptions.</li>
     </ul>
   </div>
 </section>
@@ -154,6 +154,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
       <li><strong>Fuel volatility</strong> scales the real fuel/vehicle-maintenance line from the forecast by the selected percentage.</li>
       <li><strong>Late-paying client delay</strong> drags against the real total open receivables from the Receivables tab, spread evenly across the 8-week window.</li>
       <li>Each week's balance = last week's balance + (adjusted revenue − adjusted costs). Change the dropdown above and every number here, including the chart, recalculates from these same rules.</li>
+      <li><strong>Driver exclusions</strong> (Gig Payroll Roster tab) and <strong>added vendors</strong> (AP Aging tab) feed into this same calculation too — they're real, not hypothetical, so they apply on top of whichever scenario is selected, not instead of it.</li>
     </ol>
   </div>
   <div class="chart-box">
@@ -193,7 +194,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v16.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v17.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
