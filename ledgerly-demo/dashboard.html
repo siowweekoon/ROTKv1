@@ -157,7 +157,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v3.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v4.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -177,7 +177,6 @@ const opening0 = 42000;
 const kpisStatic = [
   ["Current Cash Balance","S$42,000","ok","On track"],
   ["Projected 6-Week Low Point","S$31,200 (Wk 5)","watch","Watch"],
-  ["Weeks of Runway at Current Burn","9.8 weeks","ok","On track"],
   ["Gig Payroll Due Next 7 Days","S$7,900","ok","Confirmed"],
   ["Scenario Spread (Worst to Best, Wk 8)","S$28,400 to S$46,100","watch","Wide -- monitor churn"],
 ];
@@ -256,6 +255,18 @@ function computeOverdueReceivablesKPI(){
   return ["Overdue Receivables", `${fmt(total)} (${overdue.length} invoice${overdue.length>1?'s':''}, up to ${maxDays}d)`, "attn", "Attention -- see Receivables tab"];
 }
 
+function computeRunwayKPI(){
+  // burn rate = average weekly decline, counted only across weeks that actually
+  // declined -- averaging in growth weeks would understate real burn risk
+  const deltas = trend8.slice(1).map((v,i)=>v-trend8[i]);
+  const declines = deltas.filter(d=>d<0);
+  if(declines.length === 0) return ["Weeks of Runway at Current Burn","No declining weeks in forecast","ok","On track"];
+  const avgBurn = -declines.reduce((a,b)=>a+b,0)/declines.length;
+  const weeks = (trend8[0] / avgBurn).toFixed(1);
+  const status = weeks < 8 ? "attn" : weeks < 12 ? "watch" : "ok";
+  return ["Weeks of Runway at Current Burn", `${weeks} weeks`, status, status==="attn"?"Attention":status==="watch"?"Watch":"On track"];
+}
+
 function computeNetCashKPI(){
   const diff = trend8[0] - lastWeekActualBalance;
   const pct = (diff / lastWeekActualBalance * 100).toFixed(1);
@@ -265,7 +276,7 @@ function computeNetCashKPI(){
 
 function renderKPIs(){
   const grid = document.getElementById('kpi-cards');
-  const all = [...kpisStatic.slice(0,4), computeOverdueReceivablesKPI(), computeNetCashKPI(), ...kpisStatic.slice(4)];
+  const all = [...kpisStatic.slice(0,2), computeRunwayKPI(), ...kpisStatic.slice(2,3), computeOverdueReceivablesKPI(), computeNetCashKPI(), ...kpisStatic.slice(3)];
   grid.innerHTML = all.map(([label,value,cls,status]) => `
     <div class="card">
       <div class="label">${label}</div>
