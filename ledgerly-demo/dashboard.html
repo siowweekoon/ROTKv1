@@ -157,7 +157,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v4.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v5.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -175,9 +175,6 @@ const weeks13 = {
 const opening0 = 42000;
 
 const kpisStatic = [
-  ["Current Cash Balance","S$42,000","ok","On track"],
-  ["Projected 6-Week Low Point","S$31,200 (Wk 5)","watch","Watch"],
-  ["Gig Payroll Due Next 7 Days","S$7,900","ok","Confirmed"],
   ["Scenario Spread (Worst to Best, Wk 8)","S$28,400 to S$46,100","watch","Wide -- monitor churn"],
 ];
 const trend8 = [42000,43350,44700,43100,41850,31200,33900,36200];
@@ -255,6 +252,24 @@ function computeOverdueReceivablesKPI(){
   return ["Overdue Receivables", `${fmt(total)} (${overdue.length} invoice${overdue.length>1?'s':''}, up to ${maxDays}d)`, "attn", "Attention -- see Receivables tab"];
 }
 
+function computeCurrentBalanceKPI(){
+  // verified consistent with trend8[0] during the round-5 audit -- computed
+  // directly from it now so the two can never drift apart again
+  return ["Current Cash Balance", fmt(trend8[0]), "ok", "On track"];
+}
+
+function computeLowPointKPI(){
+  const min = Math.min(...trend8);
+  const idx = trend8.indexOf(min);
+  const status = min < 32000 ? "watch" : "ok";
+  return ["Projected Low Point", `${fmt(min)} (Wk ${idx+1})`, status, status==="watch"?"Watch":"On track"];
+}
+
+function computeGigPayrollDueKPI(){
+  const totalNet = rosterRows.reduce((s,r)=>s+r[7],0);
+  return ["Gig Payroll Due Next 7 Days", fmt(totalNet), "ok", "Confirmed -- from payout roster"];
+}
+
 function computeRunwayKPI(){
   // burn rate = average weekly decline, counted only across weeks that actually
   // declined -- averaging in growth weeks would understate real burn risk
@@ -276,7 +291,7 @@ function computeNetCashKPI(){
 
 function renderKPIs(){
   const grid = document.getElementById('kpi-cards');
-  const all = [...kpisStatic.slice(0,2), computeRunwayKPI(), ...kpisStatic.slice(2,3), computeOverdueReceivablesKPI(), computeNetCashKPI(), ...kpisStatic.slice(3)];
+  const all = [computeCurrentBalanceKPI(), computeLowPointKPI(), computeRunwayKPI(), computeGigPayrollDueKPI(), computeOverdueReceivablesKPI(), computeNetCashKPI(), ...kpisStatic];
   grid.innerHTML = all.map(([label,value,cls,status]) => `
     <div class="card">
       <div class="label">${label}</div>
