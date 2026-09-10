@@ -190,15 +190,15 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
   <div class="controls" style="margin-top:14px;">
     <label for="new-vendor-name"><strong>Add vendor:</strong></label>
     <input type="text" id="new-vendor-name" placeholder="Vendor name" style="padding:7px 10px;border-radius:8px;border:1px solid var(--border);font-size:13px;">
-    <input type="number" id="new-vendor-amount" placeholder="Weekly amount (SGD)" style="padding:7px 10px;border-radius:8px;border:1px solid var(--border);font-size:13px;width:170px;">
-    <button onclick="addVendor()" style="padding:7px 16px;border-radius:8px;border:none;background:var(--green);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">Add</button>
+    <input type="number" id="new-vendor-amount" placeholder="Weekly amount (SGD)" aria-label="Weekly amount in Singapore dollars" style="padding:7px 10px;border-radius:8px;border:1px solid var(--border);font-size:13px;width:170px;">
+    <button onclick="addVendor()" aria-label="Add this vendor to AP Aging" style="padding:7px 16px;border-radius:8px;border:none;background:var(--green);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">Add</button>
   </div>
   <div class="note">A newly added vendor is a real payable, not a hypothetical scenario — it lands in the "Current" bucket here immediately and also reduces the projections in 13-Week Forecast and Scenario Planner, unlike the Worst/Base/Best toggle which only affects the scenario chart.</div>
 </section>
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v18.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v19.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
