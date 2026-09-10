@@ -182,11 +182,18 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
   <h2>Accounts Payable Aging</h2>
   <div class="panel-sub">Standard 0-30 / 31-60 / 61-90 / 90+ buckets. Gig payroll stays in "Current" by design — the whole point of the product is catching it before it ages.</div>
   <div class="table-wrap"><table id="aging-table"></table></div>
+  <div class="controls" style="margin-top:14px;">
+    <label for="new-vendor-name"><strong>Add vendor:</strong></label>
+    <input type="text" id="new-vendor-name" placeholder="Vendor name" style="padding:7px 10px;border-radius:8px;border:1px solid var(--border);font-size:13px;">
+    <input type="number" id="new-vendor-amount" placeholder="Weekly amount (SGD)" style="padding:7px 10px;border-radius:8px;border:1px solid var(--border);font-size:13px;width:170px;">
+    <button onclick="addVendor()" style="padding:7px 16px;border-radius:8px;border:none;background:var(--green);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">Add</button>
+  </div>
+  <div class="note">A newly added vendor is a real payable, not a hypothetical scenario — it lands in the "Current" bucket here immediately and also reduces the projections in 13-Week Forecast and Scenario Planner, unlike the Worst/Base/Best toggle which only affects the scenario chart.</div>
 </section>
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v15.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v16.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -203,6 +210,27 @@ const weeks13 = {
 };
 const opening0 = 42000;
 
+// Interactive real-time state (round-1-of-this-batch scope). One shared source of
+// truth -- every view (KPIs, all 3 charts, roster total, aging total) must read
+// from these, and recomputeAll() must re-render all of them together. This is the
+// hard requirement Su Ann set to avoid reintroducing the disconnected-views bug
+// the prior 10-round batch spent its whole run fixing.
+let excludedDriverIds = new Set();
+let extraVendors = []; // {name, weeklyAmount}
+
+function excludedWeeklyGigCost(){
+  return rosterRows.filter(r => excludedDriverIds.has(r[0])).reduce((s,r)=>s+r[7], 0);
+}
+function excludedWeeklyRevenueLoss(){
+  // No real per-driver revenue-attribution data exists in the roster (it only has
+  // payout), so this uses the same avgRevenuePerDriver estimate the churn driver
+  // already relies on -- documented honestly, not presented as more precise than it is.
+  return excludedDriverIds.size * avgRevenuePerDriver;
+}
+function extraVendorWeeklyTotal(){
+  return extraVendors.reduce((s,v)=>s+v.weeklyAmount, 0);
+}
+
 // Real, computed closing-balance trend (not invented). trend8[i] = closing balance
 // at the END of week i+1 (matching the chart's own "Wk1..Wk8" labels honestly),
 // derived from the same weekly line items and formula as the 13-Week Forecast tab.
@@ -210,15 +238,22 @@ const opening0 = 42000;
 // recover story with no relationship to the real forecast data at all.
 function computeRealForecastTrend(weekCount){
   let bal = opening0, vals = [];
+  const gigReduction = excludedWeeklyGigCost();
+  const revenueReduction = excludedWeeklyRevenueLoss();
+  const vendorAdd = extraVendorWeeklyTotal();
   for(let w=0; w<weekCount; w++){
-    const inflow = weeks13.retail[w] + weeks13.fb[w] + weeks13.newclient[w];
-    const outflow = weeks13.gig[w] + weeks13.fuel[w] + weeks13.fixed[w] + weeks13.payroll[w] + weeks13.gst[w] + weeks13.churn[w];
+    const inflow = weeks13.retail[w] + weeks13.fb[w] + weeks13.newclient[w] - revenueReduction;
+    const outflow = (weeks13.gig[w] - gigReduction) + weeks13.fuel[w] + weeks13.fixed[w] + weeks13.payroll[w] + weeks13.gst[w] + weeks13.churn[w] + vendorAdd;
     bal += (inflow - outflow);
     vals.push(Math.round(bal));
   }
   return vals;
 }
-const trend8 = computeRealForecastTrend(8);
+// Not computed here -- computeRealForecastTrend() now depends on roster/AR data
+// defined later in this file (for the driver-exclusion/vendor-addition feature),
+// so eagerly calling it at this point would hit a real load-order bug (caught by
+// testing before deploy). Set to its real value once by recomputeAll() at init.
+let trend8 = [];
 // last week's real closing balance -- a historical reference point outside the
 // forward-looking trend8 array, needed to make the net-cash KPI genuinely
 // computable rather than asserting a dollar figure that doesn't derive from anything.
@@ -419,15 +454,18 @@ function computeScenario(scenario){
   const d = {};
   Object.entries(drivers).forEach(([k,v]) => d[k]=v[scenario]);
   const latepayDrag = totalOpenAR * (d.latepay / 30) / 8; // spread over the 8-week window
+  const gigReduction = excludedWeeklyGigCost();
+  const revenueReduction = excludedWeeklyRevenueLoss();
+  const vendorAdd = extraVendorWeeklyTotal();
   // vals[i] = closing balance at the END of week i+1, matching the chart's own
   // "Wk1..Wk8" labels honestly -- previously seeded vals[0] with today's balance
   // and mislabeled it "Wk1", the same off-by-one class of bug found in trend8.
   let bal = opening0, vals=[];
   for(let w=0; w<8; w++){
-    const revenue = weeks13.retail[w] + weeks13.fb[w] + d.newclient - (d.churn * avgRevenuePerDriver);
-    const gigCost = weeks13.gig[w] - (d.churn * avgPayoutPerDriver);
+    const revenue = weeks13.retail[w] + weeks13.fb[w] + d.newclient - (d.churn * avgRevenuePerDriver) - revenueReduction;
+    const gigCost = weeks13.gig[w] - (d.churn * avgPayoutPerDriver) - gigReduction;
     const fuelCost = weeks13.fuel[w] * (1 + d.fuel/100);
-    const fixedCosts = weeks13.fixed[w] + weeks13.payroll[w];
+    const fixedCosts = weeks13.fixed[w] + weeks13.payroll[w] + vendorAdd;
     const net = revenue - gigCost - fuelCost - fixedCosts - latepayDrag;
     bal += net;
     vals.push(Math.round(bal));
@@ -460,27 +498,57 @@ function renderAR(){
   tbl.innerHTML = html;
 }
 
+function toggleDriver(driverId){
+  if(excludedDriverIds.has(driverId)) excludedDriverIds.delete(driverId);
+  else excludedDriverIds.add(driverId);
+  recomputeAll();
+}
+
 function renderRoster(){
   const tbl = document.getElementById('roster-table');
-  let html = `<tr><th>Driver</th><th>Name</th><th>Platform</th><th>Trips</th><th>Gross</th><th>Incentive</th><th>Deduction</th><th>Net Payout</th><th>Expected Pay</th><th>Engagement</th></tr>`;
+  let html = `<tr><th>Include this week</th><th>Driver</th><th>Name</th><th>Platform</th><th>Trips</th><th>Gross</th><th>Incentive</th><th>Deduction</th><th>Net Payout</th><th>Expected Pay</th><th>Engagement</th></tr>`;
   rosterRows.forEach(r => {
-    html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${fmt2(r[4])}</td><td>${fmt2(r[5])}</td><td>${fmt2(r[6])}</td><td style="font-weight:700">${fmt2(r[7])}</td><td>${r[9]}</td><td>${r[10]}</td></tr>`;
+    const excluded = excludedDriverIds.has(r[0]);
+    const checkbox = `<input type="checkbox" ${excluded?'':'checked'} onchange="toggleDriver('${r[0]}')" aria-label="Include ${r[1]} in this week's payout">`;
+    const rowStyle = excluded ? ' style="opacity:.45;text-decoration:line-through;"' : '';
+    html += `<tr${rowStyle}><td>${checkbox}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${fmt2(r[4])}</td><td>${fmt2(r[5])}</td><td>${fmt2(r[6])}</td><td style="font-weight:700">${fmt2(r[7])}</td><td>${r[9]}</td><td>${r[10]}</td></tr>`;
   });
-  const totalNet = rosterRows.reduce((s,r)=>s+r[7],0);
-  html += `<tr class="total"><td colspan="7">TOTAL NET PAYOUT</td><td>${fmt2(totalNet)}</td><td colspan="2"></td></tr>`;
+  const totalNet = rosterRows.filter(r=>!excludedDriverIds.has(r[0])).reduce((s,r)=>s+r[7],0);
+  html += `<tr class="total"><td colspan="8">TOTAL NET PAYOUT${excludedDriverIds.size?` (${excludedDriverIds.size} excluded)`:''}</td><td>${fmt2(totalNet)}</td><td colspan="2"></td></tr>`;
   tbl.innerHTML = html;
+}
+
+function addVendor(){
+  const nameInput = document.getElementById('new-vendor-name');
+  const amtInput = document.getElementById('new-vendor-amount');
+  const name = nameInput.value.trim();
+  const amount = parseFloat(amtInput.value);
+  if(!name || !amount || amount <= 0) return;
+  extraVendors.push({name, weeklyAmount: amount});
+  nameInput.value = '';
+  amtInput.value = '';
+  recomputeAll();
+}
+
+function removeVendor(idx){
+  extraVendors.splice(idx, 1);
+  recomputeAll();
 }
 
 function renderAging(){
   const tbl = document.getElementById('aging-table');
-  let html = `<tr><th>Vendor / Payee</th><th>Category</th><th>Current (0-30d)</th><th>31-60d</th><th>61-90d</th><th>90d+</th><th>Total Owed</th></tr>`;
+  let html = `<tr><th>Vendor / Payee</th><th>Category</th><th>Current (0-30d)</th><th>31-60d</th><th>61-90d</th><th>90d+</th><th>Total Owed</th><th></th></tr>`;
   let totals=[0,0,0,0];
   agingRows.forEach(r => {
     const total = r[2]+r[3]+r[4]+r[5];
     totals = totals.map((t,i)=>t+r[2+i]);
-    html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${fmt(r[2])}</td><td>${fmt(r[3])}</td><td>${fmt(r[4])}</td><td>${fmt(r[5])}</td><td style="font-weight:700">${fmt(total)}</td></tr>`;
+    html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${fmt(r[2])}</td><td>${fmt(r[3])}</td><td>${fmt(r[4])}</td><td>${fmt(r[5])}</td><td style="font-weight:700">${fmt(total)}</td><td></td></tr>`;
   });
-  html += `<tr class="total"><td colspan="2">TOTAL</td>${totals.map(t=>`<td>${fmt(t)}</td>`).join('')}<td>${fmt(totals.reduce((a,b)=>a+b,0))}</td></tr>`;
+  extraVendors.forEach((v, idx) => {
+    totals[0] += v.weeklyAmount; // new vendors land in Current -- they're new, not overdue
+    html += `<tr><td>${v.name}</td><td>Added Vendor (live)</td><td>${fmt(v.weeklyAmount)}</td><td>${fmt(0)}</td><td>${fmt(0)}</td><td>${fmt(0)}</td><td style="font-weight:700">${fmt(v.weeklyAmount)}</td><td><button onclick="removeVendor(${idx})" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;">Remove</button></td></tr>`;
+  });
+  html += `<tr class="total"><td colspan="2">TOTAL</td>${totals.map(t=>`<td>${fmt(t)}</td>`).join('')}<td>${fmt(totals.reduce((a,b)=>a+b,0))}</td><td></td></tr>`;
   tbl.innerHTML = html;
 }
 
@@ -518,16 +586,26 @@ document.getElementById('tabs').addEventListener('keydown', e => {
 
 document.getElementById('scenario-select').addEventListener('change', renderScenario);
 
+// ---------- single recompute path ----------
+// Every interactive control (driver checkbox, add/remove vendor) calls this and
+// only this. It re-derives trend8 fresh, then re-renders every view that could
+// possibly depend on the changed state, in one place, so nothing can go stale
+// independently of anything else.
+function recomputeAll(){
+  trend8 = computeRealForecastTrend(8);
+  renderKPIs();
+  lineChart('trend-chart', trend8, '#0F7A5C');
+  renderForecastTable();
+  lineChart('forecast-chart', computeRealForecastTrend(13), '#0369A1');
+  renderScenario();
+  renderRoster();
+  renderAging();
+}
+
 // ---------- init ----------
 document.querySelectorAll('#tabs button').forEach(b => b.tabIndex = b.classList.contains('active') ? 0 : -1);
-renderKPIs();
-lineChart('trend-chart', trend8, '#0F7A5C');
-renderForecastTable();
-lineChart('forecast-chart', computeRealForecastTrend(13), '#0369A1');
-renderScenario();
 renderAR();
-renderRoster();
-renderAging();
+recomputeAll();
 </script>
 </body>
 </html>
