@@ -157,7 +157,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v2.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v3.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -385,18 +385,41 @@ function renderAging(){
 }
 
 // ---------- tab switching ----------
+function activateTab(btn){
+  document.querySelectorAll('#tabs button').forEach(b=>{b.classList.remove('active'); b.setAttribute('aria-selected','false'); b.tabIndex=-1;});
+  btn.classList.add('active');
+  btn.setAttribute('aria-selected','true');
+  btn.tabIndex=0;
+  btn.focus();
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+}
+
 document.getElementById('tabs').addEventListener('click', e => {
   if(e.target.tagName !== 'BUTTON') return;
-  document.querySelectorAll('#tabs button').forEach(b=>{b.classList.remove('active'); b.setAttribute('aria-selected','false');});
-  e.target.classList.add('active');
-  e.target.setAttribute('aria-selected','true');
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panel-'+e.target.dataset.tab).classList.add('active');
+  activateTab(e.target);
+});
+
+// WAI-ARIA tabs pattern: Left/Right (and Home/End) move between tabs; Tab key
+// leaves the tablist entirely via native focus order (unaffected by this handler).
+document.getElementById('tabs').addEventListener('keydown', e => {
+  if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) return;
+  const tabs = Array.from(document.querySelectorAll('#tabs button'));
+  const current = tabs.indexOf(document.activeElement);
+  if(current === -1) return;
+  e.preventDefault();
+  let next;
+  if(e.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length;
+  else if(e.key === 'ArrowRight') next = (current + 1) % tabs.length;
+  else if(e.key === 'Home') next = 0;
+  else next = tabs.length - 1;
+  activateTab(tabs[next]);
 });
 
 document.getElementById('scenario-select').addEventListener('change', renderScenario);
 
 // ---------- init ----------
+document.querySelectorAll('#tabs button').forEach(b => b.tabIndex = b.classList.contains('active') ? 0 : -1);
 renderKPIs();
 lineChart('trend-chart', trend8, '#0F7A5C');
 renderForecastTable();
