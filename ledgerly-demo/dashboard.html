@@ -80,7 +80,11 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
       <div class="sub">Cash-flow forecasting for gig-worker-dependent SMEs — sample data, Ang Mo Kio Logistics Pte Ltd (pilot)</div>
     </div>
   </div>
-  <a href="index.html" class="back-link">← Ledgerly overview</a>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span id="override-indicator" style="font-size:12px;color:var(--gold);font-weight:700;"></span>
+    <button onclick="resetAllOverrides()" style="font-size:12px;font-weight:700;color:var(--muted);background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;">Reset to baseline</button>
+    <a href="index.html" class="back-link">← Ledgerly overview</a>
+  </div>
 </header>
 
 <nav id="tabs" role="tablist" aria-label="Ledgerly demo sections">
@@ -194,7 +198,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v17.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v18.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -499,6 +503,12 @@ function renderAR(){
   tbl.innerHTML = html;
 }
 
+function resetAllOverrides(){
+  excludedDriverIds = new Set();
+  extraVendors = [];
+  recomputeAll();
+}
+
 function toggleDriver(driverId){
   if(excludedDriverIds.has(driverId)) excludedDriverIds.delete(driverId);
   else excludedDriverIds.add(driverId);
@@ -593,6 +603,10 @@ document.getElementById('scenario-select').addEventListener('change', renderScen
 // possibly depend on the changed state, in one place, so nothing can go stale
 // independently of anything else.
 function recomputeAll(){
+  const overrideCount = excludedDriverIds.size + extraVendors.length;
+  document.getElementById('override-indicator').innerHTML = overrideCount
+    ? `⚠ ${overrideCount} live override${overrideCount>1?'s':''} active`
+    : '';
   trend8 = computeRealForecastTrend(8);
   renderKPIs();
   lineChart('trend-chart', trend8, '#0F7A5C');
