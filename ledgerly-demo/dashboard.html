@@ -171,7 +171,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v10.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v11.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
@@ -213,10 +213,10 @@ const lastWeekActualBalance = 40650;
 const AS_OF_DATE = new Date("2026-09-07");
 
 const drivers = {
-  churn:     {label:"Weekly driver churn (lost gig drivers/wk)", desc:"How many gig drivers stop taking shifts for this customer each week.", worst:3, base:1, best:0},
-  newclient: {label:"New client win -- weekly revenue add (SGD)", desc:"Extra weekly revenue if a new delivery/logistics contract is signed.", worst:0, base:1500, best:3200},
-  latepay:   {label:"Late-paying client delay beyond terms (days)", desc:"How many days late clients pay past their stated invoice terms, on average.", worst:12, base:5, best:0},
-  fuel:      {label:"Fuel cost volatility (% vs baseline)", desc:"How much fuel/vehicle costs move vs. the base-case assumption.", worst:18, base:5, best:-3},
+  churn:     {label:"Weekly driver churn (lost gig drivers/wk)", desc:"How many gig drivers stop taking shifts for this customer each week.", unitFn: v => ` driver${v===1?'':'s'}/wk`, worst:3, base:1, best:0},
+  newclient: {label:"New client win -- weekly revenue add (SGD)", desc:"Extra weekly revenue if a new delivery/logistics contract is signed.", isCurrency:true, worst:0, base:1500, best:3200},
+  latepay:   {label:"Late-paying client delay beyond terms (days)", desc:"How many days late clients pay past their stated invoice terms, on average.", unitFn: v => ` day${v===1?'':'s'}`, worst:12, base:5, best:0},
+  fuel:      {label:"Fuel cost volatility (% vs baseline)", desc:"How much fuel/vehicle costs move vs. the base-case assumption.", unitFn: () => '%', worst:18, base:5, best:-3},
 };
 
 const arRows = [
@@ -375,12 +375,18 @@ function renderForecastTable(){
   tbl.innerHTML = html;
 }
 
+function fmtDriverVal(d, v){
+  if(d.isCurrency) return fmt(v);
+  const u = d.unitFn ? d.unitFn(v) : '';
+  return `${v}${u}`;
+}
+
 function renderDriverTable(scenario){
   const tbl = document.getElementById('driver-table');
   let html = `<tr><th>Driver</th><th>Worst</th><th>Base</th><th>Best</th><th>Live Value</th></tr>`;
   Object.values(drivers).forEach(d => {
     const live = d[scenario];
-    html += `<tr><td>${d.label}<span class="driver-desc">${d.desc}</span></td><td>${d.worst}</td><td>${d.base}</td><td>${d.best}</td><td style="font-weight:800;color:var(--green)">${live}</td></tr>`;
+    html += `<tr><td>${d.label}<span class="driver-desc">${d.desc}</span></td><td>${fmtDriverVal(d,d.worst)}</td><td>${fmtDriverVal(d,d.base)}</td><td>${fmtDriverVal(d,d.best)}</td><td style="font-weight:800;color:var(--green)">${fmtDriverVal(d,live)}</td></tr>`;
   });
   tbl.innerHTML = html;
 }
