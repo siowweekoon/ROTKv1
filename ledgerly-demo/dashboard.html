@@ -353,7 +353,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v38.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v39.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -600,7 +600,29 @@ function computeRecommendedActions(){
     });
   }
 
-  // Lever 2: vendor payment timing -- only recommends deferral when cash is
+  // Lever 2: surface a real, dated one-time cost bump early -- this is literally
+  // the product's own pitch ("see it six weeks out, not six days out"), but
+  // before this it only showed up in a subtitle sentence on the Forecast tab,
+  // never on the Overview tab where someone would actually glance first (round-7
+  // audit finding). Detected generically from the data itself (any week whose
+  // fixed cost differs from the baseline/mode) rather than a second hardcoded
+  // "Wk5 / $4,200" reference living disconnected from the chart that already
+  // reflects it.
+  const fixedCounts = {};
+  weeks13.fixed.forEach(v => fixedCounts[v] = (fixedCounts[v]||0)+1);
+  const baselineFixed = Number(Object.entries(fixedCounts).sort((a,b)=>b[1]-a[1])[0][0]);
+  const upcomingBump = weeks13.fixed
+    .map((v,i)=>({week:i+1, extra:v-baselineFixed}))
+    .find(x => x.extra > 0 && x.week <= 8);
+  if(upcomingBump){
+    actions.push({
+      cls: 'info',
+      label: 'Upcoming cost flagged early',
+      detail: `Week ${upcomingBump.week} includes a one-time cost of ${fmt(upcomingBump.extra)} above the normal fixed-cost baseline (${fmt(baselineFixed)}/wk) -- already reflected in the trend and forecast above, buffer holds through it, no action needed. This is exactly the kind of thing Ledgerly is built to flag before it happens, not after.`
+    });
+  }
+
+  // Lever 3: vendor payment timing -- only recommends deferral when cash is
   // actually tight, and never against gig payroll or tax (never squeeze drivers,
   // never miss IRAS). Stays honest when nothing needs deferring right now instead
   // of inventing urgency to look more useful than the real numbers support.
