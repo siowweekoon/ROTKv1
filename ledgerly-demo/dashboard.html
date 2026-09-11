@@ -353,7 +353,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v42.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v43.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -378,6 +378,11 @@ const weeks13 = {
   churn:    [0,0,0,0,0,-400,-400,-400,0,0,0,0,0],
 };
 const opening0 = 42000;
+// Round-6 audit (Su Ann): this buffer was a hardcoded 32000 literal in 2 places
+// (projectedLowPoint's watch threshold and Recommended Actions' vendor-timing
+// lever) that happened to agree but had nothing forcing them to. Single named
+// constant now -- both callsites reference this, not their own copy.
+const VENDOR_PAYMENT_WATCH_BUFFER = 32000;
 
 // Interactive real-time state (round-1-of-this-batch scope). One shared source of
 // truth -- every view (KPIs, all 3 charts, roster total, aging total) must read
@@ -541,7 +546,7 @@ function projectedLowPoint(){
   const min = Math.min(...candidates);
   const idx = candidates.indexOf(min);
   const label = idx === 0 ? 'Today' : `Wk ${idx}`;
-  const status = min < 32000 ? "watch" : "ok";
+  const status = min < VENDOR_PAYMENT_WATCH_BUFFER ? "watch" : "ok";
   return { min, idx, label, status };
 }
 
@@ -656,7 +661,7 @@ function computeRecommendedActions(){
   // never miss IRAS). Stays honest when nothing needs deferring right now instead
   // of inventing urgency to look more useful than the real numbers support.
   const lowPointVal = projectedLowPoint().min;
-  const bufferThreshold = 32000; // matches computeLowPointKPI's own "watch" threshold
+  const bufferThreshold = VENDOR_PAYMENT_WATCH_BUFFER;
   const deferable = agingRows.filter(r => r[1] !== 'Gig Payroll' && r[1] !== 'Tax' && (r[2]+r[3]+r[4]+r[5]) > 0);
   if(lowPointVal < bufferThreshold && deferable.length > 0){
     const target = deferable.reduce((a,b) => (a[2]+a[3]+a[4]+a[5]) < (b[2]+b[3]+b[4]+b[5]) ? a : b);
