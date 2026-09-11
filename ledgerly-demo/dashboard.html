@@ -143,6 +143,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <section class="panel active" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
   <h2>Dashboard</h2>
   <div class="panel-sub">As of 2026-09-07 — the same 7 KPIs designed for the mobile companion app home screen.</div>
+  <div class="note">AMK Logistics is a last-mile delivery-as-a-service business: it bills retail and F&amp;B clients (Bishan Home Services, Tampines Retail Group, and others in the Receivables tab) for delivery fulfillment, and pays gig drivers on Grab/foodpanda/Lalamove as its direct cost of delivering it. "Retail revenue" and "F&amp;B revenue" throughout this demo are service revenue from those client segments -- not product sales -- and gig payroll is the cost of fulfilling them, the same way Grab or foodpanda takes a cut of what a merchant is billed and pays a smaller amount to the driver.</div>
   <div class="card-grid" id="kpi-cards"></div>
   <div class="chart-box">
     <strong>8-Week Closing Cash Trend</strong>
@@ -344,7 +345,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v31.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v32.0</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -591,7 +592,7 @@ function renderForecastTable(){
   const adjFixed = weeks13.fixed.map(v => v + vendorAdd);
 
   html += `<tr class="section"><td colspan="14">CASH INFLOWS</td></tr>`;
-  const inflowRows = [["Customer receipts -- retail", adjRetail], ["Customer receipts -- F&B", weeks13.fb], ["New client win (scenario)", weeks13.newclient]];
+  const inflowRows = [["Customer receipts -- retail-segment clients", adjRetail], ["Customer receipts -- F&B-segment clients", weeks13.fb], ["New client win (scenario)", weeks13.newclient]];
   inflowRows.forEach(([label, arr]) => {
     html += `<tr><td>${label}</td>${arr.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
   });
