@@ -206,7 +206,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
     <strong>8-Week Closing Cash — Live Projection</strong>
     <svg id="scenario-chart" width="100%" height="220" viewBox="0 0 760 220"></svg>
   </div>
-  <div class="note">Same mechanism as the Excel version in Su Ann Downloads: a single scenario selector drives every downstream number. Nothing here is a static mockup.</div>
+  <div class="note">Same mechanism as the original source spreadsheet: a single scenario selector drives every downstream number. Nothing here is a static mockup.</div>
 </section>
 
 <!-- RECEIVABLES -->
@@ -344,10 +344,10 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v29.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v30.0</span></footer>
 
 <script>
-// ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
+// ---------- real data extracted from the source spreadsheet ----------
 const weeks13 = {
   retail:   [8200,8400,7900,8600,8100,8900,9100,8300,8700,9200,8800,9000,9300],
   fb:       [5100,5300,5000,5400,5200,5600,5700,5300,5500,5800,5600,5900,6000],
@@ -364,7 +364,7 @@ const opening0 = 42000;
 // Interactive real-time state (round-1-of-this-batch scope). One shared source of
 // truth -- every view (KPIs, all 3 charts, roster total, aging total) must read
 // from these, and recomputeAll() must re-render all of them together. This is the
-// hard requirement Su Ann set to avoid reintroducing the disconnected-views bug
+// hard requirement the product owner set to avoid reintroducing the disconnected-views bug
 // the prior 10-round batch spent its whole run fixing.
 let excludedDriverIds = new Set();
 let extraVendors = []; // {name, weeklyAmount}
