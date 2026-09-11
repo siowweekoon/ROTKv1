@@ -12,14 +12,14 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 :root{
-  /* Color refinement (owner request, no content change) -- see dashboard.html
-     for the full reasoning. Same palette, kept in sync across both pages. */
-  --green:#0F7A5C; --dark:#0B2A24; --card:#F4FAF8; --border:#DCE8E4;
-  --gold:#B45309; --teal:#0E7490; --red:#B91C1C; --muted:#5B6B66; --white:#FFFFFF;
+  /* Full blue theme (owner request) -- see dashboard.html for the full
+     reasoning. Same palette, kept in sync across both pages. */
+  --green:#1D4ED8; --dark:#0B1D33; --card:#F0F6FC; --border:#D7E3F0;
+  --gold:#B45309; --teal:#0369A1; --red:#B91C1C; --muted:#55677E; --white:#FFFFFF;
 }
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{margin:0;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:#EEF4F1;color:var(--dark);line-height:1.6;}
+body{margin:0;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:#EAF2FA;color:var(--dark);line-height:1.6;}
 header{padding:16px 28px;display:flex;align-items:center;gap:10px;}
 header .logo{width:34px;height:34px;border-radius:8px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;}
 header .name{font-weight:800;font-size:18px;}
@@ -41,7 +41,7 @@ main{max-width:920px;margin:0 auto;padding:20px 28px 60px;}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;}
 .card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px;}
 .card h3{margin:0 0 8px;font-size:15px;color:var(--green);}
-.card p{margin:0;font-size:13px;color:#374151;}
+.card p{margin:0;font-size:13px;color:#334155;}
 .stat-row{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:14px;padding:22px;margin:26px 0;}
 .stat{text-align:center;}
 .stat .n{font-size:28px;font-weight:800;color:var(--green);}
@@ -51,7 +51,7 @@ main{max-width:920px;margin:0 auto;padding:20px 28px 60px;}
 .compare .card.good{border-left:3px solid var(--green);}
 .foot-cta{background:var(--dark);color:#fff;border-radius:16px;padding:36px 28px;text-align:center;}
 .foot-cta h2{color:#fff;margin-bottom:10px;}
-.foot-cta p{color:#B8C7C2;margin-bottom:22px;font-size:14px;}
+.foot-cta p{color:#B7C4D6;margin-bottom:22px;font-size:14px;}
 .foot-cta .btn-primary{background:var(--green);}
 footer{text-align:center;color:var(--muted);font-size:11px;padding:20px;}
 .pill{font-size:11px;background:var(--card);color:var(--green);padding:2px 8px;border-radius:20px;font-weight:700;margin-left:8px;}
@@ -86,7 +86,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:20px;}
   <div class="section">
     <h2>The problem</h2>
     <p class="lede">The owner doesn't see a payroll or tax-bill gap coming weeks out.</p>
-    <p style="color:#374151;font-size:14px;">Generic forecasting tools track contractual due dates. For a gig-worker-dependent SME, that's the wrong clock — payroll is variable by design, and the thing that actually determines a cash crunch is when money is <em>expected</em> to move, not when a contract says it should.</p>
+    <p style="color:#334155;font-size:14px;">Generic forecasting tools track contractual due dates. For a gig-worker-dependent SME, that's the wrong clock — payroll is variable by design, and the thing that actually determines a cash crunch is when money is <em>expected</em> to move, not when a contract says it should.</p>
   </div>
 
   <div class="section">
@@ -102,7 +102,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:20px;}
   <div class="section">
     <h2>Why not just use Float or Fathom</h2>
     <p class="lede">13-week rolling cash-flow forecasting itself isn't new — Float, Fathom, and Agicap already do it well off Xero or QuickBooks. We're not claiming otherwise.</p>
-    <p style="color:#374151;font-size:14px;">What none of them do is treat gig/contractor payroll as its own dedicated forecast line for a business that depends on it — it gets folded into generic "vendor commitments" instead, even though it's the one cost that actually swings week to week for a gig-dependent SME. That's the real, narrower claim here: not "better cash-flow forecasting" in general, but forecasting built around the one variable general-purpose tools weren't designed for.</p>
+    <p style="color:#334155;font-size:14px;">What none of them do is treat gig/contractor payroll as its own dedicated forecast line for a business that depends on it — it gets folded into generic "vendor commitments" instead, even though it's the one cost that actually swings week to week for a gig-dependent SME. That's the real, narrower claim here: not "better cash-flow forecasting" in general, but forecasting built around the one variable general-purpose tools weren't designed for.</p>
   </div>
 
   <div class="section" id="how-it-works">
@@ -152,7 +152,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:20px;}
 
 </main>
 
-<footer>Ledgerly — fictional product built inside the Simulated Female Subject A research project. Sample data only, not a real company. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v27.0 (landing page)</span></footer>
+<footer>Ledgerly — fictional product built inside the Simulated Female Subject A research project. Sample data only, not a real company. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v28.0 (landing page)</span></footer>
 
 </body>
 </html>

@@ -12,27 +12,27 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 :root{
-  /* Color refinement (owner request, no content change): kept the existing
-     green-primary/neutral-background structure -- research-validated for
-     fintech (money/growth association), and the original palette already
-     passed WCAG AA (4.5:1+) everywhere it's used, so this isn't an
-     accessibility fix, it's a harmony refinement. Two real problems found:
-     --teal was a flat, unrelated blue (#0369A1) that clashed with its own
-     name and with the green-dominant palette instead of bridging it; --gold
-     read as a muddy, dated brown rather than a clean caution color. Both
-     replaced with hues that stay in the same warm/cool family as --green
-     and --red, verified to still clear 4.5:1 contrast on every background
-     they're actually used against before shipping.
+  /* Full blue theme (owner request): replaced the green-primary palette
+     entirely. Variable NAMES kept unchanged (--green, --teal) to avoid
+     touching ~50+ usage sites across the file and increasing risk -- only
+     the hex VALUES changed. --green is now the primary blue, --teal a
+     secondary/accent blue used to visually distinguish the Forecast tab's
+     chart and the Scenario Planner's "Base" case line from the primary.
+     --gold and --red kept as warm semantic caution/error colors on purpose
+     -- real dashboards reserve red/amber for status regardless of brand
+     hue (research-backed, same reasoning as the prior refinement round).
+     Every text/button color re-verified against 4.5:1 WCAG AA before
+     shipping, not assumed from the old palette's numbers.
   */
-  --green:#0F7A5C; --dark:#0B2A24; --card:#F4FAF8; --border:#DCE8E4;
-  --gold:#B45309; --teal:#0E7490; --red:#B91C1C; --muted:#5B6B66; --white:#FFFFFF;
+  --green:#1D4ED8; --dark:#0B1D33; --card:#F0F6FC; --border:#D7E3F0;
+  --gold:#B45309; --teal:#0369A1; --red:#B91C1C; --muted:#55677E; --white:#FFFFFF;
 }
 *{box-sizing:border-box;}
 /* Inter and IBM Plex Sans are the named top fintech typography choices (round 1
    research) -- both for tabular-figure quality and the "reliable, authoritative"
    tone fintech products need. Loaded properly and made primary here instead of
    sitting last in the stack where system fonts would almost always win instead. */
-body{margin:0;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:#EEF4F1;color:var(--dark);}
+body{margin:0;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:#EAF2FA;color:var(--dark);}
 header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
 header .brand{display:flex;align-items:center;gap:10px;}
 header .brand .logo{width:34px;height:34px;border-radius:8px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;}
@@ -61,7 +61,7 @@ h2{font-size:20px;margin:0 0 4px;}
 .rec-card.high{border-left-color:var(--red);}
 .rec-card.info{border-left-color:var(--green);}
 .rec-card .rec-label{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:4px;}
-.rec-card .rec-detail{font-size:13px;color:#374151;line-height:1.55;}
+.rec-card .rec-detail{font-size:13px;color:#334155;line-height:1.55;}
 table{width:100%;border-collapse:collapse;background:var(--white);border-radius:10px;overflow:hidden;border:1px solid var(--border);font-size:13px;font-variant-numeric:tabular-nums;}
 .card .value{font-variant-numeric:tabular-nums;}
 th{background:var(--green);color:#fff;text-align:left;padding:9px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;position:sticky;top:0;}
@@ -96,7 +96,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 .phone-appbar{padding:8px 16px 10px;flex:0 0 auto;border-bottom:1px solid var(--border);}
 .phone-appbar .app-name{font-size:13px;font-weight:800;color:var(--dark);}
 .phone-appbar .app-sub{font-size:10px;color:var(--muted);margin-top:1px;}
-.phone-content{flex:1 1 auto;padding:12px 14px;overflow:hidden;background:#EEF4F1;}
+.phone-content{flex:1 1 auto;padding:12px 14px;overflow:hidden;background:#EAF2FA;}
 .phone-card{background:#fff;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--border);}
 .phone-card .pc-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;font-weight:700;}
 .phone-card .pc-value{font-size:20px;font-weight:800;color:var(--dark);margin-top:2px;font-variant-numeric:tabular-nums;}
@@ -218,7 +218,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
   </div>
   <div class="chart-box" style="margin-bottom:16px;">
     <strong>How this projection is actually calculated</strong>
-    <ol style="font-size:13px;color:#374151;margin:10px 0 0;padding-left:20px;line-height:1.8;">
+    <ol style="font-size:13px;color:#334155;margin:10px 0 0;padding-left:20px;line-height:1.8;">
       <li>Starts from the same real weekly revenue and cost lines used in the 13-Week Forecast tab (retail, F&amp;B, gig payroll, fuel, fixed costs) -- not a separate number.</li>
       <li><strong>Driver churn</strong> reduces both revenue and gig payroll cost, using the actual average revenue and payout per driver computed from the Gig Payroll Roster tab -- losing a driver costs more in lost revenue than it saves in payroll, which is why churn is net-negative.</li>
       <li><strong>New client win</strong> adds straight to weekly revenue.</li>
@@ -385,7 +385,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v47.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v48.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -751,13 +751,13 @@ function lineChart(svgId, values, color){
   const y = v => h - pad - ((v - min) / (max - min)) * (h - pad*2);
   let path = values.map((v,i) => `${i===0?'M':'L'} ${padLeft + i*stepX} ${y(v)}`).join(' ');
   let dots = values.map((v,i) => `<circle cx="${padLeft+i*stepX}" cy="${y(v)}" r="4" fill="${color}"/>`).join('');
-  let labels = values.map((v,i) => `<text x="${padLeft+i*stepX}" y="${h-8}" font-size="11" fill="#5B6B66" text-anchor="middle">Wk${i+1}</text>`).join('');
+  let labels = values.map((v,i) => `<text x="${padLeft+i*stepX}" y="${h-8}" font-size="11" fill="#55677E" text-anchor="middle">Wk${i+1}</text>`).join('');
   let gridlines = '', yLabels = '';
   for(let i=0;i<=3;i++){
     const gy = pad + i*(h-pad*2)/3;
     const gVal = Math.round(max - i*(max-min)/3);
-    gridlines += `<line x1="${padLeft}" y1="${gy}" x2="${w-pad}" y2="${gy}" stroke="#DCE8E4" stroke-width="1"/>`;
-    yLabels += `<text x="${padLeft-8}" y="${gy+4}" font-size="10" fill="#5B6B66" text-anchor="end">${fmt(gVal)}</text>`;
+    gridlines += `<line x1="${padLeft}" y1="${gy}" x2="${w-pad}" y2="${gy}" stroke="#D7E3F0" stroke-width="1"/>`;
+    yLabels += `<text x="${padLeft-8}" y="${gy+4}" font-size="10" fill="#55677E" text-anchor="end">${fmt(gVal)}</text>`;
   }
   svg.innerHTML = `${gridlines}${yLabels}<path d="${path}" fill="none" stroke="${color}" stroke-width="2.5"/>${dots}${labels}`;
 }
@@ -865,7 +865,7 @@ function renderScenario(){
   const scenario = document.getElementById('scenario-select').value;
   renderDriverTable(scenario);
   const vals = computeScenario(scenario);
-  const color = scenario==='worst' ? '#B91C1C' : scenario==='best' ? '#0F7A5C' : '#0E7490';
+  const color = scenario==='worst' ? '#B91C1C' : scenario==='best' ? '#1D4ED8' : '#0369A1';
   lineChart('scenario-chart', vals, color);
 }
 
@@ -1038,9 +1038,9 @@ function recomputeAll(){
   trend8 = computeRealForecastTrend(8);
   renderKPIs();
   renderRecommendedActions();
-  lineChart('trend-chart', trend8, '#0F7A5C');
+  lineChart('trend-chart', trend8, '#1D4ED8');
   renderForecastTable();
-  lineChart('forecast-chart', computeRealForecastTrend(13), '#0E7490');
+  lineChart('forecast-chart', computeRealForecastTrend(13), '#0369A1');
   renderScenario();
   renderRoster();
   renderAging();
