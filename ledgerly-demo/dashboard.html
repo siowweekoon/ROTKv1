@@ -336,12 +336,12 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
             <div class="phone-alert">⚠ S$15,383 in overdue receivables — 2 invoices</div>
             <div class="phone-card">
               <div class="pc-label">Bishan Home Services Pte Ltd</div>
-              <div class="pc-value" style="font-size:16px;">S$9,006.63</div>
+              <div class="pc-value" style="font-size:16px;">S$9,007</div>
               <div class="pc-note">INV-2026090 · 4 days overdue</div>
             </div>
             <div class="phone-card">
               <div class="pc-label">Tampines Retail Group</div>
-              <div class="pc-value" style="font-size:16px;">S$6,376.39</div>
+              <div class="pc-value" style="font-size:16px;">S$6,376</div>
               <div class="pc-note">INV-2026094 · 13 days overdue</div>
             </div>
           </div>
@@ -366,7 +366,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
             <div id="mob-roster-rows"></div>
             <div class="phone-card" style="margin-top:6px;">
               <div class="pc-label" id="mob-roster-total-label">Total this week (12 drivers)</div>
-              <div class="pc-value" id="mob-roster-total-value">S$5,122.68</div>
+              <div class="pc-value" id="mob-roster-total-value">S$5,123</div>
             </div>
           </div>
           <div class="phone-navbar">
@@ -385,7 +385,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v48.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v49.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -875,7 +875,7 @@ function renderAR(){
   arRows.forEach(r => {
     const od = daysOverdue(r[4], r[9]);
     const odCell = od > 0 ? `<td style="font-weight:800;color:var(--red)">${od}d</td>` : `<td style="color:var(--muted)">—</td>`;
-    html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${fmt2(r[6])}</td><td>${fmt2(r[7])}</td><td>${fmt2(r[8])}</td><td>${r[9]}</td>${odCell}</tr>`;
+    html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${fmt(r[6])}</td><td>${fmt(r[7])}</td><td>${fmt(r[8])}</td><td>${r[9]}</td>${odCell}</tr>`;
   });
   tbl.innerHTML = html;
 }
@@ -904,10 +904,10 @@ function renderRoster(){
     // wraps a normal-sized checkbox rather than blowing up the checkbox itself visually
     const checkbox = `<label style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;cursor:pointer;"><input type="checkbox" style="width:20px;height:20px;cursor:pointer;" ${excluded?'':'checked'} onchange="toggleDriver('${r[0]}')" aria-label="Include ${r[1]} in this week's payout"></label>`;
     const rowStyle = excluded ? ' style="opacity:.45;text-decoration:line-through;"' : '';
-    html += `<tr${rowStyle}><td>${r[1]}</td><td>${checkbox}</td><td>${r[0]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${fmt2(r[4])}</td><td>${fmt2(r[5])}</td><td>${fmt2(r[6])}</td><td style="font-weight:700">${fmt2(r[7])}</td><td>${r[9]}</td><td>${r[10]}</td></tr>`;
+    html += `<tr${rowStyle}><td>${r[1]}</td><td>${checkbox}</td><td>${r[0]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${fmt(r[4])}</td><td>${fmt(r[5])}</td><td>${fmt(r[6])}</td><td style="font-weight:700">${fmt(r[7])}</td><td>${r[9]}</td><td>${r[10]}</td></tr>`;
   });
   const totalNet = computeNetPayoutSum();
-  html += `<tr class="total"><td colspan="8">TOTAL NET PAYOUT${excludedDriverIds.size?` (${excludedDriverIds.size} excluded)`:''}</td><td>${fmt2(totalNet)}</td><td colspan="2"></td></tr>`;
+  html += `<tr class="total"><td colspan="8">TOTAL NET PAYOUT${excludedDriverIds.size?` (${excludedDriverIds.size} excluded)`:''}</td><td>${fmt(totalNet)}</td><td colspan="2"></td></tr>`;
   tbl.innerHTML = html;
 }
 
@@ -949,11 +949,11 @@ function renderMobilePreview(){
   const rowsHtml = shown.map(r => {
     const excluded = excludedDriverIds.has(r[0]);
     const style = excluded ? ' style="opacity:.45;text-decoration:line-through;"' : '';
-    return `<div class="phone-row-item"${style}><div><div class="prow-name">${r[1]}</div><div class="prow-sub">${r[2]} · ${r[3]} trips</div></div><div class="prow-amt">${fmt2(r[7])}</div></div>`;
+    return `<div class="phone-row-item"${style}><div><div class="prow-name">${r[1]}</div><div class="prow-sub">${r[2]} · ${r[3]} trips</div></div><div class="prow-amt">${fmt(r[7])}</div></div>`;
   }).join('') + `<div class="phone-row-item" style="opacity:.6;"><div><div class="prow-name">+${remaining} more drivers</div><div class="prow-sub">see full roster on desktop</div></div><div class="prow-amt">—</div></div>`;
   document.getElementById('mob-roster-rows').innerHTML = rowsHtml;
   document.getElementById('mob-roster-total-label').textContent = `Total this week (${rosterRows.length} drivers)${excludedDriverIds.size ? ` (${excludedDriverIds.size} excluded)` : ''}`;
-  document.getElementById('mob-roster-total-value').textContent = fmt2(computeNetPayoutSum());
+  document.getElementById('mob-roster-total-value').textContent = fmt(computeNetPayoutSum());
 }
 
 function addVendor(){
