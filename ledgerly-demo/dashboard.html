@@ -353,7 +353,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v41.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v42.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -530,17 +530,23 @@ function computeCurrentBalanceKPI(){
   return ["Current Cash Balance", fmt(opening0), "ok", "On track"];
 }
 
-function computeLowPointKPI(){
-  // Su Ann's round-3 diligence catch: this only scanned trend8 (the forward
-  // 8-week projection), never today's actual balance -- so it could report a
-  // "low point" HIGHER than the real Current Cash Balance shown right next to
-  // it. A skeptical board member catches that contradiction in ten seconds.
-  // Today is now a real candidate, same as every other week.
+// Round-5 audit (Su Ann's instruction, after the same bug turned up a second
+// time in Recommended Actions): the "does the low point include today"
+// calculation was duplicated independently in 3 places and drifted out of
+// sync when only 1 was fixed. Single source of truth now -- every caller
+// (the KPI card, the Recommended Actions vendor-timing lever, and the Mobile
+// Preview screen) reads from here, so a future fix can't miss a spot again.
+function projectedLowPoint(){
   const candidates = [opening0, ...trend8];
   const min = Math.min(...candidates);
   const idx = candidates.indexOf(min);
   const label = idx === 0 ? 'Today' : `Wk ${idx}`;
   const status = min < 32000 ? "watch" : "ok";
+  return { min, idx, label, status };
+}
+
+function computeLowPointKPI(){
+  const { min, label, status } = projectedLowPoint();
   return ["Projected Low Point", `${fmt(min)} (${label})`, status, status==="watch"?"Watch":"On track"];
 }
 
@@ -649,7 +655,7 @@ function computeRecommendedActions(){
   // actually tight, and never against gig payroll or tax (never squeeze drivers,
   // never miss IRAS). Stays honest when nothing needs deferring right now instead
   // of inventing urgency to look more useful than the real numbers support.
-  const lowPointVal = Math.min(...trend8);
+  const lowPointVal = projectedLowPoint().min;
   const bufferThreshold = 32000; // matches computeLowPointKPI's own "watch" threshold
   const deferable = agingRows.filter(r => r[1] !== 'Gig Payroll' && r[1] !== 'Tax' && (r[2]+r[3]+r[4]+r[5]) > 0);
   if(lowPointVal < bufferThreshold && deferable.length > 0){
@@ -865,11 +871,10 @@ function renderMobilePreview(){
     ? `Wed 9 Sep · ${activeDrivers} of ${rosterRows.length} drivers`
     : `Wed 9 Sep · ${rosterRows.length} drivers`;
 
-  const lowMin = Math.min(...trend8);
-  const lowIdx = trend8.indexOf(lowMin);
-  const lowStatus = lowMin < 32000 ? 'Watch' : 'On track';
-  document.getElementById('mob-lowpoint-value').textContent = fmt(lowMin);
-  document.getElementById('mob-lowpoint-note').textContent = `Week ${lowIdx+1} · ${lowStatus}`;
+  const lp = projectedLowPoint();
+  const lowStatus = lp.status === 'watch' ? 'Watch' : 'On track';
+  document.getElementById('mob-lowpoint-value').textContent = fmt(lp.min);
+  document.getElementById('mob-lowpoint-note').textContent = `${lp.label} · ${lowStatus}`;
 
   const shown = rosterRows.slice(0, 5);
   const remaining = rosterRows.length - shown.length;
