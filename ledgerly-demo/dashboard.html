@@ -353,7 +353,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v40.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v41.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -457,7 +457,7 @@ const arRows = [
 ["INV-2026096","Clementi Convenience Chain","2026-08-13","Net 30","2026-09-12","2026-09-26",2971.24,267.41,3238.65,"Open",0],
 ["INV-2026097","Bishan Home Services Pte Ltd","2026-09-03","Net 14","2026-09-10","2026-09-19",4309.61,387.86,4697.47,"Paid (historical)",0],
 ["INV-2026098","Woodlands Wholesale Pte Ltd","2026-09-04","Net 30","2026-09-18","2026-09-18",6140.04,552.60,6692.64,"Open",0],
-["INV-2026099","Tampines Retail Group","2026-08-20","Net 30","2026-09-19","2026-09-19",2215.37,199.38,2414.75,"Paid (historical)",0],
+["INV-2026099","Tampines Retail Group","2026-07-21","Net 30","2026-08-20","2026-08-22",2215.37,199.38,2414.75,"Paid (historical)",0],
 ];
 
 const rosterRows = [
@@ -619,7 +619,7 @@ function computeRecommendedActions(){
     actions.push({
       cls: 'high',
       label: 'Accelerate collection on overdue receivables',
-      detail: `${fmt(totalOverdue)} is overdue across ${overdue.length} invoice${overdue.length>1?'s':''} -- oldest is ${oldest[1]} (${fmt2(oldest[8])}, ${oldestDays} days overdue). Two concrete levers: invoice financing against the open AR book (illustrative ${Math.round(advanceRate*100)}% advance rate would release ~${fmt(totalOverdue*advanceRate)} this week without waiting on the client), or a direct early-payment-discount nudge to ${oldest[1]} specifically, since they're both the oldest and one of the larger balances.`
+      detail: `${fmt(totalOverdue)} is overdue across ${overdue.length} invoice${overdue.length>1?'s':''} -- oldest is ${oldest[1]} (${fmt2(oldest[8])}, ${oldestDays} days overdue; payment-history pattern unclear -- this data model has no actual-paid-on-date field, so treat as a flag for manual follow-up, not a confirmed repeat offender). Two concrete levers: invoice financing against the open AR book (illustrative ${Math.round(advanceRate*100)}% advance rate would release ~${fmt(totalOverdue*advanceRate)} this week without waiting on the client), or a direct early-payment-discount nudge to ${oldest[1]} specifically, since they're both the oldest and one of the larger balances.`
     });
   }
 
