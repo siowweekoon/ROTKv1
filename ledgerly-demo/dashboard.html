@@ -344,7 +344,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v30.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v31.0</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -447,6 +447,22 @@ const rosterRows = [
 ["DRV-1010","Boon Keng O.","Grab",37,301.35,7.70,37.29,271.76,"2026-09-06","2026-09-09","Part-time (2-4 days/wk)"],
 ["DRV-1011","Dev P.","Grab",76,549.39,41.64,66.64,524.39,"2026-09-06","2026-09-09","Ad-hoc"],
 ];
+
+// Reconcile weeks13.gig with the real roster total -- round-5 audit of this batch
+// found weeks13.gig was an independently hardcoded array (avg ~S$7,523/wk) that had
+// drifted from rosterRows' actual per-driver sum (S$5,122.68/wk, verified constant).
+// Two different numbers for the same real fact -- the Forecast tab, Overview trend
+// chart, and Scenario Planner all disagreed with the Roster tab, Gig Payroll Due KPI,
+// and Mobile Preview about how much gig payroll actually costs. rosterRows represents
+// one real payout week (this week, matching AS_OF_DATE), so Wk1 (index 0) must equal
+// it exactly; the remaining 12 weeks keep their original relative week-to-week shape
+// (busier vs quieter weeks), rescaled to the correct current-week anchor instead of
+// an arbitrary disconnected one.
+(function reconcileGigPayrollLine(){
+  const rosterWeeklyBase = rosterRows.reduce((s,r)=>s+r[7],0);
+  const scaleFactor = rosterWeeklyBase / weeks13.gig[0];
+  weeks13.gig = weeks13.gig.map(v => Math.round(v * scaleFactor));
+})();
 
 const agingRows = [
 ["Grab/foodpanda driver payouts (pooled)","Gig Payroll",7900,0,0,0],
