@@ -42,6 +42,14 @@ h2{font-size:20px;margin:0 0 4px;}
 .status.ok{background:rgba(15,122,92,.12);color:var(--green);}
 .status.watch{background:rgba(212,175,55,.15);color:var(--gold);}
 .status.attn{background:rgba(185,28,28,.12);color:var(--red);}
+.rec-actions{margin-bottom:22px;}
+.rec-actions h3{font-size:14px;margin:0 0 4px;}
+.rec-actions .rec-sub{font-size:12px;color:var(--muted);margin-bottom:10px;}
+.rec-card{background:var(--white);border:1px solid var(--border);border-left:4px solid var(--muted);border-radius:10px;padding:14px 16px;margin-bottom:10px;}
+.rec-card.high{border-left-color:var(--red);}
+.rec-card.info{border-left-color:var(--green);}
+.rec-card .rec-label{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:4px;}
+.rec-card .rec-detail{font-size:13px;color:#374151;line-height:1.55;}
 table{width:100%;border-collapse:collapse;background:var(--white);border-radius:10px;overflow:hidden;border:1px solid var(--border);font-size:13px;font-variant-numeric:tabular-nums;}
 .card .value{font-variant-numeric:tabular-nums;}
 th{background:var(--green);color:#fff;text-align:left;padding:9px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;position:sticky;top:0;}
@@ -145,6 +153,11 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
   <div class="panel-sub">As of 2026-09-07 — the same 7 KPIs designed for the mobile companion app home screen.</div>
   <div class="note">AMK Logistics is a last-mile delivery-as-a-service business: it bills retail and F&amp;B clients (Bishan Home Services, Tampines Retail Group, and others in the Receivables tab) for delivery fulfillment, and pays gig drivers on Grab/foodpanda/Lalamove as its direct cost of delivering it. "Retail revenue" and "F&amp;B revenue" throughout this demo are service revenue from those client segments -- not product sales -- and gig payroll is the cost of fulfilling them, the same way Grab or foodpanda takes a cut of what a merchant is billed and pays a smaller amount to the driver.</div>
   <div class="card-grid" id="kpi-cards"></div>
+  <div class="rec-actions">
+    <h3>Recommended Actions</h3>
+    <div class="rec-sub">Computed from the same live data as the KPIs above -- not static advice. This is what Ledgerly proposes doing about a cash-flow risk, not just where it flags one.</div>
+    <div id="rec-actions-list"></div>
+  </div>
   <div class="chart-box">
     <strong>8-Week Closing Cash Trend</strong>
     <svg id="trend-chart" width="100%" height="220" viewBox="0 0 760 220"></svg>
@@ -345,7 +358,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v32.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v33.0</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -549,6 +562,64 @@ function renderKPIs(){
       <div class="label">${label}</div>
       <div class="value">${value}</div>
       <span class="status ${cls}">${status}</span>
+    </div>`).join('');
+}
+
+// Round 3 of the owner's 5-item business-model batch: detecting a cash-flow gap
+// and charting it is not a product on its own -- real tools in this category pair
+// the forecast with an actual lever (invoice financing, an early-payment nudge,
+// vendor-payment timing). This computes real, data-driven recommendations from
+// the same live state as the KPIs above, not static advice text.
+function computeRecommendedActions(){
+  const actions = [];
+
+  // Lever 1: overdue receivables -- fires for real whenever any invoice is overdue.
+  const overdue = arRows.filter(r => daysOverdue(r[4], r[9]) > 0);
+  if(overdue.length > 0){
+    const oldest = overdue.reduce((a,b)=> daysOverdue(b[4],b[9]) > daysOverdue(a[4],a[9]) ? b : a);
+    const oldestDays = daysOverdue(oldest[4], oldest[9]);
+    const totalOverdue = overdue.reduce((s,r)=>s+r[8],0);
+    const advanceRate = 0.80;
+    actions.push({
+      cls: 'high',
+      label: 'Accelerate collection on overdue receivables',
+      detail: `${fmt(totalOverdue)} is overdue across ${overdue.length} invoice${overdue.length>1?'s':''} -- oldest is ${oldest[1]} (${fmt2(oldest[8])}, ${oldestDays} days overdue). Two concrete levers: invoice financing against the open AR book (illustrative ${Math.round(advanceRate*100)}% advance rate would release ~${fmt(totalOverdue*advanceRate)} this week without waiting on the client), or a direct early-payment-discount nudge to ${oldest[1]} specifically, since they're both the oldest and one of the larger balances.`
+    });
+  }
+
+  // Lever 2: vendor payment timing -- only recommends deferral when cash is
+  // actually tight, and never against gig payroll or tax (never squeeze drivers,
+  // never miss IRAS). Stays honest when nothing needs deferring right now instead
+  // of inventing urgency to look more useful than the real numbers support.
+  const lowPointVal = Math.min(...trend8);
+  const bufferThreshold = 32000; // matches computeLowPointKPI's own "watch" threshold
+  const deferable = agingRows.filter(r => r[1] !== 'Gig Payroll' && r[1] !== 'Tax' && (r[2]+r[3]+r[4]+r[5]) > 0);
+  if(lowPointVal < bufferThreshold && deferable.length > 0){
+    const target = deferable.reduce((a,b) => (a[2]+a[3]+a[4]+a[5]) < (b[2]+b[3]+b[4]+b[5]) ? a : b);
+    const targetTotal = target[2]+target[3]+target[4]+target[5];
+    actions.push({
+      cls: 'high',
+      label: 'Delay a non-critical vendor payment',
+      detail: `Projected low point (${fmt(lowPointVal)}) dips below the ${fmt(bufferThreshold)} buffer. ${target[0]} (${fmt(targetTotal)}, ${target[1]}) is the smallest non-essential, non-tax, non-gig-payroll payable on the AP Aging tab -- delaying it a week would ease the tightest point in the projection without touching driver payouts or IRAS obligations.`
+    });
+  } else {
+    actions.push({
+      cls: 'info',
+      label: 'Vendor payment timing',
+      detail: `Projected low point (${fmt(lowPointVal)}) stays above the ${fmt(bufferThreshold)} buffer across this window, so no vendor payment needs to be delayed right now. If it ever dips below buffer, Ledgerly flags a specific non-critical, non-tax, non-gig-payroll vendor here as the deferral candidate first -- never driver payouts, never IRAS.`
+    });
+  }
+
+  return actions;
+}
+
+function renderRecommendedActions(){
+  const list = document.getElementById('rec-actions-list');
+  const actions = computeRecommendedActions();
+  list.innerHTML = actions.map(a => `
+    <div class="rec-card ${a.cls}">
+      <div class="rec-label">${a.label}</div>
+      <div class="rec-detail">${a.detail}</div>
     </div>`).join('');
 }
 
@@ -797,6 +868,7 @@ function recomputeAll(){
     : '';
   trend8 = computeRealForecastTrend(8);
   renderKPIs();
+  renderRecommendedActions();
   lineChart('trend-chart', trend8, '#0F7A5C');
   renderForecastTable();
   lineChart('forecast-chart', computeRealForecastTrend(13), '#0369A1');
