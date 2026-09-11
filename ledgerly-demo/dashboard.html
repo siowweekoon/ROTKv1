@@ -150,7 +150,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <!-- OVERVIEW -->
 <section class="panel active" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
   <h2>Dashboard</h2>
-  <div class="panel-sub">As of 2026-09-07 — the same 7 KPIs designed for the mobile companion app home screen.</div>
+  <div class="panel-sub">As of <span id="asof-overview">2026-09-07</span> — the same 7 KPIs designed for the mobile companion app home screen.</div>
   <div class="note">Ang Mo Kio Logistics is a last-mile delivery-as-a-service business: it bills retail and F&amp;B clients (Bishan Home Services, Tampines Retail Group, and others in the Receivables tab) for delivery fulfillment, and pays gig drivers on Grab/foodpanda/Lalamove as its direct cost of delivering it. "Retail revenue" and "F&amp;B revenue" throughout this demo are service revenue from those client segments -- not product sales -- and gig payroll is the cost of fulfilling them, the same way Grab or foodpanda takes a cut of what a merchant is billed and pays a smaller amount to the driver.</div>
   <div class="card-grid" id="kpi-cards"></div>
   <div class="rec-actions">
@@ -178,7 +178,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <!-- 13-WEEK FORECAST -->
 <section class="panel" id="panel-forecast" role="tabpanel" aria-labelledby="tab-forecast">
   <h2>13-Week Cash Flow Forecast</h2>
-  <div class="panel-sub">Starting 2026-09-07 — direct method, weekly granularity, tracked by expected pay date, not contractual due date. Wk5's fixed costs include a one-time commercial-vehicle repair — the one real dip this projection actually has to catch.</div>
+  <div class="panel-sub">Starting <span id="asof-forecast">2026-09-07</span> — direct method, weekly granularity, tracked by expected pay date, not contractual due date. Wk5's fixed costs include a one-time commercial-vehicle repair — the one real dip this projection actually has to catch.</div>
   <div class="chart-box" style="margin-bottom:16px;">
     <strong>13-Week Closing Cash Trend</strong>
     <svg id="forecast-chart" width="100%" height="220" viewBox="0 0 760 220"></svg>
@@ -192,7 +192,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <!-- SCENARIO -->
 <section class="panel" id="panel-scenario" role="tabpanel" aria-labelledby="tab-scenario">
   <h2>Scenario Planner</h2>
-  <div class="panel-sub">As of 2026-09-07 — driver-based modeling, projecting 8 weeks forward from today. Change the scenario, the whole projection recalculates live.</div>
+  <div class="panel-sub">As of <span id="asof-scenario">2026-09-07</span> — driver-based modeling, projecting 8 weeks forward from today. Change the scenario, the whole projection recalculates live.</div>
   <div class="controls">
     <label for="scenario-select"><strong>Scenario:</strong></label>
     <select id="scenario-select">
@@ -226,7 +226,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <!-- RECEIVABLES -->
 <section class="panel" id="panel-receivables" role="tabpanel" aria-labelledby="tab-receivables">
   <h2>Accounts Receivable</h2>
-  <div class="panel-sub">As of 2026-09-07 — GST shown as its own column per IRAS's 11 mandatory tax-invoice fields. "Expected Pay Date" is history-adjusted, not the contractual due date. "Days Overdue" is calculated against that fixed date, not today.</div>
+  <div class="panel-sub">As of <span id="asof-receivables">2026-09-07</span> — GST shown as its own column per IRAS's 11 mandatory tax-invoice fields. "Expected Pay Date" is history-adjusted, not the contractual due date. "Days Overdue" is calculated against that fixed date, not today.</div>
   <div class="table-wrap"><table id="ar-table"></table></div>
 </section>
 
@@ -240,7 +240,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <!-- AGING -->
 <section class="panel" id="panel-aging" role="tabpanel" aria-labelledby="tab-aging">
   <h2>Accounts Payable Aging</h2>
-  <div class="panel-sub">As of 2026-09-07 — standard 0-30 / 31-60 / 61-90 / 90+ buckets, aged against that fixed date, not today. Gig payroll stays in "Current" by design — the whole point of the product is catching it before it ages.</div>
+  <div class="panel-sub">As of <span id="asof-aging">2026-09-07</span> — standard 0-30 / 31-60 / 61-90 / 90+ buckets, aged against that fixed date, not today. Gig payroll stays in "Current" by design — the whole point of the product is catching it before it ages.</div>
   <div class="table-wrap"><table id="aging-table"></table></div>
   <div class="controls" style="margin-top:14px;">
     <label for="new-vendor-name"><strong>Add vendor:</strong></label>
@@ -254,7 +254,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <!-- MOBILE APP PREVIEW -->
 <section class="panel" id="panel-mobile" role="tabpanel" aria-labelledby="tab-mobile">
   <h2>Mobile App Preview</h2>
-  <div class="panel-sub">Demo screens showing what the Ledgerly companion app would look and feel like on an owner's phone. Figures as of 2026-09-07, same fixed date as the rest of this demo.</div>
+  <div class="panel-sub">Demo screens showing what the Ledgerly companion app would look and feel like on an owner's phone. Figures as of <span id="asof-mobile">2026-09-07</span>, same fixed date as the rest of this demo.</div>
 
   <div class="phone-row">
 
@@ -353,7 +353,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v44.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v45.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -523,6 +523,17 @@ function daysOverdue(dueDateStr, status){
   const due = new Date(dueDateStr);
   const diff = Math.round((AS_OF_DATE - due) / (1000*60*60*24));
   return diff > 0 ? diff : 0;
+}
+
+// Su Ann's round-9 catch: 6 HTML panel-sub labels hardcoded "2026-09-07" as
+// plain text instead of deriving from AS_OF_DATE -- a source-of-truth problem
+// wearing a cosmetic mask, her words. If AS_OF_DATE ever rotates, these would
+// silently keep showing the old date while every calculation already used the
+// new one. Prevents that: all 6 render from the one real constant.
+function renderAsOfDateLabels(){
+  const formatted = AS_OF_DATE.toISOString().slice(0, 10);
+  ['asof-overview','asof-forecast','asof-scenario','asof-receivables','asof-aging','asof-mobile']
+    .forEach(id => { document.getElementById(id).textContent = formatted; });
 }
 
 function computeOverdueReceivablesKPI(){
@@ -975,6 +986,7 @@ document.getElementById('scenario-select').addEventListener('change', renderScen
 // possibly depend on the changed state, in one place, so nothing can go stale
 // independently of anything else.
 function recomputeAll(){
+  renderAsOfDateLabels();
   const overrideCount = excludedDriverIds.size + extraVendors.length;
   document.getElementById('override-indicator').innerHTML = overrideCount
     ? `⚠ ${overrideCount} live override${overrideCount>1?'s':''} active`
