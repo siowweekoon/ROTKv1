@@ -1,0 +1,22 @@
+name: Lint duplicate logic (Ledgerly)
+
+on:
+  push:
+    paths:
+      - 'ledgerly-demo/dashboard.html'
+      - 'ledgerly-demo/lint-duplicates.js'
+  pull_request:
+    paths:
+      - 'ledgerly-demo/dashboard.html'
+      - 'ledgerly-demo/lint-duplicates.js'
+
+jobs:
+  lint-duplicates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check for duplicated thresholds and filter/reduce chains
+        run: node ledgerly-demo/lint-duplicates.js ledgerly-demo/dashboard.html
