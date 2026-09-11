@@ -281,7 +281,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
             <div class="phone-card">
               <div class="pc-label">Cash on hand today</div>
               <div class="pc-value">S$42,000</div>
-              <div class="pc-note">matches Current Cash Balance on Overview</div>
+              <div class="pc-note" id="mob-cash-note">matches Current Cash Balance on Overview</div>
             </div>
             <div class="phone-alert">⚠ S$15,383 overdue — 2 invoices, up to 13 days</div>
             <div class="phone-card">
@@ -289,7 +289,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
               <div class="pc-value warn" id="mob-gig-value">S$5,123</div>
               <div class="pc-note" id="mob-gig-note">Wed 9 Sep · 12 drivers</div>
             </div>
-            <div class="phone-card">
+            <div class="phone-card" id="mob-lowpoint-card">
               <div class="pc-label">Projected low point</div>
               <div class="pc-value pos" id="mob-lowpoint-value">S$42,300</div>
               <div class="pc-note" id="mob-lowpoint-note">Week 1 · on track</div>
@@ -385,7 +385,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v50.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v51.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -686,7 +686,11 @@ function computeRecommendedActions(){
       // still showing cents, creating a real inconsistency against the
       // Alerts phone screen showing the same invoice rounded), and trimmed
       // to her example phrasing instead of two full explanatory sentences.
-      detail: `${fmt(totalOverdue)} across ${overdue.length} invoice${overdue.length>1?'s':''} (oldest: ${oldest[1]}, ${fmt(oldest[8])}, ${oldestDays}+ days overdue, pattern unclear from current data). Invoice financing could release ~${fmt(totalOverdue*advanceRate)} this week, or nudge ${oldest[1]} with an early-payment discount.`
+      // Caveat moved to the end (round-2 catch): the first sentence needs to
+      // stand alone as a complete statement, since the Mobile Preview screen
+      // truncates at the first sentence boundary -- it was leading with the
+      // caveat, so the mobile version always got cut mid-thought.
+      detail: `${fmt(totalOverdue)} across ${overdue.length} invoice${overdue.length>1?'s':''} (oldest: ${oldest[1]}, ${fmt(oldest[8])}, ${oldestDays}+ days overdue). Invoice financing could release ~${fmt(totalOverdue*advanceRate)} this week, or nudge ${oldest[1]} with an early-payment discount (payment-history pattern unclear from current data).`
     });
   }
 
@@ -931,14 +935,22 @@ function renderMobilePreview(){
   const recActions = computeRecommendedActions();
   document.getElementById('mob-recactions-count').textContent = `${recActions.length} item${recActions.length===1?'':'s'} today`;
   document.getElementById('mob-recactions-rows').innerHTML = recActions.map(a => {
-    // Break at the last full word, not mid-word -- Su Ann's round-1 note that
-    // the screen reads too wordy; cutting off mid-word ("...overdue, p…")
-    // made it read worse, not just long.
+    // Round-1 fix: break at the last full word, not mid-word. Round-2 catch:
+    // even word-boundary truncation still cut off an otherwise-complete
+    // sentence mid-thought -- "the middle truncation is worse than being
+    // shorter upfront." Prefer a full first-sentence cut (no ellipsis at all)
+    // when that sentence reasonably fits; only fall back to word-boundary
+    // character truncation for the rare detail with no early sentence break.
     let shortDetail = a.detail;
     if (shortDetail.length > 90) {
-      const cut = shortDetail.slice(0, 87);
-      const lastSpace = cut.lastIndexOf(' ');
-      shortDetail = (lastSpace > 60 ? cut.slice(0, lastSpace) : cut) + '…';
+      const firstSentenceEnd = shortDetail.indexOf('. ');
+      if (firstSentenceEnd > 0 && firstSentenceEnd <= 130) {
+        shortDetail = shortDetail.slice(0, firstSentenceEnd + 1);
+      } else {
+        const cut = shortDetail.slice(0, 87);
+        const lastSpace = cut.lastIndexOf(' ');
+        shortDetail = (lastSpace > 60 ? cut.slice(0, lastSpace) : cut) + '…';
+      }
     }
     return a.cls === 'high'
       ? `<div class="phone-alert">⚠ ${a.label} — ${shortDetail}</div>`
@@ -952,10 +964,24 @@ function renderMobilePreview(){
     ? `Wed 9 Sep · ${activeDrivers} of ${rosterRows.length} drivers`
     : `Wed 9 Sep · ${rosterRows.length} drivers`;
 
+  // Su Ann's round-2 catch: when today IS the low point (the common case with
+  // this sample data, since it only grows from here -- see round-6 audit), a
+  // separate "Projected low point" card just restates "Cash on hand today" in
+  // different words. Consolidate into the cash card's own note instead of a
+  // redundant second card; only show the low-point card separately when it's
+  // a genuine, different, future fact worth surfacing on its own.
   const lp = projectedLowPoint();
   const lowStatus = lp.status === 'watch' ? 'Watch' : 'On track';
-  document.getElementById('mob-lowpoint-value').textContent = fmt(lp.min);
-  document.getElementById('mob-lowpoint-note').textContent = `${lp.label} · ${lowStatus}`;
+  const lowPointCard = document.getElementById('mob-lowpoint-card');
+  if (lp.idx === 0) {
+    lowPointCard.style.display = 'none';
+    document.getElementById('mob-cash-note').textContent = `Also this window's low point — ${lowStatus.toLowerCase()}`;
+  } else {
+    lowPointCard.style.display = '';
+    document.getElementById('mob-cash-note').textContent = 'matches Current Cash Balance on Overview';
+    document.getElementById('mob-lowpoint-value').textContent = fmt(lp.min);
+    document.getElementById('mob-lowpoint-note').textContent = `${lp.label} · ${lowStatus}`;
+  }
 
   const shown = rosterRows.slice(0, 5);
   const remaining = rosterRows.length - shown.length;
