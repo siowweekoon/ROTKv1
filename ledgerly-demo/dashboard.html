@@ -226,7 +226,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <!-- RECEIVABLES -->
 <section class="panel" id="panel-receivables" role="tabpanel" aria-labelledby="tab-receivables">
   <h2>Accounts Receivable</h2>
-  <div class="panel-sub">GST shown as its own column per IRAS's 11 mandatory tax-invoice fields. "Expected Pay Date" is history-adjusted, not the contractual due date.</div>
+  <div class="panel-sub">As of 2026-09-07 — GST shown as its own column per IRAS's 11 mandatory tax-invoice fields. "Expected Pay Date" is history-adjusted, not the contractual due date. "Days Overdue" is calculated against that fixed date, not today.</div>
   <div class="table-wrap"><table id="ar-table"></table></div>
 </section>
 
@@ -240,7 +240,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <!-- AGING -->
 <section class="panel" id="panel-aging" role="tabpanel" aria-labelledby="tab-aging">
   <h2>Accounts Payable Aging</h2>
-  <div class="panel-sub">Standard 0-30 / 31-60 / 61-90 / 90+ buckets. Gig payroll stays in "Current" by design — the whole point of the product is catching it before it ages.</div>
+  <div class="panel-sub">As of 2026-09-07 — standard 0-30 / 31-60 / 61-90 / 90+ buckets, aged against that fixed date, not today. Gig payroll stays in "Current" by design — the whole point of the product is catching it before it ages.</div>
   <div class="table-wrap"><table id="aging-table"></table></div>
   <div class="controls" style="margin-top:14px;">
     <label for="new-vendor-name"><strong>Add vendor:</strong></label>
@@ -254,7 +254,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <!-- MOBILE APP PREVIEW -->
 <section class="panel" id="panel-mobile" role="tabpanel" aria-labelledby="tab-mobile">
   <h2>Mobile App Preview</h2>
-  <div class="panel-sub">Demo screens showing what the Ledgerly companion app would look and feel like on an owner's phone.</div>
+  <div class="panel-sub">Demo screens showing what the Ledgerly companion app would look and feel like on an owner's phone. Figures as of 2026-09-07, same fixed date as the rest of this demo.</div>
 
   <div class="phone-row">
 
@@ -274,13 +274,13 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
             <div class="phone-alert">⚠ S$15,383 overdue — 2 invoices, up to 13 days</div>
             <div class="phone-card">
               <div class="pc-label">Gig payroll due</div>
-              <div class="pc-value warn">S$5,123</div>
-              <div class="pc-note">Wed 9 Sep · 12 drivers</div>
+              <div class="pc-value warn" id="mob-gig-value">S$5,123</div>
+              <div class="pc-note" id="mob-gig-note">Wed 9 Sep · 12 drivers</div>
             </div>
             <div class="phone-card">
               <div class="pc-label">Projected low point</div>
-              <div class="pc-value pos">S$42,300</div>
-              <div class="pc-note">Week 1 · on track</div>
+              <div class="pc-value pos" id="mob-lowpoint-value">S$42,300</div>
+              <div class="pc-note" id="mob-lowpoint-note">Week 1 · on track</div>
             </div>
           </div>
           <div class="phone-navbar">
@@ -331,15 +331,10 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
           <div class="phone-statusbar"></div>
           <div class="phone-appbar"><div class="app-name">Payroll Roster</div><div class="app-sub">Week of Sep 6 · 12 drivers</div></div>
           <div class="phone-content">
-            <div class="phone-row-item"><div><div class="prow-name">Rahim B.</div><div class="prow-sub">Lalamove · 42 trips</div></div><div class="prow-amt">S$262.46</div></div>
-            <div class="phone-row-item"><div><div class="prow-name">Wei Jie T.</div><div class="prow-sub">Grab · 39 trips</div></div><div class="prow-amt">S$290.08</div></div>
-            <div class="phone-row-item"><div><div class="prow-name">Kumar S.</div><div class="prow-sub">foodpanda · 31 trips</div></div><div class="prow-amt">S$250.37</div></div>
-            <div class="phone-row-item"><div><div class="prow-name">Hafiz A.</div><div class="prow-sub">Grab · 85 trips</div></div><div class="prow-amt">S$668.87</div></div>
-            <div class="phone-row-item"><div><div class="prow-name">Zhi Hao L.</div><div class="prow-sub">foodpanda · 82 trips</div></div><div class="prow-amt">S$531.73</div></div>
-            <div class="phone-row-item" style="opacity:.6;"><div><div class="prow-name">+7 more drivers</div><div class="prow-sub">see full roster on desktop</div></div><div class="prow-amt">—</div></div>
+            <div id="mob-roster-rows"></div>
             <div class="phone-card" style="margin-top:6px;">
-              <div class="pc-label">Total this week (12 drivers)</div>
-              <div class="pc-value">S$5,122.68</div>
+              <div class="pc-label" id="mob-roster-total-label">Total this week (12 drivers)</div>
+              <div class="pc-value" id="mob-roster-total-value">S$5,122.68</div>
             </div>
           </div>
           <div class="phone-navbar">
@@ -358,7 +353,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v33.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v34.0</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -788,6 +783,40 @@ function renderRoster(){
   tbl.innerHTML = html;
 }
 
+// Round 2 of the owner's 6th review batch: the Mobile Preview screens were pure
+// static HTML, never wired into recomputeAll() -- so excluding a driver or adding
+// a vendor updated every other tab but left the phone mockups silently stale, the
+// exact disconnected-view bug class this build has fought elsewhere. The Alerts
+// screen and "Cash on hand" are genuinely unaffected by any override in this app
+// (arRows and opening0 are never touched by excludedDriverIds/extraVendors) so
+// they stay static safely; gig payroll, low point, and the roster list/total DO
+// depend on live state and are now computed here, the same way every other tab is.
+function renderMobilePreview(){
+  const gigKPI = computeGigPayrollDueKPI();
+  document.getElementById('mob-gig-value').textContent = gigKPI[1];
+  const activeDrivers = rosterRows.length - excludedDriverIds.size;
+  document.getElementById('mob-gig-note').textContent = excludedDriverIds.size
+    ? `Wed 9 Sep · ${activeDrivers} of ${rosterRows.length} drivers`
+    : `Wed 9 Sep · ${rosterRows.length} drivers`;
+
+  const lowMin = Math.min(...trend8);
+  const lowIdx = trend8.indexOf(lowMin);
+  const lowStatus = lowMin < 32000 ? 'Watch' : 'On track';
+  document.getElementById('mob-lowpoint-value').textContent = fmt(lowMin);
+  document.getElementById('mob-lowpoint-note').textContent = `Week ${lowIdx+1} · ${lowStatus}`;
+
+  const shown = rosterRows.slice(0, 5);
+  const remaining = rosterRows.length - shown.length;
+  const rowsHtml = shown.map(r => {
+    const excluded = excludedDriverIds.has(r[0]);
+    const style = excluded ? ' style="opacity:.45;text-decoration:line-through;"' : '';
+    return `<div class="phone-row-item"${style}><div><div class="prow-name">${r[1]}</div><div class="prow-sub">${r[2]} · ${r[3]} trips</div></div><div class="prow-amt">${fmt2(r[7])}</div></div>`;
+  }).join('') + `<div class="phone-row-item" style="opacity:.6;"><div><div class="prow-name">+${remaining} more drivers</div><div class="prow-sub">see full roster on desktop</div></div><div class="prow-amt">—</div></div>`;
+  document.getElementById('mob-roster-rows').innerHTML = rowsHtml;
+  document.getElementById('mob-roster-total-label').textContent = `Total this week (${rosterRows.length} drivers)${excludedDriverIds.size ? ` (${excludedDriverIds.size} excluded)` : ''}`;
+  document.getElementById('mob-roster-total-value').textContent = fmt2(rosterRows.filter(r=>!excludedDriverIds.has(r[0])).reduce((s,r)=>s+r[7],0));
+}
+
 function addVendor(){
   const nameInput = document.getElementById('new-vendor-name');
   const amtInput = document.getElementById('new-vendor-amount');
@@ -875,6 +904,7 @@ function recomputeAll(){
   renderScenario();
   renderRoster();
   renderAging();
+  renderMobilePreview();
 }
 
 // ---------- init ----------
