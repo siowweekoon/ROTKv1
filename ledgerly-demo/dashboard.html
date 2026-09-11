@@ -178,7 +178,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 <!-- 13-WEEK FORECAST -->
 <section class="panel" id="panel-forecast" role="tabpanel" aria-labelledby="tab-forecast">
   <h2>13-Week Cash Flow Forecast</h2>
-  <div class="panel-sub">Starting 2026-09-07 — direct method, weekly granularity, tracked by expected pay date, not contractual due date.</div>
+  <div class="panel-sub">Starting 2026-09-07 — direct method, weekly granularity, tracked by expected pay date, not contractual due date. Wk5's fixed costs include a one-time commercial-vehicle repair — the one real dip this projection actually has to catch.</div>
   <div class="chart-box" style="margin-bottom:16px;">
     <strong>13-Week Closing Cash Trend</strong>
     <svg id="forecast-chart" width="100%" height="220" viewBox="0 0 760 220"></svg>
@@ -353,7 +353,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v37.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v38.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -363,7 +363,16 @@ const weeks13 = {
   newclient:[0,0,0,0,3000,3000,3000,3000,3000,3000,3000,3000,3000],
   gig:      [6800,7000,6600,7200,6900,7900,8100,7300,7600,8200,7900,8000,8300],
   fuel:     [1200,1150,1300,1250,1180,1320,1290,1240,1260,1310,1280,1300,1330],
-  fixed:    [1800,1800,1800,1800,1800,1800,1800,1800,1800,1800,1800,1800,1800],
+  // Wk5 includes a one-time commercial-vehicle repair (S$4,200) -- deliberately
+  // NOT the same NTUC Income fleet-insurance line already on the AP Aging tab
+  // (that one is a real, separate, smaller recurring premium at S$1,800; reusing
+  // its name here for a different dollar amount would have created the exact
+  // cross-tab inconsistency this whole batch has been fixing, caught before
+  // shipping). Round-6 audit found the base 8-week trend never declined even
+  // once because nothing in the sample data ever actually stressed it; this is
+  // the real, dated, one-time event that gives the "catch it coming" pitch
+  // something genuine to demonstrate on the default view, not just Worst-case.
+  fixed:    [1800,1800,1800,1800,6000,1800,1800,1800,1800,1800,1800,1800,1800],
   payroll:  [3200,0,3200,0,3200,0,3200,0,3200,0,3200,0,3200],
   gst:      [0,0,0,0,0,0,0,0,0,0,0,0,2100],
   churn:    [0,0,0,0,0,-400,-400,-400,0,0,0,0,0],
@@ -402,7 +411,16 @@ function computeRealForecastTrend(weekCount){
   const revenueReduction = excludedWeeklyRevenueLoss();
   const vendorAdd = extraVendorWeeklyTotal();
   for(let w=0; w<weekCount; w++){
-    const inflow = weeks13.retail[w] + weeks13.fb[w] + weeks13.newclient[w] - revenueReduction;
+    // weeks13.newclient is deliberately NOT included here -- the Forecast table
+    // labels this exact line "New client win (scenario)", i.e. a hypothetical,
+    // not a fact. It was previously added unconditionally from Wk5 onward,
+    // meaning the "real" base-case trend silently assumed a client win that
+    // never actually happened -- a real coherence bug found in the round-6
+    // audit, and part of why the trend never showed a genuine dip. Winning a
+    // new client is exactly what the Scenario Planner's own newclient driver
+    // already models (worst 0 / base 1500 / best 3200/wk) -- that stays the
+    // only place this optimism is allowed to affect a number.
+    const inflow = weeks13.retail[w] + weeks13.fb[w] - revenueReduction;
     const outflow = (weeks13.gig[w] - gigReduction) + weeks13.fuel[w] + weeks13.fixed[w] + weeks13.payroll[w] + weeks13.gst[w] + weeks13.churn[w] + vendorAdd;
     bal += (inflow - outflow);
     vals.push(Math.round(bal));
@@ -658,11 +676,14 @@ function renderForecastTable(){
   const adjFixed = weeks13.fixed.map(v => v + vendorAdd);
 
   html += `<tr class="section"><td colspan="14">CASH INFLOWS</td></tr>`;
-  const inflowRows = [["Customer receipts -- retail-segment clients", adjRetail], ["Customer receipts -- F&B-segment clients", weeks13.fb], ["New client win (scenario)", weeks13.newclient]];
+  const inflowRows = [["Customer receipts -- retail-segment clients", adjRetail], ["Customer receipts -- F&B-segment clients", weeks13.fb], ["New client win (scenario -- hypothetical, not counted below)", weeks13.newclient]];
   inflowRows.forEach(([label, arr]) => {
     html += `<tr><td>${label}</td>${arr.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
   });
-  const totalInflow = adjRetail.map((_,i)=> adjRetail[i]+weeks13.fb[i]+weeks13.newclient[i]);
+  // weeks13.newclient deliberately excluded -- same reasoning as computeRealForecastTrend():
+  // it's a hypothetical scenario line, not a realized fact, and shouldn't silently
+  // count toward the real projected total. Shown above for reference only.
+  const totalInflow = adjRetail.map((_,i)=> adjRetail[i]+weeks13.fb[i]);
   html += `<tr class="total"><td>Total Cash Inflows</td>${totalInflow.map(v=>`<td>${fmt(v)}</td>`).join('')}</tr>`;
   html += `<tr class="section"><td colspan="14">CASH OUTFLOWS</td></tr>`;
   const outflowRows = [["Gig/contractor driver payouts", adjGig], ["Fuel & vehicle maintenance", weeks13.fuel], ["Fixed vendor commitments", adjFixed], ["Payroll -- core staff", weeks13.payroll], ["GST remittance (Wk13)", weeks13.gst], ["Driver churn impact", weeks13.churn]];
