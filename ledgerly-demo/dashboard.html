@@ -353,7 +353,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v39.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v40.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -531,10 +531,17 @@ function computeCurrentBalanceKPI(){
 }
 
 function computeLowPointKPI(){
-  const min = Math.min(...trend8);
-  const idx = trend8.indexOf(min);
+  // Su Ann's round-3 diligence catch: this only scanned trend8 (the forward
+  // 8-week projection), never today's actual balance -- so it could report a
+  // "low point" HIGHER than the real Current Cash Balance shown right next to
+  // it. A skeptical board member catches that contradiction in ten seconds.
+  // Today is now a real candidate, same as every other week.
+  const candidates = [opening0, ...trend8];
+  const min = Math.min(...candidates);
+  const idx = candidates.indexOf(min);
+  const label = idx === 0 ? 'Today' : `Wk ${idx}`;
   const status = min < 32000 ? "watch" : "ok";
-  return ["Projected Low Point", `${fmt(min)} (Wk ${idx+1})`, status, status==="watch"?"Watch":"On track"];
+  return ["Projected Low Point", `${fmt(min)} (${label})`, status, status==="watch"?"Watch":"On track"];
 }
 
 function computeGigPayrollDueKPI(){
@@ -548,11 +555,27 @@ function computeGigPayrollDueKPI(){
 
 function computeRunwayKPI(){
   // burn rate = average weekly decline, counted only across weeks that actually
-  // declined -- averaging in growth weeks would understate real burn risk
-  const deltas = trend8.slice(1).map((v,i)=>v-trend8[i]);
-  const declines = deltas.filter(d=>d<0);
-  if(declines.length === 0) return ["Weeks of Runway at Current Burn","No declining weeks in forecast","ok","On track"];
-  const avgBurn = -declines.reduce((a,b)=>a+b,0)/declines.length;
+  // declined -- averaging in growth weeks would understate real burn risk.
+  // Su Ann's round-3 diligence catch: this previously would have blended a
+  // real one-time cost event (Wk5's vehicle repair) into the average as if it
+  // were part of a sustained burn trend -- extrapolating "weeks of runway"
+  // from a single one-off is misleading, her words: "a wrong denominator."
+  // One-off weeks are detected the same way the Recommended Actions layer's
+  // "Upcoming cost flagged early" card does -- any week whose fixed cost
+  // differs from the baseline/mode -- and excluded from the burn average.
+  const fixedCounts = {};
+  weeks13.fixed.forEach(v => fixedCounts[v] = (fixedCounts[v]||0)+1);
+  const baselineFixed = Number(Object.entries(fixedCounts).sort((a,b)=>b[1]-a[1])[0][0]);
+  const oneOffWeeks = new Set(weeks13.fixed.map((v,i)=> v!==baselineFixed ? i+1 : null).filter(w=>w!==null));
+
+  const deltas = trend8.slice(1).map((v,i)=>({delta: v-trend8[i], week: i+2}));
+  const sustainedDeclines = deltas.filter(d => d.delta<0 && !oneOffWeeks.has(d.week));
+  if(sustainedDeclines.length === 0){
+    // Honest per her instruction to "just own that the numbers are lumpy"
+    // rather than present a runway figure built on a single one-time blip.
+    return ["Weeks of Runway at Current Burn", "No sustained decline -- only one-time events", "ok", "On track"];
+  }
+  const avgBurn = -sustainedDeclines.reduce((a,b)=>a+b.delta,0)/sustainedDeclines.length;
   const weeks = (trend8[0] / avgBurn).toFixed(1);
   const status = weeks < 8 ? "attn" : weeks < 12 ? "watch" : "ok";
   return ["Weeks of Runway at Current Burn", `${weeks} weeks`, status, status==="attn"?"Attention":status==="watch"?"Watch":"On track"];
