@@ -353,7 +353,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v43.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v44.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -394,6 +394,14 @@ let extraVendors = []; // {name, weeklyAmount}
 
 function excludedWeeklyGigCost(){
   return rosterRows.filter(r => excludedDriverIds.has(r[0])).reduce((s,r)=>s+r[7], 0);
+}
+// Round-6 audit (Su Ann): "sum of non-excluded roster net payouts" was written
+// out independently 3 times -- computeGigPayrollDueKPI(), renderRoster()'s own
+// total row, and inline inside renderMobilePreview() -- 3 copies of the same
+// calculation with no shared source, customer-facing on 3 different surfaces.
+// Single function now; all 3 callers read from here.
+function computeNetPayoutSum(){
+  return rosterRows.filter(r => !excludedDriverIds.has(r[0])).reduce((s,r)=>s+r[7], 0);
 }
 function excludedWeeklyRevenueLoss(){
   // No real per-driver revenue-attribution data exists in the roster (it only has
@@ -559,7 +567,7 @@ function computeGigPayrollDueKPI(){
   // Must respect excludedDriverIds -- found via integration testing that this KPI
   // was still summing ALL drivers even after some were excluded on the Roster tab,
   // silently disagreeing with the Roster tab's own (correctly filtered) total.
-  const totalNet = rosterRows.filter(r => !excludedDriverIds.has(r[0])).reduce((s,r)=>s+r[7],0);
+  const totalNet = computeNetPayoutSum();
   const excludedNote = excludedDriverIds.size ? ` (${excludedDriverIds.size} excluded)` : '';
   return ["Gig Payroll Due Next 7 Days", fmt(totalNet), "ok", `Confirmed -- from payout roster${excludedNote}`];
 }
@@ -855,7 +863,7 @@ function renderRoster(){
     const rowStyle = excluded ? ' style="opacity:.45;text-decoration:line-through;"' : '';
     html += `<tr${rowStyle}><td>${r[1]}</td><td>${checkbox}</td><td>${r[0]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${fmt2(r[4])}</td><td>${fmt2(r[5])}</td><td>${fmt2(r[6])}</td><td style="font-weight:700">${fmt2(r[7])}</td><td>${r[9]}</td><td>${r[10]}</td></tr>`;
   });
-  const totalNet = rosterRows.filter(r=>!excludedDriverIds.has(r[0])).reduce((s,r)=>s+r[7],0);
+  const totalNet = computeNetPayoutSum();
   html += `<tr class="total"><td colspan="8">TOTAL NET PAYOUT${excludedDriverIds.size?` (${excludedDriverIds.size} excluded)`:''}</td><td>${fmt2(totalNet)}</td><td colspan="2"></td></tr>`;
   tbl.innerHTML = html;
 }
@@ -890,7 +898,7 @@ function renderMobilePreview(){
   }).join('') + `<div class="phone-row-item" style="opacity:.6;"><div><div class="prow-name">+${remaining} more drivers</div><div class="prow-sub">see full roster on desktop</div></div><div class="prow-amt">—</div></div>`;
   document.getElementById('mob-roster-rows').innerHTML = rowsHtml;
   document.getElementById('mob-roster-total-label').textContent = `Total this week (${rosterRows.length} drivers)${excludedDriverIds.size ? ` (${excludedDriverIds.size} excluded)` : ''}`;
-  document.getElementById('mob-roster-total-value').textContent = fmt2(rosterRows.filter(r=>!excludedDriverIds.has(r[0])).reduce((s,r)=>s+r[7],0));
+  document.getElementById('mob-roster-total-value').textContent = fmt2(computeNetPayoutSum());
 }
 
 function addVendor(){
