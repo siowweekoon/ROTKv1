@@ -385,7 +385,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v49.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v50.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -680,8 +680,13 @@ function computeRecommendedActions(){
     const advanceRate = 0.80;
     actions.push({
       cls: 'high',
-      label: 'Accelerate collection on overdue receivables',
-      detail: `${fmt(totalOverdue)} is overdue across ${overdue.length} invoice${overdue.length>1?'s':''} -- oldest is ${oldest[1]} (${fmt2(oldest[8])}, ${oldestDays} days overdue; payment-history pattern unclear -- this data model has no actual-paid-on-date field, so treat as a flag for manual follow-up, not a confirmed repeat offender). Two concrete levers: invoice financing against the open AR book (illustrative ${Math.round(advanceRate*100)}% advance rate would release ~${fmt(totalOverdue*advanceRate)} this week without waiting on the client), or a direct early-payment-discount nudge to ${oldest[1]} specifically, since they're both the oldest and one of the larger balances.`
+      label: 'Collect overdue receivables',
+      // Tightened per Su Ann's real-pipeline review: same rounding rule as
+      // everywhere else (fmt, not fmt2 -- was the one spot in this function
+      // still showing cents, creating a real inconsistency against the
+      // Alerts phone screen showing the same invoice rounded), and trimmed
+      // to her example phrasing instead of two full explanatory sentences.
+      detail: `${fmt(totalOverdue)} across ${overdue.length} invoice${overdue.length>1?'s':''} (oldest: ${oldest[1]}, ${fmt(oldest[8])}, ${oldestDays}+ days overdue, pattern unclear from current data). Invoice financing could release ~${fmt(totalOverdue*advanceRate)} this week, or nudge ${oldest[1]} with an early-payment discount.`
     });
   }
 
@@ -703,7 +708,7 @@ function computeRecommendedActions(){
     actions.push({
       cls: 'info',
       label: 'Upcoming cost flagged early',
-      detail: `Week ${upcomingBump.week} includes a one-time cost of ${fmt(upcomingBump.extra)} above the normal fixed-cost baseline (${fmt(baselineFixed)}/wk) -- already reflected in the trend and forecast above, buffer holds through it, no action needed. This is exactly the kind of thing Ledgerly is built to flag before it happens, not after.`
+      detail: `Week ${upcomingBump.week}: one-time cost of ${fmt(upcomingBump.extra)} above the ${fmt(baselineFixed)}/wk baseline. Already reflected in the trend above -- buffer holds, no action needed.`
     });
   }
 
@@ -720,13 +725,13 @@ function computeRecommendedActions(){
     actions.push({
       cls: 'high',
       label: 'Delay a non-critical vendor payment',
-      detail: `Projected low point (${fmt(lowPointVal)}) dips below the ${fmt(bufferThreshold)} buffer. ${target[0]} (${fmt(targetTotal)}, ${target[1]}) is the smallest non-essential, non-tax, non-gig-payroll payable on the AP Aging tab -- delaying it a week would ease the tightest point in the projection without touching driver payouts or IRAS obligations.`
+      detail: `Low point (${fmt(lowPointVal)}) dips below the ${fmt(bufferThreshold)} buffer. Delay ${target[0]} (${fmt(targetTotal)}, ${target[1]}) a week -- smallest non-essential payable, eases the tightest point without touching driver payouts or IRAS.`
     });
   } else {
     actions.push({
       cls: 'info',
       label: 'Vendor payment timing',
-      detail: `Projected low point (${fmt(lowPointVal)}) stays above the ${fmt(bufferThreshold)} buffer across this window, so no vendor payment needs to be delayed right now. If it ever dips below buffer, Ledgerly flags a specific non-critical, non-tax, non-gig-payroll vendor here as the deferral candidate first -- never driver payouts, never IRAS.`
+      detail: `Low point (${fmt(lowPointVal)}) stays above the ${fmt(bufferThreshold)} buffer -- no vendor payment needs delaying right now. If it ever dips below buffer, this flags a non-critical, non-tax, non-payroll vendor first.`
     });
   }
 
@@ -926,7 +931,15 @@ function renderMobilePreview(){
   const recActions = computeRecommendedActions();
   document.getElementById('mob-recactions-count').textContent = `${recActions.length} item${recActions.length===1?'':'s'} today`;
   document.getElementById('mob-recactions-rows').innerHTML = recActions.map(a => {
-    const shortDetail = a.detail.length > 90 ? a.detail.slice(0, 87) + '…' : a.detail;
+    // Break at the last full word, not mid-word -- Su Ann's round-1 note that
+    // the screen reads too wordy; cutting off mid-word ("...overdue, p…")
+    // made it read worse, not just long.
+    let shortDetail = a.detail;
+    if (shortDetail.length > 90) {
+      const cut = shortDetail.slice(0, 87);
+      const lastSpace = cut.lastIndexOf(' ');
+      shortDetail = (lastSpace > 60 ? cut.slice(0, lastSpace) : cut) + '…';
+    }
     return a.cls === 'high'
       ? `<div class="phone-alert">⚠ ${a.label} — ${shortDetail}</div>`
       : `<div class="phone-card"><div class="pc-label">${a.label}</div><div class="pc-note" style="margin-top:4px;">${shortDetail}</div></div>`;
