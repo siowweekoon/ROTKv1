@@ -306,6 +306,26 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
     </div>
 
     <div class="phone-unit">
+      <div class="phone-label">Today's Recommended Actions</div>
+      <div class="phone-frame" role="group" aria-label="Demo screen -- illustrative only, not interactive">
+        <div class="demo-badge" aria-hidden="true">Demo</div>
+        <div class="phone-screen">
+          <div class="phone-statusbar"></div>
+          <div class="phone-appbar"><div class="app-name">Recommended Actions</div><div class="app-sub" id="mob-recactions-count">-- items today</div></div>
+          <div class="phone-content">
+            <div id="mob-recactions-rows"></div>
+          </div>
+          <div class="phone-navbar">
+            <div class="pnav-item"><div class="pnav-dot"></div>Home</div>
+            <div class="pnav-item"><div class="pnav-dot"></div>Forecast</div>
+            <div class="pnav-item"><div class="pnav-dot"></div>Payroll</div>
+            <div class="pnav-item active"><div class="pnav-dot"></div>Actions</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-unit">
       <div class="phone-label">Alerts — a payroll gap flagged early</div>
       <div class="phone-frame" role="group" aria-label="Demo screen -- illustrative only, not interactive">
         <div class="demo-badge" aria-hidden="true">Demo</div>
@@ -365,7 +385,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v46.0 (dashboard)</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill" title="Dashboard and landing page are versioned independently, not in lockstep">Build v47.0 (dashboard)</span></footer>
 
 <script>
 // ---------- real data extracted from the source spreadsheet ----------
@@ -900,6 +920,18 @@ function renderRoster(){
 // they stay static safely; gig payroll, low point, and the roster list/total DO
 // depend on live state and are now computed here, the same way every other tab is.
 function renderMobilePreview(){
+  // "Today's Recommended Actions" screen -- condensed from the real, live
+  // computeRecommendedActions() output (same function the Overview tab uses),
+  // not separately-written phone copy that could drift from the real levers.
+  const recActions = computeRecommendedActions();
+  document.getElementById('mob-recactions-count').textContent = `${recActions.length} item${recActions.length===1?'':'s'} today`;
+  document.getElementById('mob-recactions-rows').innerHTML = recActions.map(a => {
+    const shortDetail = a.detail.length > 90 ? a.detail.slice(0, 87) + '…' : a.detail;
+    return a.cls === 'high'
+      ? `<div class="phone-alert">⚠ ${a.label} — ${shortDetail}</div>`
+      : `<div class="phone-card"><div class="pc-label">${a.label}</div><div class="pc-note" style="margin-top:4px;">${shortDetail}</div></div>`;
+  }).join('');
+
   const gigKPI = computeGigPayrollDueKPI();
   document.getElementById('mob-gig-value').textContent = gigKPI[1];
   const activeDrivers = rosterRows.length - excludedDriverIds.size;
