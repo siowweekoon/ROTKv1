@@ -61,6 +61,39 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
 .pill{font-size:11px;background:var(--card);color:var(--green);padding:2px 8px;border-radius:20px;font-weight:700;margin-left:8px;}
 .back-link{font-size:12px;color:var(--green);text-decoration:none;font-weight:700;display:inline-flex;align-items:center;gap:4px;}
 .driver-desc{font-size:11px;color:var(--muted);font-weight:400;display:block;margin-top:2px;}
+
+/* Mobile App Preview: CSS phone-frame (device-bezel) mockups, the standard
+   convention for previewing "what the app will look like" inside a desktop
+   demo (round 3 research) -- built natively, no external mockup tool needed. */
+.phone-row{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;margin:24px 0;}
+.phone-unit{text-align:center;}
+.phone-unit .phone-label{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:10px;}
+.phone-frame{width:250px;height:520px;background:var(--dark);border-radius:36px;padding:12px;box-shadow:0 12px 28px rgba(11,42,36,.22);position:relative;}
+.phone-frame::before{content:'';position:absolute;top:12px;left:50%;transform:translateX(-50%);width:80px;height:18px;background:var(--dark);border-radius:0 0 12px 12px;z-index:2;}
+.demo-badge{position:absolute;top:34px;right:22px;z-index:3;background:var(--red);color:#fff;font-size:9px;font-weight:800;letter-spacing:.4px;padding:3px 8px;border-radius:5px;text-transform:uppercase;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+.phone-screen{background:var(--white);width:100%;height:100%;border-radius:26px;overflow:hidden;display:flex;flex-direction:column;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;}
+.phone-statusbar{height:26px;flex:0 0 auto;}
+.phone-appbar{padding:8px 16px 10px;flex:0 0 auto;border-bottom:1px solid var(--border);}
+.phone-appbar .app-name{font-size:13px;font-weight:800;color:var(--dark);}
+.phone-appbar .app-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+.phone-content{flex:1 1 auto;padding:12px 14px;overflow:hidden;background:#EEF4F1;}
+.phone-card{background:#fff;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--border);}
+.phone-card .pc-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;font-weight:700;}
+.phone-card .pc-value{font-size:20px;font-weight:800;color:var(--dark);margin-top:2px;font-variant-numeric:tabular-nums;}
+.phone-card .pc-value.pos{color:var(--green);}
+.phone-card .pc-value.warn{color:var(--gold);}
+.phone-card .pc-note{font-size:10px;color:var(--muted);margin-top:3px;}
+.phone-alert{background:#FEF3E2;border:1px solid #F5D9A8;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--gold);font-weight:600;}
+.phone-row-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.phone-row-item:last-child{border-bottom:none;}
+.phone-row-item .prow-name{font-weight:700;color:var(--dark);}
+.phone-row-item .prow-sub{font-size:9px;color:var(--muted);}
+.phone-row-item .prow-amt{font-weight:700;font-variant-numeric:tabular-nums;}
+.phone-navbar{flex:0 0 auto;display:flex;justify-content:space-around;padding:10px 0 14px;border-top:1px solid var(--border);background:#fff;}
+.phone-navbar .pnav-item{font-size:9px;color:var(--muted);text-align:center;min-width:44px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;}
+.phone-navbar .pnav-item.active{color:var(--green);font-weight:700;}
+.phone-navbar .pnav-dot{width:20px;height:20px;border-radius:6px;background:var(--border);}
+.phone-navbar .pnav-item.active .pnav-dot{background:var(--green);}
 @media (max-width: 640px){
   header{padding:12px 14px;}
   header h1{font-size:16px;}
@@ -70,6 +103,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
   main{padding:14px;}
   .card{padding:12px 14px;}
   .card .value{font-size:18px;}
+  .phone-frame{width:220px;height:460px;}
   table{font-size:11px;}
   th,td{padding:6px 7px;}
   .controls{padding:10px 12px;}
@@ -100,6 +134,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
   <button data-tab="receivables" id="tab-receivables" role="tab" aria-selected="false" aria-controls="panel-receivables">Receivables</button>
   <button data-tab="payroll" id="tab-payroll" role="tab" aria-selected="false" aria-controls="panel-payroll">Gig Payroll Roster</button>
   <button data-tab="aging" id="tab-aging" role="tab" aria-selected="false" aria-controls="panel-aging">AP Aging</button>
+  <button data-tab="mobile" id="tab-mobile" role="tab" aria-selected="false" aria-controls="panel-mobile">Mobile App Preview</button>
 </nav>
 
 <main>
@@ -202,9 +237,112 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px;}
   <div class="note">A newly added vendor is a real payable, not a hypothetical scenario — it lands in the "Current" bucket here immediately and also reduces the projections in 13-Week Forecast and Scenario Planner, unlike the Worst/Base/Best toggle which only affects the scenario chart.</div>
 </section>
 
+<!-- MOBILE APP PREVIEW -->
+<section class="panel" id="panel-mobile" role="tabpanel" aria-labelledby="tab-mobile">
+  <h2>Mobile App Preview</h2>
+  <div class="panel-sub">Demo screens showing what the Ledgerly companion app would look and feel like on an owner's phone — mobile fintech UX is a separate design decision, not a shrunk version of this desktop demo. Bottom nav keeps the primary action in thumb reach; all tap targets are 44×44px minimum.</div>
+
+  <div class="phone-row">
+
+    <div class="phone-unit">
+      <div class="phone-label">Home — today's cash position</div>
+      <div class="phone-frame">
+        <div class="demo-badge">Demo</div>
+        <div class="phone-screen">
+          <div class="phone-statusbar"></div>
+          <div class="phone-appbar"><div class="app-name">Ledgerly</div><div class="app-sub">Ang Mo Kio Logistics</div></div>
+          <div class="phone-content">
+            <div class="phone-card">
+              <div class="pc-label">Cash on hand today</div>
+              <div class="pc-value">S$42,000</div>
+              <div class="pc-note">as of this morning's sync</div>
+            </div>
+            <div class="phone-alert">⚠ Low point in 5 weeks — S$18,400 projected</div>
+            <div class="phone-card">
+              <div class="pc-label">Next gig payroll due</div>
+              <div class="pc-value warn">S$6,850</div>
+              <div class="pc-note">Friday · 12 drivers</div>
+            </div>
+            <div class="phone-card">
+              <div class="pc-label">Open receivables</div>
+              <div class="pc-value pos">S$31,200</div>
+              <div class="pc-note">3 invoices overdue</div>
+            </div>
+          </div>
+          <div class="phone-navbar">
+            <div class="pnav-item active"><div class="pnav-dot"></div>Home</div>
+            <div class="pnav-item"><div class="pnav-dot"></div>Forecast</div>
+            <div class="pnav-item"><div class="pnav-dot"></div>Payroll</div>
+            <div class="pnav-item"><div class="pnav-dot"></div>More</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-unit">
+      <div class="phone-label">Alerts — a payroll gap flagged early</div>
+      <div class="phone-frame">
+        <div class="demo-badge">Demo</div>
+        <div class="phone-screen">
+          <div class="phone-statusbar"></div>
+          <div class="phone-appbar"><div class="app-name">Alerts</div><div class="app-sub">2 active</div></div>
+          <div class="phone-content">
+            <div class="phone-alert">⚠ Projected shortfall week of Oct 12 — S$4,300 below your S$15,000 buffer</div>
+            <div class="phone-card">
+              <div class="pc-label">Likely driver</div>
+              <div class="pc-value" style="font-size:14px;">2 drivers on leave + fuel line up 6%</div>
+            </div>
+            <div class="phone-alert">⚠ Invoice INV-2026090 (S$9,006.63) now 4 days overdue</div>
+            <div class="phone-card">
+              <div class="pc-label">Suggested action</div>
+              <div class="pc-value" style="font-size:14px;">Delay non-urgent vendor payment by 1 week</div>
+            </div>
+          </div>
+          <div class="phone-navbar">
+            <div class="pnav-item"><div class="pnav-dot"></div>Home</div>
+            <div class="pnav-item"><div class="pnav-dot"></div>Forecast</div>
+            <div class="pnav-item"><div class="pnav-dot"></div>Payroll</div>
+            <div class="pnav-item active"><div class="pnav-dot"></div>Alerts</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-unit">
+      <div class="phone-label">Gig Payroll — this week's roster</div>
+      <div class="phone-frame">
+        <div class="demo-badge">Demo</div>
+        <div class="phone-screen">
+          <div class="phone-statusbar"></div>
+          <div class="phone-appbar"><div class="app-name">Payroll Roster</div><div class="app-sub">Week of Sep 14 · 12 drivers</div></div>
+          <div class="phone-content">
+            <div class="phone-row-item"><div><div class="prow-name">Rizwan A.</div><div class="prow-sub">Grab · 6 days</div></div><div class="prow-amt">S$612</div></div>
+            <div class="phone-row-item"><div><div class="prow-name">Mei Ling T.</div><div class="prow-sub">foodpanda · 5 days</div></div><div class="prow-amt">S$498</div></div>
+            <div class="phone-row-item"><div><div class="prow-name">Haziq R.</div><div class="prow-sub">Lalamove · 6 days</div></div><div class="prow-amt">S$587</div></div>
+            <div class="phone-row-item"><div><div class="prow-name">Wei Jun K.</div><div class="prow-sub">Grab · on leave</div></div><div class="prow-amt" style="color:var(--muted);">—</div></div>
+            <div class="phone-row-item"><div><div class="prow-name">Farah S.</div><div class="prow-sub">foodpanda · 6 days</div></div><div class="prow-amt">S$601</div></div>
+            <div class="phone-card" style="margin-top:6px;">
+              <div class="pc-label">Total this week</div>
+              <div class="pc-value">S$6,850</div>
+            </div>
+          </div>
+          <div class="phone-navbar">
+            <div class="pnav-item"><div class="pnav-dot"></div>Home</div>
+            <div class="pnav-item"><div class="pnav-dot"></div>Forecast</div>
+            <div class="pnav-item active"><div class="pnav-dot"></div>Payroll</div>
+            <div class="pnav-item"><div class="pnav-dot"></div>More</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
 </main>
 
-<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v26.0</span></footer>
+<footer>Ledgerly — fictional sample data, built for internal product review. Not a real customer's financials. <span class="pill">Build v27.0</span></footer>
 
 <script>
 // ---------- real data extracted from Su Ann Downloads/*.xlsx ----------
